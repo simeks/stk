@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
 
-message(CMAKE_BINARY_DIR " ${CMAKE_BINARY_DIR}")
-
 option(STK_BUILD_TESTS "Build unit tests" ON)
 option(STK_ENABLE_CUDA "Enables CUDA support" OFF)
 option(STK_WARNINGS_ARE_ERRORS "Warnings are treated as errors" OFF)
