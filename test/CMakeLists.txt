@@ -1,5 +1,7 @@
 set(STK_TEST_SRCS 
-    "test_main.cpp")
+    "test_main.cpp"
+    "test_logging.cpp"
+    )
 
 add_executable(stk_test ${STK_TEST_SRCS})
 add_test(stk_test stk_test)
