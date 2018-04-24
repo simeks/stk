@@ -1,4 +1,5 @@
 set(STK_TEST_SRCS 
+    "test_error.cpp"
     "test_main.cpp"
     "test_logging.cpp"
     )
