@@ -2,7 +2,9 @@
 
 #include <sstream>
 
-//#define STK_LOGGING_DETAILED_PREAMBLE
+#define STK_LOGGING_PREAMBLE_PRINT_LEVEL
+#define STK_LOGGING_PREAMBLE_PRINT_TIME
+#define STK_LOGGING_PREAMBLE_PRINT_FILE
 
 namespace stk
 {
@@ -60,7 +62,7 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
     return s;
 }
 
-#ifdef STK_LOGGING_DETAILED_PREAMBLE
+#ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
     #define LOG(level) stk::LogMessage(stk::##level, __FILE__, __LINE__).stream()
 #else
     #define LOG(level) stk::LogMessage(stk::##level).stream()

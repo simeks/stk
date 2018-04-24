@@ -23,6 +23,8 @@ namespace
         Sink(stk::LogLevel level) : _level(level) {}
 
         virtual void write(stk::LogLevel level, const char* msg) = 0;
+        virtual void flush() {}
+
         virtual Type type() const = 0;
 
     protected:
@@ -55,11 +57,11 @@ namespace
             }
             _file = file;
         }
-        void write(stk::LogLevel, const char* msg)
+        void write(stk::LogLevel level, const char* msg)
         {
             std::lock_guard<std::mutex> guard(_lock);
 
-            if (_fs.is_open()) {
+            if(_fs.is_open() && level >= _level) {
                 _fs.write(msg, strlen(msg));
             }
         }
@@ -138,15 +140,13 @@ namespace
             s->write(level, msg.c_str());
         }
         
-        if (level >= stk::Error) {
-            std::cerr << msg;
-        }
-        else {
-            std::cout << msg;
-        }
+        std::cerr << msg;
 
         if (level == stk::Fatal) {
-            abort();
+            // Flush all sinks before aborting
+            for (auto& s : _logger_data->sinks) {
+                s->flush();
+            }
         }
     }
 }
@@ -175,28 +175,39 @@ namespace stk
     }
     void LogMessage::format_preamble(LogLevel level, const char* file, int line)
     {
+    #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
+        const char* level_to_str[Num_LogLevel] = {
+            "DBG",
+            "INF",
+            "WAR",
+            "ERR",
+            "FAT", 
+        };
+        _s << level_to_str[level] << " ";
+    #endif
+
+    #ifdef STK_LOGGING_PREAMBLE_PRINT_TIME
         auto now = system_clock::now();
         auto in_time = system_clock::to_time_t(now);
         auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
-        const char* level_to_str[Num_LogLevel] = {
-            "D",
-            "I",
-            "W",
-            "E",
-            "F", 
-        };
+        _s << std::put_time(std::localtime(&in_time), "%m-%d %X") << "." << std::setw(3) << std::left << ms.count() << " ";
+    #endif
 
-        _s << "[" << level_to_str[level] << " " << std::put_time(std::localtime(&in_time), "%m-%d %X") << "." << ms.count();
-
+    #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
         if (file && line >= 0) {
-            _s << " " << file << ":" << line << "] ";
+            // Only include filename
+            for (const char* ptr = file; *ptr; ++ptr) {
+                if (*ptr == '/' || *ptr == '\\') {
+                    file = ptr + 1;
+                }
+            }
+            _s << "[" << file << ":" << std::setw(4) << line << "] ";
         }
-        else {
-            _s << "] ";
-        }
-    }
+    #endif
 
+        _s << "| ";
+    }
 
     void log_init()
     {
@@ -233,6 +244,7 @@ namespace stk
             if ((*it)->type() == Sink::Type_FileSink &&
                 static_cast<FileSink*>(*it)->file() == file)
             {
+                delete (*it);
                 _logger_data->sinks.erase(it);
                 return;
             }
@@ -255,10 +267,11 @@ namespace stk
         auto it = _logger_data->sinks.begin();
         for (; it != _logger_data->sinks.end(); ++it)
         {
-            if ((*it)->type() == Sink::Type_FileSink &&
+            if ((*it)->type() == Sink::Type_CallbackSink &&
                 static_cast<CallbackSink*>(*it)->fn() == fn &&
                 static_cast<CallbackSink*>(*it)->user_data() == user_data)
             {
+                delete (*it);
                 _logger_data->sinks.erase(it);
                 return;
             }
