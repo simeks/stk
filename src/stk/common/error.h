@@ -48,3 +48,6 @@ namespace stk
 
 // Usage: FATAL() << "Error message";
 #define FATAL() stk::FatalError(__FILE__, __LINE__).stream()
+
+// Usage: FATAL_IF(failed==true) << "Error message";
+#define FATAL_IF(expr) !(expr) ? (void)0 : FATAL()
