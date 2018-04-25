@@ -65,11 +65,15 @@ namespace stk
 
         std::ostringstream& stream();
 
+        void flush();
+
     private:
         void format_prefix(LogLevel level, const char* file = 0, int line = -1);
 
         LogLevel _level;
         std::ostringstream _s;
+
+        bool _flushed;
     };
 
     // Class to nullify incoming log messages, used for debug messages in release build
@@ -87,11 +91,6 @@ namespace stk
     
     // Shuts the logging system down.
     void log_shutdown();
-
-    // Writes the specified message to the log.
-    // This performs no formatting and assumes that the prefix is included
-    // Should not be used directly, consider using the LOG() macros.
-    void log_write(stk::LogLevel level, const char* msg);
 
     // Creates a new log file and outputs all messages above the specified level
     void log_add_file(const char* file, LogLevel level);

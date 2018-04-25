@@ -19,14 +19,30 @@ namespace
     }
 }
 
+
 TEST_CASE("error", "[error] [logging]")
 {
     stk::log_init();
-    
+
     LogData data = { -1, "" };
     stk::log_add_callback(log_callback, &data, stk::Fatal);
 
+#if STK_USE_EXCEPTIONS
+    bool catched = false;
+    try {
+        FATAL() << "this did not work";
+    } 
+    catch (stk::FatalException& ) {
+        catched = true;
+    }
+    // Assure error was thrown and catched
+    REQUIRE(catched);
+#else
+    REQUIRE(false); // Not implemented
+#endif
 
+    // Check log
+    REQUIRE(data.last_msg.find("this did not work") != std::string::npos);
 
     stk::log_remove_callback(log_callback, &data);
     stk::log_shutdown();

@@ -1,9 +1,50 @@
 #pragma once
 
+#include <sstream>
+
+#define STK_USE_EXCEPTIONS 1
+
+#if STK_USE_EXCEPTIONS
+    #include <exception>
+    #include <string>
+#endif
+
 namespace stk
 {
-    // Logs the error message and exits the application.
+#if STK_USE_EXCEPTIONS
+    class FatalException : public std::exception
+    {
+    public:
+        FatalException(const char* message);
+        virtual ~FatalException() throw();
+
+        virtual const char* what() const throw();
+
+    private:
+        std::string _message;
+    };
+#endif
+
+    // Helper class for the FATAL()-macro
+    class FatalError
+    {
+    public:
+        FatalError(const char* file, int line);
+        __declspec(noreturn) ~FatalError() noexcept(false);
+
+        std::ostringstream& stream();
+    private:
+        std::ostringstream _s;
+
+        const char* _file;
+        int _line;
+    };
+
+    // Logs the error message and either exits the application or throws an 
+    //  exception depending on whether STK_USE_EXCEPTIONS is set or not.
     // Typically called through any of the error macros.
     void error(const char* msg, const char* file, int line);
 }
 
+// Usage: FATAL() << "Error message";
+#define FATAL() stk::FatalError(__FILE__, __LINE__).stream()

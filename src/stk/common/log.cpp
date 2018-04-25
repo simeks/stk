@@ -130,29 +130,57 @@ namespace
 
     LoggerData* _logger_data = nullptr;
 
+    void log_write(stk::LogLevel level, const char* msg)
+    {
+        std::cerr << msg;
+
+        if (_logger_data) {
+            for (auto& s : _logger_data->sinks) {
+                s->write(level, msg);
+            }
+            if (level == stk::Fatal) {
+                // Flush all sinks
+                for (auto& s : _logger_data->sinks) {
+                    s->flush();
+                }
+            }
+        }
+    }
 }
 
 namespace stk
 {
     LogMessage::LogMessage(LogLevel level) :
-        _level(level)
+        _level(level),
+        _flushed(false)
     {
         format_prefix(level);
     }
     LogMessage::LogMessage(LogLevel level, const char* file, int line) :
-        _level(level)
+        _level(level),
+        _flushed(false)
     {
         format_prefix(level, file, line);
     }
     LogMessage::~LogMessage()
     {
-        _s << std::endl;
-        // Flush
-        log_write(_level, _s.str().c_str());
+        flush();
     }
     std::ostringstream& LogMessage::stream()
     {
         return _s;
+    }
+    void LogMessage::flush()
+    {
+        // We only flush messages once
+        if (_flushed)
+            return;
+
+        _s << std::endl;
+        // Flush
+        log_write(_level, _s.str().c_str());
+
+        _flushed = true;
     }
     void LogMessage::format_prefix(LogLevel level, const char* file, int line)
     {
@@ -200,22 +228,6 @@ namespace stk
         }
         
         delete _logger_data;
-    }
-    void log_write(stk::LogLevel level, const char* msg)
-    {
-        std::cerr << msg;
-
-        if (_logger_data) {
-            for (auto& s : _logger_data->sinks) {
-                s->write(level, msg);
-            }
-            if (level == stk::Fatal) {
-                // Flush all sinks
-                for (auto& s : _logger_data->sinks) {
-                    s->flush();
-                }
-            }
-        }
     }
     void log_add_file(const char* file, LogLevel level)
     {
