@@ -28,57 +28,61 @@ endif()
 
 if (MSVC)
     add_definitions( -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_DEPRECATE )
-    set(extra_flags "/FS")
+    set(EXTRA_FLAGS "/FS")
 
     string(REGEX REPLACE "/W[1-3]" "/W4" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     string(REGEX REPLACE "/W[1-3]" "/W4" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
     
     if (STK_WARNINGS_ARE_ERRORS)
-        set(extra_flags "${extra_flags} /WX")
+        set(EXTRA_FLAGS "${extra_flags} /WX")
     endif()
 
     if (STK_BUILD_WITH_DEBUG_INFO)
-        set(extra_flags_release "/Zi")
+        set(EXTRA_FLAGS_RELEASE "/Zi")
+        set(EXTRA_LINK_FLAGS_RELEASE "/DEBUG")
     endif()
 
     if (STK_ENABLE_FAST_MATH)
-        set(extra_flags "${extra_flags} /fp:fast")
+        set(EXTRA_FLAGS "${extra_flags} /fp:fast")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID matches "GNU")
-    set(extra_flags "-Wall")
+    set(EXTRA_FLAGS "-Wall")
 
     if (STK_WARNINGS_ARE_ERRORS)
-        set(extra_flags "${extra_flags} -Werror")
+        set(EXTRA_FLAGS "${extra_flags} -Werror")
     endif()
 
     if (STK_BUILD_WITH_DEBUG_INFO)
-        set(extra_flags_release "-g1")
+        set(EXTRA_FLAGS_RELEASE "-g1")
     endif()
 
     if (STK_ENABLE_FAST_MATH)
-        set(extra_flags "${extra_flags} -ffast-math")
+        set(EXTRA_FLAGS "${extra_flags} -ffast-math")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID matches "Clang")
-    set(extra_flags "-Wall")
+    set(EXTRA_FLAGS "-Wall")
 
     if (STK_WARNINGS_ARE_ERRORS)
-        set(extra_flags "${extra_flags} -Werror")
+        set(EXTRA_FLAGS "${extra_flags} -Werror")
     endif()
 
     if (STK_BUILD_WITH_DEBUG_INFO)
-        set(extra_flags_release "-g1")
+        set(EXTRA_FLAGS_RELEASE "-g1")
     endif()
 
     if (STK_ENABLE_FAST_MATH)
-        set(extra_flags "${extra_flags} -ffast-math")
+        set(EXTRA_FLAGS "${extra_flags} -ffast-math")
     endif()
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${extra_flags}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${extra_flags}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${EXTRA_FLAGS_RELEASE}")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${extra_flags}")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${extra_flags}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${EXTRA_FLAGS_RELEASE}")
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_LINK_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_LINK_FLAGS_RELEASE}")
 
 # Catch: Test utility
 set(CATCH_INCLUDE_DIR ${THIRD_PARTY_DIR}/Catch2)
