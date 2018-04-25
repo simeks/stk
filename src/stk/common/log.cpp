@@ -132,20 +132,17 @@ namespace
 
     void log_message(stk::LogLevel level, const std::string& msg)
     {
-        if (!_logger_data) {
-            return;
-        }
-
-        for (auto& s : _logger_data->sinks) {
-            s->write(level, msg.c_str());
-        }
-        
         std::cerr << msg;
 
-        if (level == stk::Fatal) {
-            // Flush all sinks before aborting
+        if (_logger_data) {
             for (auto& s : _logger_data->sinks) {
-                s->flush();
+                s->write(level, msg.c_str());
+            }
+            if (level == stk::Fatal) {
+                // Flush all sinks
+                for (auto& s : _logger_data->sinks) {
+                    s->flush();
+                }
             }
         }
     }
@@ -177,7 +174,6 @@ namespace stk
     {
     #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
         const char* level_to_str[Num_LogLevel] = {
-            "DBG",
             "INF",
             "WAR",
             "ERR",

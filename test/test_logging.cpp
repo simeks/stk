@@ -25,10 +25,9 @@ TEST_CASE("logging_basic", "[logging]")
 {
     stk::log_init();
     
-    LOG(Debug) << "Debug " << 1;
-    LOG(Info) << "Info " << 1.0f;
-    LOG(Warning) << "Warning " << '!';
-    LOG(Error) << "Error " << "error";
+    LOG(Info) << "Info " << 1;
+    LOG(Warning) << "Warning " << 1.0;
+    LOG(Error) << "Error " << 'a';
     LOG(Fatal) << "Fatal " << "Fatal " << "Fatal";
     
     stk::log_shutdown();
@@ -43,11 +42,6 @@ TEST_CASE("logging_callback", "[logging]")
     LogData data = { -1, "" };
     stk::log_add_callback(log_callback, &data, stk::Fatal);
     
-    // Should not trigger callback, since Debug < Fatal
-    LOG(Debug) << "Debug";
-    REQUIRE(data.last_level == -1);
-    REQUIRE(data.last_msg == "");
-
     // Should not trigger callback, since Info < Fatal
     LOG(Info) << "Info";
     REQUIRE(data.last_level == -1);
@@ -72,10 +66,6 @@ TEST_CASE("logging_callback", "[logging]")
     stk::log_remove_callback(log_callback, &data);
 
     // No logging should trigger the callback since it has been removed
-    LOG(Debug) << "Debug";
-    REQUIRE(data.last_level == -1);
-    REQUIRE(data.last_msg == "");
-
     LOG(Info) << "Info";
     REQUIRE(data.last_level == -1);
     REQUIRE(data.last_msg == "");
@@ -93,13 +83,9 @@ TEST_CASE("logging_callback", "[logging]")
     REQUIRE(data.last_msg == "");
 
     data = { -1, "" };
-    stk::log_add_callback(log_callback, &data, stk::Debug);
+    stk::log_add_callback(log_callback, &data, stk::Info);
 
     // Should trigger for all messages
-    LOG(Debug) << "Debug";
-    REQUIRE(data.last_level == stk::Debug);
-    REQUIRE(data.last_msg.find("Debug") != std::string::npos);
-
     LOG(Info) << "Info";
     REQUIRE(data.last_level == stk::Info);
     REQUIRE(data.last_msg.find("Info") != std::string::npos);
@@ -161,7 +147,6 @@ TEST_CASE("logging_file", "[logging]")
     {
         stk::log_add_file("test_logging_file_1.txt", stk::Fatal);
 
-        LOG(Debug) << "Debug";
         LOG(Info) << "Info";
         LOG(Warning) << "Warning";
         LOG(Error) << "Error";
@@ -188,9 +173,8 @@ TEST_CASE("logging_file", "[logging]")
     // Test 2, all levels
     SECTION("all levels")
     {
-        stk::log_add_file("test_logging_file_2.txt", stk::Debug);
+        stk::log_add_file("test_logging_file_2.txt", stk::Info);
 
-        LOG(Debug) << "Debug";
         LOG(Info) << "Info";
         LOG(Warning) << "Warning";
         LOG(Error) << "Error";
@@ -203,15 +187,6 @@ TEST_CASE("logging_file", "[logging]")
         std::ifstream fs("test_logging_file_2.txt");
 
         std::string line;
-        REQUIRE(std::getline(fs, line));
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
-            REQUIRE(line.find("DBG") == 0); // From preamble
-        #endif
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From preamble
-        #endif
-        REQUIRE(line.find("Debug") != std::string::npos);
-    
         REQUIRE(std::getline(fs, line));
         #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
             REQUIRE(line.find("INF") == 0); // From preamble
@@ -252,4 +227,10 @@ TEST_CASE("logging_file", "[logging]")
     }
 
     stk::log_shutdown();
+}
+
+TEST_CASE("logging_debug", "[logging]")
+{
+    DLOG(Info) << "A" << "B" << "C";
+    REQUIRE(true);
 }

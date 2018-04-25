@@ -6,11 +6,49 @@
 #define STK_LOGGING_PREAMBLE_PRINT_TIME
 #define STK_LOGGING_PREAMBLE_PRINT_FILE
 
+// Logging utilities
+//
+// Usage:
+//  Initialize the logging using log_init. This step is optional if you only want
+//  output to stderr. If you want to use log files or callbacks however, the initialization
+//  is required.
+//
+//  After the initialization you can create log files using log_add_file. This will create
+//  or overwrite a file at the specified path and all output above the specified level will
+//  be written to said file. E.g. log_add_file('log.txt', stk::Info) will output _all_ log
+//  messages to log.txt. To only output error messages, change stk::Info to stk::Error.
+//
+//  In addition to file outputs you can also add C-style callback functions using 
+//  log_add_callback. Whenever a log message is received the message (including preamble)
+//  will be passed to the callback.
+//
+//  Opened log files can be closed using log_remove_file and callbacks can be removed with
+//  log_remove_callback.
+//
+//  The LOG() macro is used for logging messages. You specify the level (or severity) of
+//  the message within the macro, e.g. LOG(Info), or LOG(Error). A C++-style stream object
+//  is returned, allowing logging in the style of LOG(Info) << "My Message" << my_variable;
+//
+//  For debug message only wanted in debug builds it is advised to use the DLOG() macro.
+//  These macros will not be compiled in release builds.
+//
+//  log_shutdown() cleans up data allocated by the system and closes all open log files.
+//
+// There are 4 severity levels: 
+//  * Info
+//  * Warning
+//  * Error
+//  * Fatal
+//
+//  The goal of this subsystem is only to do logging, None of the levels, including Fatal, 
+//  affects the runtime in any way. Therefore the use of the Fatal level should be limited
+//  to use within the error handling system (see error.h) to avoid confusion.
+
+
 namespace stk
 {
     enum LogLevel
     {
-        Debug,
         Info,
         Warning,
         Error, // Typically asserts and such
@@ -32,6 +70,13 @@ namespace stk
 
         LogLevel _level;
         std::ostringstream _s;
+    };
+
+    class NullStream
+    {
+    public:
+        template<typename T>
+        NullStream& operator<<(const T&) { return *this; }
     };
 
     typedef void (LogCallback)(void*, LogLevel, const char*);
@@ -64,6 +109,12 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
 
 #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
     #define LOG(level) stk::LogMessage(stk::##level, __FILE__, __LINE__).stream()
+    
+    #ifdef NDEBUG
+        #define DLOG(level) stk::NullStream()
+    #else
+        #define DLOG(level) LOG(level)
+    #endif
 #else
     #define LOG(level) stk::LogMessage(stk::##level).stream()
 #endif
