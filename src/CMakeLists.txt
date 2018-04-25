@@ -3,6 +3,7 @@ set(STK_SRCS
     "stk/common/error.h"
     "stk/common/log.cpp"
     "stk/common/log.h"
+    "stk/math/types.h"
 )
 
 add_library(stk STATIC ${STK_SRCS})
