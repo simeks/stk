@@ -160,11 +160,11 @@ TEST_CASE("logging_file", "[logging]")
 
         std::string line;
         REQUIRE(std::getline(fs, line));
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
-            REQUIRE(line.find("FAT") == 0); // From preamble
+        #ifdef STK_LOGGING_PREFIX_LEVEL
+            REQUIRE(line.find("FAT") == 0); // From prefix
         #endif
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From preamble
+        #ifdef STK_LOGGING_PREFIX_FILE
+            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
         #endif
         REQUIRE(line.find("Fatal") != std::string::npos);
         REQUIRE(!std::getline(fs, line)); // Should only contain one line
@@ -188,38 +188,38 @@ TEST_CASE("logging_file", "[logging]")
 
         std::string line;
         REQUIRE(std::getline(fs, line));
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
-            REQUIRE(line.find("INF") == 0); // From preamble
+        #ifdef STK_LOGGING_PREFIX_LEVEL
+            REQUIRE(line.find("INF") == 0); // From prefix
         #endif
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From preamble
+        #ifdef STK_LOGGING_PREFIX_FILE
+            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
         #endif
         REQUIRE(line.find("Info") != std::string::npos);
         
         REQUIRE(std::getline(fs, line));
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
-            REQUIRE(line.find("WAR") == 0); // From preamble
+        #ifdef STK_LOGGING_PREFIX_LEVEL
+            REQUIRE(line.find("WAR") == 0); // From prefix
         #endif
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From preamble
+        #ifdef STK_LOGGING_PREFIX_FILE
+            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
         #endif
         REQUIRE(line.find("Warning") != std::string::npos);
         
         REQUIRE(std::getline(fs, line));
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
-            REQUIRE(line.find("ERR") == 0); // From preamble
+        #ifdef STK_LOGGING_PREFIX_LEVEL
+            REQUIRE(line.find("ERR") == 0); // From prefix
         #endif
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From preamble
+        #ifdef STK_LOGGING_PREFIX_FILE
+            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
         #endif
         REQUIRE(line.find("Error") != std::string::npos);
         
         REQUIRE(std::getline(fs, line));
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
-            REQUIRE(line.find("FAT") == 0); // From preamble
+        #ifdef STK_LOGGING_PREFIX_LEVEL
+            REQUIRE(line.find("FAT") == 0); // From prefix
         #endif
-        #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From preamble
+        #ifdef STK_LOGGING_PREFIX_FILE
+            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
         #endif
         REQUIRE(line.find("Fatal") != std::string::npos);
         

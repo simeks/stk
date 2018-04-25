@@ -2,9 +2,9 @@
 
 #include <sstream>
 
-#define STK_LOGGING_PREAMBLE_PRINT_LEVEL
-#define STK_LOGGING_PREAMBLE_PRINT_TIME
-#define STK_LOGGING_PREAMBLE_PRINT_FILE
+#define STK_LOGGING_PREFIX_LEVEL
+#define STK_LOGGING_PREFIX_TIME
+#define STK_LOGGING_PREFIX_FILE
 
 // Logging utilities
 //
@@ -19,7 +19,7 @@
 //  messages to log.txt. To only output error messages, change stk::Info to stk::Error.
 //
 //  In addition to file outputs you can also add C-style callback functions using 
-//  log_add_callback. Whenever a log message is received the message (including preamble)
+//  log_add_callback. Whenever a log message is received the message (including prefix)
 //  will be passed to the callback.
 //
 //  Opened log files can be closed using log_remove_file and callbacks can be removed with
@@ -51,8 +51,8 @@ namespace stk
     {
         Info,
         Warning,
-        Error, // Typically asserts and such
-        Fatal, // Error that kills the application
+        Error,
+        Fatal,
         Num_LogLevel
     };
 
@@ -66,12 +66,13 @@ namespace stk
         std::ostringstream& stream();
 
     private:
-        void format_preamble(LogLevel level, const char* file = 0, int line = -1);
+        void format_prefix(LogLevel level, const char* file = 0, int line = -1);
 
         LogLevel _level;
         std::ostringstream _s;
     };
 
+    // Class to nullify incoming log messages, used for debug messages in release build
     class NullStream
     {
     public:
@@ -86,6 +87,11 @@ namespace stk
     
     // Shuts the logging system down.
     void log_shutdown();
+
+    // Writes the specified message to the log.
+    // This performs no formatting and assumes that the prefix is included
+    // Should not be used directly, consider using the LOG() macros.
+    void log_write(stk::LogLevel level, const char* msg);
 
     // Creates a new log file and outputs all messages above the specified level
     void log_add_file(const char* file, LogLevel level);
@@ -107,7 +113,7 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
     return s;
 }
 
-#ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
+#ifdef STK_LOGGING_PREFIX_FILE
     #define LOG(level) stk::LogMessage(stk::##level, __FILE__, __LINE__).stream()
     
     #ifdef NDEBUG

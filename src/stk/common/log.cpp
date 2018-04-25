@@ -130,22 +130,6 @@ namespace
 
     LoggerData* _logger_data = nullptr;
 
-    void log_message(stk::LogLevel level, const std::string& msg)
-    {
-        std::cerr << msg;
-
-        if (_logger_data) {
-            for (auto& s : _logger_data->sinks) {
-                s->write(level, msg.c_str());
-            }
-            if (level == stk::Fatal) {
-                // Flush all sinks
-                for (auto& s : _logger_data->sinks) {
-                    s->flush();
-                }
-            }
-        }
-    }
 }
 
 namespace stk
@@ -153,26 +137,26 @@ namespace stk
     LogMessage::LogMessage(LogLevel level) :
         _level(level)
     {
-        format_preamble(level);
+        format_prefix(level);
     }
     LogMessage::LogMessage(LogLevel level, const char* file, int line) :
         _level(level)
     {
-        format_preamble(level, file, line);
+        format_prefix(level, file, line);
     }
     LogMessage::~LogMessage()
     {
         _s << std::endl;
         // Flush
-        log_message(_level, _s.str());
+        log_write(_level, _s.str().c_str());
     }
     std::ostringstream& LogMessage::stream()
     {
         return _s;
     }
-    void LogMessage::format_preamble(LogLevel level, const char* file, int line)
+    void LogMessage::format_prefix(LogLevel level, const char* file, int line)
     {
-    #ifdef STK_LOGGING_PREAMBLE_PRINT_LEVEL
+    #ifdef STK_LOGGING_PREFIX_LEVEL
         const char* level_to_str[Num_LogLevel] = {
             "INF",
             "WAR",
@@ -182,7 +166,7 @@ namespace stk
         _s << level_to_str[level] << " ";
     #endif
 
-    #ifdef STK_LOGGING_PREAMBLE_PRINT_TIME
+    #ifdef STK_LOGGING_PREFIX_TIME
         auto now = system_clock::now();
         auto in_time = system_clock::to_time_t(now);
         auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
@@ -190,7 +174,7 @@ namespace stk
         _s << std::put_time(std::localtime(&in_time), "%m-%d %X") << "." << std::setw(3) << std::left << ms.count() << " ";
     #endif
 
-    #ifdef STK_LOGGING_PREAMBLE_PRINT_FILE
+    #ifdef STK_LOGGING_PREFIX_FILE
         if (file && line >= 0) {
             // Only include filename
             for (const char* ptr = file; *ptr; ++ptr) {
@@ -216,6 +200,22 @@ namespace stk
         }
         
         delete _logger_data;
+    }
+    void log_write(stk::LogLevel level, const char* msg)
+    {
+        std::cerr << msg;
+
+        if (_logger_data) {
+            for (auto& s : _logger_data->sinks) {
+                s->write(level, msg);
+            }
+            if (level == stk::Fatal) {
+                // Flush all sinks
+                for (auto& s : _logger_data->sinks) {
+                    s->flush();
+                }
+            }
+        }
     }
     void log_add_file(const char* file, LogLevel level)
     {
