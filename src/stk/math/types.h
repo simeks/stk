@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sstream>
+
 #ifdef STK_USE_CUDA
 // float2, float3, etc...
 #include <vector_types.h>
@@ -72,3 +74,69 @@ struct double4
 };
 
 #endif
+
+// Overloads for convenient logging of types
+
+inline std::ostream& operator<<(std::ostream& s, const uchar2& v)
+{
+    s << '(' << int(v.x) << ' ' << int(v.y) << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const uchar3& v)
+{
+    s << '(' << int(v.x) << ' ' << int(v.y) << ' ' << int(v.z) << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const uchar4& v)
+{
+    s << '(' << int(v.x) << ' ' << int(v.y) << ' ' << int(v.z) << ' ' << int(v.w) << ')';
+    return s;
+}
+
+inline std::ostream& operator<<(std::ostream& s, const int2& v)
+{
+    s << '(' << v.x << ' ' << v.y << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const int3& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const int4& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
+    return s;
+}
+
+inline std::ostream& operator<<(std::ostream& s, const float2& v)
+{
+    s << '(' << v.x << ' ' << v.y << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const float3& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const float4& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
+    return s;
+}
+
+inline std::ostream& operator<<(std::ostream& s, const double2& v)
+{
+    s << '(' << v.x << ' ' << v.y << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const double3& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const double4& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
+    return s;
+}

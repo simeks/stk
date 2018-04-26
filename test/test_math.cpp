@@ -84,6 +84,85 @@ TEST_CASE("math_int3_op", "[math]")
     REQUIRE(r6.y == 5/2);
     REQUIRE(r6.z == 6/2);
 }
+TEST_CASE("math_to_string", "[volume]")
+{
+    SECTION("uchar2")
+    {
+        std::ostringstream s;
+        s << uchar2{1, 2};
+        REQUIRE(s.str() == "(1 2)");
+    }
+    SECTION("uchar3")
+    {
+        std::ostringstream s;
+        s << uchar3{1, 2, 3};
+        REQUIRE(s.str() == "(1 2 3)");
+    }
+    SECTION("uchar4")
+    {
+        std::ostringstream s;
+        s << uchar4{1, 2, 3, 4};
+        REQUIRE(s.str() == "(1 2 3 4)");
+    }
+
+    SECTION("int2")
+    {
+        std::ostringstream s;
+        s << int2{1, 2};
+        REQUIRE(s.str() == "(1 2)");
+    }
+    SECTION("int3")
+    {
+        std::ostringstream s;
+        s << int3{1, 2, 3};
+        REQUIRE(s.str() == "(1 2 3)");
+    }
+    SECTION("int4")
+    {
+        std::ostringstream s;
+        s << int4{1, 2, 3, 4};
+        REQUIRE(s.str() == "(1 2 3 4)");
+    }
+
+    SECTION("float2")
+    {
+        std::ostringstream s;
+        s << float2{1.5f, 2.5f};
+        REQUIRE(s.str() == "(1.5 2.5)");
+    }
+    SECTION("float3")
+    {
+        std::ostringstream s;
+        s << float3{1.5f, 2.5f, 3.5f};
+        REQUIRE(s.str() == "(1.5 2.5 3.5)");
+    }
+    SECTION("float4")
+    {
+        std::ostringstream s;
+        s << float4{1.5f, 2.5f, 3.5f, 4.5f};
+        REQUIRE(s.str() == "(1.5 2.5 3.5 4.5)");
+    }
+
+    SECTION("double2")
+    {
+        std::ostringstream s;
+        s << double2{1.5f, 2.5f};
+        REQUIRE(s.str() == "(1.5 2.5)");
+    }
+    SECTION("double3")
+    {
+        std::ostringstream s;
+        s << double3{1.5f, 2.5f, 3.5f};
+        REQUIRE(s.str() == "(1.5 2.5 3.5)");
+    }
+    SECTION("double4")
+    {
+        std::ostringstream s;
+        s << double4{1.5f, 2.5f, 3.5f, 4.5f};
+        REQUIRE(s.str() == "(1.5 2.5 3.5 4.5)");
+    }
+
+}
 
 
 
