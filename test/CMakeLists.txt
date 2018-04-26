@@ -4,6 +4,7 @@ set(STK_TEST_SRCS
     "test_main.cpp"
     "test_math.cpp"
     "test_logging.cpp"
+    "test_volume.cpp"
     )
 
 add_executable(stk_test ${STK_TEST_SRCS})
