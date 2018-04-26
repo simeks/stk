@@ -8,8 +8,8 @@
 // ASSERT will be included in all builds while DASSERT will only be included in
 //  debug builds.
 
-#define ASSERT(expr) FATAL_IF(!expr) << "Assertion failed: " # expr
+#define ASSERT(expr) FATAL_IF(!(expr)) << "Assertion failed: " # expr
 
 #ifndef NDEBUG
-    #define DASSERT(expr) FATAL_IF(!expr) << "Assertion failed: " # expr
+    #define DASSERT(expr) FATAL_IF(!(expr)) << "Assertion failed: " # expr
 #endif
