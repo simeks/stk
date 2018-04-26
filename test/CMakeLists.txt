@@ -1,4 +1,5 @@
 set(STK_TEST_SRCS 
+    "test_dim3.cpp"
     "test_error.cpp"
     "test_main.cpp"
     "test_math.cpp"

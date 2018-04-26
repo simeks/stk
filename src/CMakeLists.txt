@@ -4,6 +4,7 @@ set(STK_SRCS
     "stk/common/log.cpp"
     "stk/common/log.h"
     "stk/math/types.h"
+    "stk/volume/dim3.h"
 )
 
 add_library(stk STATIC ${STK_SRCS})
