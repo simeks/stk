@@ -86,4 +86,24 @@ namespace stk
         };
         return Type_Unknown;
     }
+    const char* as_string(Type type)
+    {
+        const char* names[] =
+        {
+            "unknown",  // Type_Unknown
+            "float",    // Type_Float
+            "float2",   // Type_Float2
+            "float3",   // Type_Float3
+            "float4",   // Type_Float4
+            "double",   // Type_Double
+            "double2",  // Type_Double2
+            "double3",  // Type_Double3
+            "double4",  // Type_Double4
+            "uchar",    // Type_UChar
+            "uchar2",   // Type_UChar2
+            "uchar3",   // Type_UChar3
+            "uchar4"    // Type_UChar4
+        };
+        return names[type];
+    }
 }

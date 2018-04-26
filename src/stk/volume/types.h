@@ -33,6 +33,9 @@ namespace stk
     // Returns the base type of a type, i.e. Float3 -> Float
     Type base_type(Type type);
 
+    // Returns the name of the type as a string
+    const char* as_string(Type type);
+
     // Type traits
     template<typename T>
     struct type_id
@@ -70,3 +73,4 @@ namespace stk
 
     #undef TYPE_TRAIT
 }
+
