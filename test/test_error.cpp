@@ -20,6 +20,7 @@ namespace
     }
 }
 
+using Catch::Matchers::Contains;
 
 TEST_CASE("error", "[error] [logging]")
 {
@@ -29,21 +30,14 @@ TEST_CASE("error", "[error] [logging]")
     stk::log_add_callback(log_callback, &data, stk::Fatal);
 
 #if STK_USE_EXCEPTIONS
-    bool catched = false;
-    try {
-        FATAL() << "this did not work";
-    }
-    catch (stk::FatalException& ) {
-        catched = true;
-    }
-    // Assure error was thrown and catched
-    REQUIRE(catched);
+    REQUIRE_THROWS_WITH(FATAL() << "this did not work", Contains("this did not work"));
 #else
     REQUIRE(false); // Not implemented
 #endif
 
     // Check log
-    REQUIRE(data.last_msg.find("this did not work") != std::string::npos);
+    REQUIRE(data.last_level == stk::Fatal);
+    REQUIRE_THAT(data.last_msg, Contains("this did not work"));
 
     stk::log_remove_callback(log_callback, &data);
     stk::log_shutdown();
@@ -59,18 +53,11 @@ TEST_CASE("error_if", "[error] [logging]")
         LogData data = { -1, "" };
         stk::log_add_callback(log_callback, &data, stk::Fatal);
 
-        bool thrown = false;
-        try {
-            FATAL_IF(true) << "this did not work";
-        }
-        catch (stk::FatalException& ) {
-            thrown = true;
-        }
-        // Assure error was thrown and catched
-        REQUIRE(thrown);
+        REQUIRE_THROWS_WITH(FATAL_IF(true) << "this did not work", Contains("this did not work"));
 
         // Check log
-        REQUIRE(data.last_msg.find("this did not work") != std::string::npos);
+        REQUIRE(data.last_level == stk::Fatal);
+        REQUIRE_THAT(data.last_msg, Contains("this did not work"));
 
         stk::log_remove_callback(log_callback, &data);
     }
@@ -79,16 +66,9 @@ TEST_CASE("error_if", "[error] [logging]")
         LogData data = { -1, "" };
         stk::log_add_callback(log_callback, &data, stk::Fatal);
 
-        bool thrown = false;
-        try {
-            FATAL_IF(false) << "this did not work";
-        }
-        catch (stk::FatalException& ) {
-            thrown = true;
-        }
-        // Error should not have been triggered
-        REQUIRE(!thrown);
+        REQUIRE_NOTHROW(FATAL_IF(false) << "this did not work");
 
+        REQUIRE(data.last_level == -1);
         REQUIRE(data.last_msg == "");
 
         stk::log_remove_callback(log_callback, &data);
@@ -110,18 +90,12 @@ TEST_CASE("error_assert", "[error] [logging]")
         LogData data = { -1, "" };
         stk::log_add_callback(log_callback, &data, stk::Fatal);
 
-        bool thrown = false;
-        try {
-            ASSERT(false);
-        }
-        catch (stk::FatalException& ) {
-            thrown = true;
-        }
-        // Assure error was thrown and catched
-        REQUIRE(thrown);
+        // Ensure error was thrown and catched
+        REQUIRE_THROWS_WITH(ASSERT(false), Contains("Assertion failed: false"));
 
         // Check log
-        REQUIRE(data.last_msg.find("Assertion failed: false") != std::string::npos);
+        REQUIRE(data.last_level == stk::Fatal);
+        REQUIRE_THAT(data.last_msg, Contains("Assertion failed: false"));
 
         stk::log_remove_callback(log_callback, &data);
     }
@@ -130,16 +104,10 @@ TEST_CASE("error_assert", "[error] [logging]")
         LogData data = { -1, "" };
         stk::log_add_callback(log_callback, &data, stk::Fatal);
 
-        bool thrown = false;
-        try {
-            ASSERT(true);
-        }
-        catch (stk::FatalException& ) {
-            thrown = true;
-        }
         // Error should not have been triggered
-        REQUIRE(!thrown);
+        REQUIRE_NOTHROW(ASSERT(true));
 
+        REQUIRE(data.last_level == -1);
         REQUIRE(data.last_msg == "");
 
         stk::log_remove_callback(log_callback, &data);
@@ -162,18 +130,12 @@ TEST_CASE("error_dassert", "[error] [logging]")
         LogData data = { -1, "" };
         stk::log_add_callback(log_callback, &data, stk::Fatal);
 
-        bool thrown = false;
-        try {
-            DASSERT(false);
-        }
-        catch (stk::FatalException& ) {
-            thrown = true;
-        }
         // Assure error was thrown and catched
-        REQUIRE(thrown);
+        REQUIRE_THROWS_WITH(DASSERT(false), Contains("Assertion failed: false"));
 
         // Check log
-        REQUIRE(data.last_msg.find("Assertion failed: false") != std::string::npos);
+        REQUIRE(data.last_level == stk::Fatal);
+        REQUIRE_THAT(data.last_msg, Contains("Assertion failed: false"));
 
         stk::log_remove_callback(log_callback, &data);
     }
@@ -182,17 +144,11 @@ TEST_CASE("error_dassert", "[error] [logging]")
         LogData data = { -1, "" };
         stk::log_add_callback(log_callback, &data, stk::Fatal);
 
-        bool thrown = false;
-        try {
-            DASSERT(true);
-        }
-        catch (stk::FatalException& ) {
-            thrown = true;
-        }
         // Error should not have been triggered
-        REQUIRE(!thrown);
+        REQUIRE_NOTHROW(DASSERT(true));
         
         // Check log
+        REQUIRE(data.last_level == -1);
         REQUIRE(data.last_msg == "");
 
         stk::log_remove_callback(log_callback, &data);

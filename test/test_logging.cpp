@@ -5,6 +5,9 @@
 #include <fstream>
 #include <string>
 
+using Catch::Matchers::Contains;
+using Catch::Matchers::StartsWith;
+
 namespace
 {
     struct LogData
@@ -60,7 +63,7 @@ TEST_CASE("logging_callback", "[logging]")
     // Should trigger callback, since Error < Fatal
     LOG(Fatal) << "Fatal";
     REQUIRE(data.last_level == stk::Fatal);
-    REQUIRE(data.last_msg.find("Fatal") != std::string::npos);
+    REQUIRE_THAT(data.last_msg, Contains("Fatal"));
 
     data = { -1, "" };
     stk::log_remove_callback(log_callback, &data);
@@ -88,19 +91,19 @@ TEST_CASE("logging_callback", "[logging]")
     // Should trigger for all messages
     LOG(Info) << "Info";
     REQUIRE(data.last_level == stk::Info);
-    REQUIRE(data.last_msg.find("Info") != std::string::npos);
+    REQUIRE_THAT(data.last_msg, Contains("Info"));
 
     LOG(Warning) << "Warning";
     REQUIRE(data.last_level == stk::Warning);
-    REQUIRE(data.last_msg.find("Warning") != std::string::npos);
+    REQUIRE_THAT(data.last_msg, Contains("Warning"));
     
     LOG(Error) << "Error";
     REQUIRE(data.last_level == stk::Error);
-    REQUIRE(data.last_msg.find("Error") != std::string::npos);
+    REQUIRE_THAT(data.last_msg, Contains("Error"));
     
     LOG(Fatal) << "Fatal";
     REQUIRE(data.last_level == stk::Fatal);
-    REQUIRE(data.last_msg.find("Fatal") != std::string::npos);
+    REQUIRE_THAT(data.last_msg, Contains("Fatal"));
 
     stk::log_remove_callback(log_callback, &data);
     stk::log_shutdown();
@@ -132,7 +135,7 @@ TEST_CASE("logging_user_type", "[logging]")
     UserType t {"AB", "C"};
 
     LOG(Info) << t;
-    REQUIRE(data.last_msg.find("ABC") != std::string::npos);
+    REQUIRE_THAT(data.last_msg, Contains("ABC"));
 
     stk::log_remove_callback(log_callback, &data);
     stk::log_shutdown();
@@ -161,12 +164,12 @@ TEST_CASE("logging_file", "[logging]")
         std::string line;
         REQUIRE(std::getline(fs, line));
         #ifdef STK_LOGGING_PREFIX_LEVEL
-            REQUIRE(line.find("FAT") == 0); // From prefix
+            REQUIRE_THAT(line, StartsWith("FAT")); // From prefix
         #endif
         #ifdef STK_LOGGING_PREFIX_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
+            REQUIRE_THAT(line, Contains("test_logging.cpp")); // From prefix
         #endif
-        REQUIRE(line.find("Fatal") != std::string::npos);
+        REQUIRE_THAT(line, Contains("Fatal"));
         REQUIRE(!std::getline(fs, line)); // Should only contain one line
     }
     
@@ -189,42 +192,83 @@ TEST_CASE("logging_file", "[logging]")
         std::string line;
         REQUIRE(std::getline(fs, line));
         #ifdef STK_LOGGING_PREFIX_LEVEL
-            REQUIRE(line.find("INF") == 0); // From prefix
+            REQUIRE_THAT(line, StartsWith("INF")); // From prefix
         #endif
         #ifdef STK_LOGGING_PREFIX_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
+            REQUIRE_THAT(line, Contains("test_logging.cpp")); // From prefix
         #endif
-        REQUIRE(line.find("Info") != std::string::npos);
+        REQUIRE_THAT(line, Contains("Info"));
         
         REQUIRE(std::getline(fs, line));
         #ifdef STK_LOGGING_PREFIX_LEVEL
-            REQUIRE(line.find("WAR") == 0); // From prefix
+            REQUIRE_THAT(line, StartsWith("WAR")); // From prefix
         #endif
         #ifdef STK_LOGGING_PREFIX_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
+            REQUIRE_THAT(line, Contains("test_logging.cpp")); // From prefix
         #endif
-        REQUIRE(line.find("Warning") != std::string::npos);
+        REQUIRE_THAT(line, Contains("Warning"));
         
         REQUIRE(std::getline(fs, line));
         #ifdef STK_LOGGING_PREFIX_LEVEL
-            REQUIRE(line.find("ERR") == 0); // From prefix
+            REQUIRE_THAT(line, StartsWith("ERR")); // From prefix
         #endif
         #ifdef STK_LOGGING_PREFIX_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
+            REQUIRE_THAT(line, Contains("test_logging.cpp")); // From prefix
         #endif
-        REQUIRE(line.find("Error") != std::string::npos);
+        REQUIRE_THAT(line, Contains("Error"));
         
         REQUIRE(std::getline(fs, line));
         #ifdef STK_LOGGING_PREFIX_LEVEL
-            REQUIRE(line.find("FAT") == 0); // From prefix
+            REQUIRE_THAT(line, StartsWith("FAT")); // From prefix
         #endif
         #ifdef STK_LOGGING_PREFIX_FILE
-            REQUIRE(line.find("test_logging.cpp") != std::string::npos); // From prefix
+            REQUIRE_THAT(line, Contains("test_logging.cpp")); // From prefix
         #endif
-        REQUIRE(line.find("Fatal") != std::string::npos);
+        REQUIRE_THAT(line, Contains("Fatal"));
         
         REQUIRE(!std::getline(fs, line));
     }
+
+    stk::log_shutdown();
+}
+
+TEST_CASE("logging_file_and_callback", "[logging]")
+{
+    // Check if both file and callback output works simultaneously
+
+    stk::log_init();
+    
+    LogData data = { -1, "" };
+    stk::log_add_callback(log_callback, &data, stk::Info);
+    stk::log_add_file("test_logging_file_3.txt", stk::Info);
+
+    LOG(Info) << "Info";
+    REQUIRE(data.last_level == stk::Info);
+    REQUIRE_THAT(data.last_msg, Contains("Info"));
+
+    LOG(Warning) << "Warning";
+    REQUIRE(data.last_level == stk::Warning);
+    REQUIRE_THAT(data.last_msg, Contains("Warning"));
+    
+    LOG(Error) << "Error";
+    REQUIRE(data.last_level == stk::Error);
+    REQUIRE_THAT(data.last_msg, Contains("Error"));
+    
+    LOG(Fatal) << "Fatal";
+    REQUIRE(data.last_level == stk::Fatal);
+    REQUIRE_THAT(data.last_msg, Contains("Fatal"));
+
+    std::ifstream fs("test_logging_file_3.txt");
+
+    std::string line;
+    REQUIRE(std::getline(fs, line));
+    REQUIRE_THAT(line, Contains("Info"));
+    REQUIRE(std::getline(fs, line));
+    REQUIRE_THAT(line, Contains("Warning"));
+    REQUIRE(std::getline(fs, line));
+    REQUIRE_THAT(line, Contains("Error"));
+    REQUIRE(std::getline(fs, line));
+    REQUIRE_THAT(line, Contains("Fatal"));
 
     stk::log_shutdown();
 }
