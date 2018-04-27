@@ -228,6 +228,7 @@ namespace stk
         }
         
         delete _logger_data;
+        _logger_data = nullptr;
     }
     void log_add_file(const char* file, LogLevel level)
     {
