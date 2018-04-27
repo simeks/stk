@@ -9,6 +9,7 @@ set(STK_SRCS
     "stk/volume/types.h"
     "stk/volume/volume.cpp"
     "stk/volume/volume.h"
+    "stk/volume/volume.inl"
 )
 
 add_library(stk STATIC ${STK_SRCS})

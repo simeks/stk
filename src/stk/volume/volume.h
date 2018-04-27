@@ -1,12 +1,21 @@
 #pragma once
 
+#include <stk/common/assert.h>
+
 #include "dim3.h"
 #include "types.h"
+
 
 #include <memory>
 
 namespace stk
 {
+    enum BorderMode
+    {
+        Border_Constant, // Zero padding outside volume
+        Border_Replicate
+    };
+
 #ifdef STK_USE_CUDA
     struct GpuVolume;
 #endif // STK_USE_CUDA
@@ -129,5 +138,63 @@ namespace stk
         float3 _origin; // Origin in world coordinates
         float3 _spacing; // Size of a voxel
     };
+
+    template<typename T>
+    class VolumeHelper : public Volume
+    {
+    public:
+        typedef T TVoxelType;
+        
+        // Creates a null (invalid) volume
+        VolumeHelper();
+        // Converts the given volume if the voxel type does not match
+        VolumeHelper(const Volume& other);
+        // Creates a new volume of the specified size
+        VolumeHelper(const dim3& size);
+        // Creates a new volume of the specified size and initializes it with the given value
+        explicit VolumeHelper(const dim3& size, const T& value);
+        // Creates a new volume and copies the given data
+        explicit VolumeHelper(const dim3& size, T* value);
+        ~VolumeHelper();
+
+        // Fills the volume with the specified value
+        void fill(const T& value);
+
+        // Returns value at 
+        T at(int x, int y, int z, BorderMode border_mode) const;
+        T at(int3 p, BorderMode border_mode) const;
+
+        T linear_at(float x, float y, float z, BorderMode border_mode) const;
+        T linear_at(float3 p, BorderMode border_mode) const;
+
+        VolumeHelper& operator=(const VolumeHelper& other);
+        VolumeHelper& operator=(const Volume& other);
+
+        const T& operator()(int x, int y, int z) const;
+        T& operator()(int x, int y, int z);
+        
+        const T& operator()(const int3& p) const;
+        T& operator()(const int3& p);
+
+        // Offset in bytes to the specified element
+        size_t offset(int x, int y, int z) const;
+
+    };
+
+    typedef VolumeHelper<uint8_t> VolumeUChar;
+    typedef VolumeHelper<uchar2>  VolumeUChar2;
+    typedef VolumeHelper<uchar3>  VolumeUChar3;
+    typedef VolumeHelper<uchar4>  VolumeUChar4;
+
+    typedef VolumeHelper<float>  VolumeFloat;
+    typedef VolumeHelper<float2> VolumeFloat2;
+    typedef VolumeHelper<float3> VolumeFloat3;
+    typedef VolumeHelper<float4> VolumeFloat4;
+
+    typedef VolumeHelper<double>  VolumeDouble;
+    typedef VolumeHelper<double2> VolumeDouble2;
+    typedef VolumeHelper<double3> VolumeDouble3;
+    typedef VolumeHelper<double4> VolumeDouble4;
 }
 
+#include "volume.inl"

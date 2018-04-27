@@ -40,7 +40,7 @@ VolumeData::~VolumeData()
         free(data);
 }
 
-Volume::Volume() : _ptr(NULL), _stride(0)
+Volume::Volume() : _ptr(NULL), _stride(0), _voxel_type(Type_Unknown)
 {
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
@@ -171,14 +171,15 @@ Volume::Volume(const Volume& other) :
 }
 Volume& Volume::operator=(const Volume& other)
 {
-    _data = other._data;
-    _ptr = other._ptr;
-    _stride = other._stride;
-    _size = other._size;
-    _voxel_type = other._voxel_type;
-    _origin = other._origin;
-    _spacing = other._spacing;
-
+    if (this != &other) {
+        _data = other._data;
+        _ptr = other._ptr;
+        _stride = other._stride;
+        _size = other._size;
+        _voxel_type = other._voxel_type;
+        _origin = other._origin;
+        _spacing = other._spacing;
+    }
     return *this;
 }
 void Volume::allocate(const dim3& size, Type voxel_type)
@@ -259,5 +260,6 @@ void Volume::download(const GpuVolume& gpu_volume)
 }
 
 #endif // STK_USE_CUDA
+
 } // namespace stk
 

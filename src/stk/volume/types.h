@@ -46,7 +46,9 @@ namespace stk
         };
     };
 
-    #define TYPE_TRAIT(T, Id) \
+    // TODO: Annoying thing: you'll have to explicitly typecast type_id<>::id into Type
+
+    #define TYPE_ID(T, Id) \
         template<> \
         struct type_id<T> \
         { \
@@ -56,21 +58,21 @@ namespace stk
             }; \
         };
 
-    TYPE_TRAIT(float, Type_Float);
-    TYPE_TRAIT(float2, Type_Float2);
-    TYPE_TRAIT(float3, Type_Float3);
-    TYPE_TRAIT(float4, Type_Float4);
+    TYPE_ID(float, Type_Float);
+    TYPE_ID(float2, Type_Float2);
+    TYPE_ID(float3, Type_Float3);
+    TYPE_ID(float4, Type_Float4);
 
-    TYPE_TRAIT(double, Type_Double);
-    TYPE_TRAIT(double2, Type_Double2);
-    TYPE_TRAIT(double3, Type_Double3);
-    TYPE_TRAIT(double4, Type_Double4);
+    TYPE_ID(double, Type_Double);
+    TYPE_ID(double2, Type_Double2);
+    TYPE_ID(double3, Type_Double3);
+    TYPE_ID(double4, Type_Double4);
 
-    TYPE_TRAIT(uint8_t, Type_UChar);
-    TYPE_TRAIT(uchar2, Type_UChar2);
-    TYPE_TRAIT(uchar3, Type_UChar3);
-    TYPE_TRAIT(uchar4, Type_UChar4);
+    TYPE_ID(uint8_t, Type_UChar);
+    TYPE_ID(uchar2, Type_UChar2);
+    TYPE_ID(uchar3, Type_UChar3);
+    TYPE_ID(uchar4, Type_UChar4);
 
-    #undef TYPE_TRAIT
+    #undef TYPE_ID
 }
 
