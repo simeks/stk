@@ -51,3 +51,6 @@ namespace stk
 
 // Usage: FATAL_IF(failed==true) << "Error message";
 #define FATAL_IF(expr) !(expr) ? (void)0 : FATAL()
+
+// Just a macro to identify "TODOs" in code
+#define NOT_IMPLEMENTED() FATAL()
