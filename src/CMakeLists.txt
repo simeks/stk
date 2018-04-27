@@ -7,6 +7,8 @@ set(STK_SRCS
     "stk/volume/dim3.h"
     "stk/volume/types.cpp"
     "stk/volume/types.h"
+    "stk/volume/volume.cpp"
+    "stk/volume/volume.h"
 )
 
 add_library(stk STATIC ${STK_SRCS})
