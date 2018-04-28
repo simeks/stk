@@ -1,6 +1,7 @@
 #include "io.h"
 #include "vtk.h"
 
+#include "stk/common/log.h"
 #include "stk/volume/volume.h"
 
 #include <algorithm>
@@ -83,6 +84,9 @@ namespace stk
             if (r.can_read(signature.data(), r.signature_length()))
                 return r;
         }
+
+        LOG(Error) << "No reader found for file " << filename << ", unsupported format?";
+
         return {0};
     }
 
@@ -98,8 +102,10 @@ namespace stk
     Volume read_volume(const char* filename)
     {
         VolumeReader r = find_reader(filename);
-        FATAL_IF(!r.read) << "No reader found for file " << filename << ", unsupported format?";
-
+        if (!r.read) {
+            LOG(Error) << "Failed to read file " << filename;
+            return Volume();
+        }
         return r.read(filename);
     }
     void write_volume(const char* filename, const Volume& vol)

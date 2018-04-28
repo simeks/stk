@@ -1,5 +1,6 @@
 #include "vtk.h"
 
+#include "stk/common/log.h"
 #include "stk/volume/volume.h"
 
 #include <assert.h>
@@ -263,8 +264,7 @@ namespace vtk {
         std::stringstream ss;
         Volume vol = read_volume(filename, ss);
         
-        FATAL_IF(!vol.valid())
-            << ss.str();
+        LOG(Error) << ss.str();
         
         return vol;
     }
@@ -399,7 +399,8 @@ namespace vtk {
         if (!ext)
             return false;
 
-        std::string s_ext(ext);
+        std::string s_ext(ext+1); // Skip '.'
+        printf("s_ext: %s\n", s_ext.c_str());
 
         for (size_t i = 0; i < s_ext.length(); ++i) 
             s_ext[i] = (char)::tolower(s_ext[i]);
