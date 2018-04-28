@@ -6,6 +6,7 @@ set(STK_TEST_SRCS
     "test_math.cpp"
     "test_logging.cpp"
     "test_types.cpp"
+    "test_util.h"
     "test_volume.cpp"
     )
 

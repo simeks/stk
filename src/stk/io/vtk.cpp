@@ -264,7 +264,7 @@ namespace vtk {
         std::stringstream ss;
         Volume vol = read_volume(filename, ss);
         
-        LOG(Error) << ss.str();
+        LOG_IF(Error, !vol.valid()) << ss.str();
         
         return vol;
     }
@@ -400,8 +400,7 @@ namespace vtk {
             return false;
 
         std::string s_ext(ext+1); // Skip '.'
-        printf("s_ext: %s\n", s_ext.c_str());
-
+        
         for (size_t i = 0; i < s_ext.length(); ++i) 
             s_ext[i] = (char)::tolower(s_ext[i]);
 

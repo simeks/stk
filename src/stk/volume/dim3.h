@@ -22,7 +22,7 @@ struct dim3
 
 inline bool operator==(const dim3& l, const dim3& r)
 {
-    return (l.x == r.x && l.y == r.y && l.y == r.y && l.z == r.z);
+    return (l.x == r.x && l.y == r.y && l.z == r.z);
 }
 inline bool operator!=(const dim3& l, const dim3& r)
 {

@@ -32,6 +32,11 @@ TEST_CASE("types", "[volume]")
         REQUIRE(stk::type_id<float3>::id == stk::Type_Float3);
         REQUIRE(stk::type_id<float4>::id == stk::Type_Float4);
 
+        REQUIRE(stk::type_id<float>::num_comp == 1);
+        REQUIRE(stk::type_id<float2>::num_comp == 2);
+        REQUIRE(stk::type_id<float3>::num_comp == 3);
+        REQUIRE(stk::type_id<float4>::num_comp == 4);
+
         REQUIRE_THAT(stk::as_string(stk::Type_Float), Equals("float"));
         REQUIRE_THAT(stk::as_string(stk::Type_Float2), Equals("float2"));
         REQUIRE_THAT(stk::as_string(stk::Type_Float3), Equals("float3"));
@@ -59,6 +64,11 @@ TEST_CASE("types", "[volume]")
         REQUIRE(stk::type_id<double3>::id == stk::Type_Double3);
         REQUIRE(stk::type_id<double4>::id == stk::Type_Double4);
 
+        REQUIRE(stk::type_id<double>::num_comp == 1);
+        REQUIRE(stk::type_id<double2>::num_comp == 2);
+        REQUIRE(stk::type_id<double3>::num_comp == 3);
+        REQUIRE(stk::type_id<double4>::num_comp == 4);
+
         REQUIRE_THAT(stk::as_string(stk::Type_Double), Equals("double"));
         REQUIRE_THAT(stk::as_string(stk::Type_Double2), Equals("double2"));
         REQUIRE_THAT(stk::as_string(stk::Type_Double3), Equals("double3"));
@@ -85,6 +95,11 @@ TEST_CASE("types", "[volume]")
         REQUIRE(stk::type_id<uchar2>::id == stk::Type_UChar2);
         REQUIRE(stk::type_id<uchar3>::id == stk::Type_UChar3);
         REQUIRE(stk::type_id<uchar4>::id == stk::Type_UChar4);
+
+        REQUIRE(stk::type_id<uint8_t>::num_comp == 1);
+        REQUIRE(stk::type_id<uchar2>::num_comp == 2);
+        REQUIRE(stk::type_id<uchar3>::num_comp == 3);
+        REQUIRE(stk::type_id<uchar4>::num_comp == 4);
 
         REQUIRE_THAT(stk::as_string(stk::Type_UChar), Equals("uchar"));
         REQUIRE_THAT(stk::as_string(stk::Type_UChar2), Equals("uchar2"));

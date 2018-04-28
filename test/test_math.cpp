@@ -3,6 +3,23 @@
 #include <stk/math/float3.h>
 #include <stk/math/int3.h>
 
+TEST_CASE("math", "[math]")
+{
+    REQUIRE(uchar2{1,2} == uchar2{1,2});
+    REQUIRE(uchar2{3,4} != uchar2{1,2});
+    REQUIRE(uchar3{1,2,3} == uchar3{1,2,3});
+    REQUIRE(uchar3{4,5,6} != uchar3{1,2,3});
+    REQUIRE(uchar4{1,2,3,4} == uchar4{1,2,3,4});
+    REQUIRE(uchar4{5,6,7,8} != uchar4{1,2,3,4});
+    
+    REQUIRE(int2{1,2} == int2{1,2});
+    REQUIRE(int2{3,4} != int2{1,2});
+    REQUIRE(int3{1,2,3} == int3{1,2,3});
+    REQUIRE(int3{4,5,6} != int3{1,2,3});
+    REQUIRE(int4{1,2,3,4} == int4{1,2,3,4});
+    REQUIRE(int4{5,6,7,8} != int4{1,2,3,4});
+}
+
 TEST_CASE("math_float3_norm", "[math]")
 {
     float3 v{1,2,3};

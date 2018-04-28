@@ -75,6 +75,60 @@ struct double4
 
 #endif
 
+inline bool operator==(uchar2 l, uchar2 r)
+{
+    return (l.x == r.x && l.y == r.y);
+}
+inline bool operator!=(uchar2 l, uchar2 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(uchar3 l, uchar3 r)
+{
+    return (l.x == r.x && l.y == r.y && l.y == r.y);
+}
+inline bool operator!=(uchar3 l, uchar3 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(uchar4 l, uchar4 r)
+{
+    return (l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w);
+}
+inline bool operator!=(uchar4 l, uchar4 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(int2 l, int2 r)
+{
+    return (l.x == r.x && l.y == r.y);
+}
+inline bool operator!=(int2 l, int2 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(int3 l, int3 r)
+{
+    return (l.x == r.x && l.y == r.y && l.y == r.y);
+}
+inline bool operator!=(int3 l, int3 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(int4 l, int4 r)
+{
+    return (l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w);
+}
+inline bool operator!=(int4 l, int4 r)
+{
+    return !operator==(l, r);
+}
+
 // Overloads for convenient logging of types
 
 inline std::ostream& operator<<(std::ostream& s, const uchar2& v)
