@@ -123,3 +123,5 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
 #else
     #define LOG(level) stk::LogMessage(stk::##level).stream()
 #endif
+
+#define LOG_IF(level, expr) !(expr) ? (void)0 : LOG(level)
