@@ -19,7 +19,7 @@ namespace stk
         size_t (*signature_length)();
 
         // Determines based on the file signature if this reader can read it
-        bool (*can_read)(const char* signature, size_t len);
+        bool (*can_read)(const char* filename, const char* signature, size_t len);
     };
     struct VolumeWriter
     {
@@ -81,7 +81,7 @@ namespace stk
         f.close();
 
         for (auto& r : _io_registry.readers) {
-            if (r.can_read(signature.data(), r.signature_length()))
+            if (r.can_read(filename, signature.data(), r.signature_length()))
                 return r;
         }
 

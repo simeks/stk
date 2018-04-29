@@ -276,7 +276,7 @@ namespace vtk {
         return 5;
     }
 
-    bool can_read(const char* signature, size_t len)
+    bool can_read(const char* /*filename*/, const char* signature, size_t len)
     {
         return len >= signature_length() &&
                 memcmp(signature, _vtk_signature, signature_length()) == 0;

@@ -19,4 +19,5 @@ set(STK_SRCS
 add_library(stk STATIC ${STK_SRCS})
 
 target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(stk niftiio)
 

@@ -2,13 +2,9 @@
 
 #include "io.h"
 
-/// Very simple implementation of reading/writing of VTK files
-/// This will in no way cover the whole VTK specs and have only 
-/// been tested on a small subset of different volumes.
-
 namespace stk
 {
-    namespace vtk
+    namespace nifti
     {
         // Reading
 
