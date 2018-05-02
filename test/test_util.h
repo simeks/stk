@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stk/math/types.h"
-#include "stk/volume/volume.h"
+#include "stk/image/volume.h"
 
 // Misc utils for testing
 

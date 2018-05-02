@@ -1,7 +1,7 @@
 #include "vtk.h"
 
 #include "stk/common/log.h"
-#include "stk/volume/volume.h"
+#include "stk/image/volume.h"
 
 #include <assert.h>
 #include <fstream>

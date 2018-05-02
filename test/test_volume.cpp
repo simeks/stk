@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
 #include <stk/common/error.h>
-#include <stk/volume/volume.h>
+#include <stk/image/volume.h>
 
 using namespace stk;
 

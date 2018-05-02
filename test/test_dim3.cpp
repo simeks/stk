@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include <stk/volume/dim3.h>
+#include <stk/image/dim3.h>
 
 TEST_CASE("dim3 op", "[volume]")
 {

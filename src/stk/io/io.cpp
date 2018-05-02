@@ -1,8 +1,9 @@
 #include "io.h"
+#include "nifti.h"
 #include "vtk.h"
 
 #include "stk/common/log.h"
-#include "stk/volume/volume.h"
+#include "stk/image/volume.h"
 
 #include <algorithm>
 #include <fstream>
@@ -19,6 +20,8 @@ namespace stk
         size_t (*signature_length)();
 
         // Determines based on the file signature if this reader can read it
+        // Preferably each module should avoid opening the file by itself and just 
+        //  use the provided signature to minimize the amount of reads.
         bool (*can_read)(const char* filename, const char* signature, size_t len);
     };
     struct VolumeWriter
@@ -47,6 +50,20 @@ namespace stk
 
             readers.push_back(vtk_reader);
             writers.push_back(vtk_writer);
+
+            // VTK
+            VolumeReader nii_reader = {
+                nifti::read,
+                nifti::signature_length,
+                nifti::can_read
+            };
+            VolumeWriter nii_writer = {
+                nifti::write,
+                nifti::can_write
+            };
+
+            readers.push_back(nii_reader);
+            writers.push_back(nii_writer);
         }
         std::vector<VolumeReader> readers;
         std::vector<VolumeWriter> writers;

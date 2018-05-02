@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include <stk/volume/types.h>
+#include <stk/image/types.h>
 
 using Catch::Matchers::Equals;
 
