@@ -1,78 +1,119 @@
 #include "nifti.h"
+#include "stk/common/log.h"
 
 #include <nifti1_io.h>
 
-namespace nifti
-{
+// TODO: Byte swapping?
+
+namespace stk {
+namespace nifti {
     Volume read(const char* filename)
     {
-        nifti_image* nim = nifti_image_read(filename, 1);
-        if (!nim) {
+        // NIFTI-1
+        // TODO: [nifti] Handle image meta data
+
+        znzFile fp = znzopen(filename, "rb", nifti_is_gzfile(filename));
+        if (znz_isnull(fp)) {
+            LOG(Error) << "Failed to open file " << filename << " for reading";
             return Volume();
         }
 
-        FATAL_IF(nim->ndim != 3) << "Nifti IO: Only supports 3 dimensional data";
-
-        int ncomp = 1;
-        if (nim->intent_code == NIFTI_INTENT_VECTOR) {
-            ncomp = nim->dim[5];
+        nifti_1_header nhdr = {0};
+        size_t r = znzread(&nhdr, 1, sizeof(nhdr), fp);
+        if (r < sizeof(nhdr)) {
+            LOG(Error) << "Failed to read header from file " << filename;
+            znzclose(fp);
+            return Volume();
         }
 
-        uint8_t voxel_type = voxel::Type_Unknown;
-        switch (nim->datatype) {
-            case NIFTI_TYPE_UINT8:
-                if (ncomp == 1) voxel_type = Type_UChar;
-                if (ncomp == 2) voxel_type = Type_UChar2;
-                if (ncomp == 3) voxel_type = Type_UChar3;
-                if (ncomp == 4) voxel_type = Type_UChar4;
-            break;
+        if (strcmp(nhdr.magic, "n+1") != 0) {
+            LOG(Error) << "Failed to read " << filename 
+                       << ": Only supports NIFTI-1 and single file images";
+            znzclose(fp);
+            return Volume();
+        }
+
+        if (!(nhdr.dim[0] == 3 
+        || (nhdr.intent_code == NIFTI_INTENT_VECTOR && nhdr.dim[0] == 5))) {
+            LOG(Error) << "Failed to read " << filename 
+                       << ": Only three dimensional volumes are supported";
+            znzclose(fp);
+            return Volume();
+        }
+
+        dim3 size = {(uint32_t)nhdr.dim[1], (uint32_t)nhdr.dim[2], (uint32_t)nhdr.dim[3]};
+        int ncomp = nhdr.intent_code == NIFTI_INTENT_VECTOR ? nhdr.dim[5] : 1;
+
+        Type voxel_type = Type_Unknown;
+        switch(nhdr.datatype)
+        {
             case NIFTI_TYPE_FLOAT32:
                 if (ncomp == 1) voxel_type = Type_Float;
-                if (ncomp == 2) voxel_type = Type_Float2;
-                if (ncomp == 3) voxel_type = Type_Float3;
-                if (ncomp == 4) voxel_type = Type_Float4;
+            else if (ncomp == 2) voxel_type = Type_Float2; 
+            else if (ncomp == 3) voxel_type = Type_Float3; 
+            else if (ncomp == 4) voxel_type = Type_Float4; 
             break;
             case NIFTI_TYPE_FLOAT64:
                 if (ncomp == 1) voxel_type = Type_Double;
-                if (ncomp == 2) voxel_type = Type_Double2;
-                if (ncomp == 3) voxel_type = Type_Double3;
-                if (ncomp == 4) voxel_type = Type_Double4;
+            else if (ncomp == 2) voxel_type = Type_Double2; 
+            else if (ncomp == 3) voxel_type = Type_Double3; 
+            else if (ncomp == 4) voxel_type = Type_Double4; 
             break;
+        case NIFTI_TYPE_UINT8:
+                 if (ncomp == 1) voxel_type = Type_UChar; 
+            else if (ncomp == 2) voxel_type = Type_UChar2; 
+            else if (ncomp == 3) voxel_type = Type_UChar3; 
+            else if (ncomp == 4) voxel_type = Type_UChar4; 
+            break;
+        };
+
+        if (voxel_type == Type_Unknown) {
+            LOG(Error) << "Failed to read " << filename 
+                       << ": Unsupported data type (" << nhdr.datatype << ")";
+            znzclose(fp);
+            return Volume();
         }
 
-        FATAL_IF(voxel_type == voxel::Type_Unknown) << "Nifti IO: Unrecognized data type (" << nim->datatype << ")";
-        
-        dim3 size {
-            nim.nx,
-            nim.ny,
-            nim.nz
-        };
-        float3 spacing {
-            nim.dx,
-            nim.dy,
-            nim.dz
-        };
-        float3 origin {0, 0, 0};
-
-        // TODO: Don't really know what these mean
-        ASSERT(nim->qform_code == 0 && nim->sform_code == 0);
-        mat44 t = nim->sto_xyz;
-
-        origin.x = -t.m[0][3]
-        origin.y = -t.m[1][3]
-        origin.z = -t.m[2][3]
-
         Volume vol(size, voxel_type);
-        vol.set_origin(origin);
-        vol.set_spacing(spacing);
+        vol.set_spacing({nhdr.pixdim[1], nhdr.pixdim[2], nhdr.pixdim[3]});
+        
+        // Only supported modes for now
+        if (nhdr.qform_code != NIFTI_XFORM_SCANNER_ANAT) {
+            LOG(Error) << "Failed to read " << filename 
+                       << ": Unsupported qform code, only supports NIFTI_XFORM_SCANNER_ANAT";
+            znzclose(fp);
+            return Volume();
+        }
+        if (nhdr.sform_code != NIFTI_XFORM_UNKNOWN) {
+            LOG(Error) << "Failed to read " << filename 
+                       << ": Unsupported sform code, only supports NIFTI_XFORM_UNKNOWN";
+            znzclose(fp);
+            return Volume();
+        }
 
-        size_t num_bytes = size.x * size.y * size.z * voxel::size(voxel_type);
-        ASSERT(num_bytes == nim->nvox * nim->nbyper);
+        // Set according to method 2 (nifti1.h)
 
-        memcpy((char*)vol.ptr(), nim->data, num_bytes);
+        vol.set_origin({nhdr.qoffset_x, nhdr.qoffset_y, nhdr.qoffset_z});
 
-        nifti_image_free(nim);
-        return out;
+        // TODO: Ignoring orientation for now
+
+        // Offset to image data
+        int vox_offset = (int)nhdr.vox_offset;
+        ASSERT(vox_offset >= sizeof(nhdr));
+
+        znzseek(fp, vox_offset, SEEK_SET);
+
+        size_t num_bytes = (nhdr.bitpix/8)*nhdr.dim[1]*nhdr.dim[2]*nhdr.dim[3];
+        r = znzread(vol.ptr(), 1, num_bytes, fp);
+        if (r < num_bytes) {
+            LOG(Error) << "Failed to read image data from file " << filename;
+            znzclose(fp);
+            return Volume();
+    }
+
+        znzclose(fp);
+
+        return vol;
     }
 
     size_t signature_length()
@@ -93,68 +134,229 @@ namespace nifti
 
     void write(const char* filename, const Volume& vol)
     {
-        nifti_image* nim = nifti_simple_init_nim();
-        nim->nifti_type = NIFTI_FTYPE_NIFTI1_1;
+        // NIFTI-1
 
-        const char* ext = nifti_find_file_extension(filename);
-        FATAL_IF(!ext) 
-            << "Bad nifti file name: " << filename;
-
-        bool is_compressed = false;
-        if (strcmp(ext[strlen(ext)-3), ".gz") == 0) {
-            is_compressed = true;
-        }
-
-        const char* basename = nifti_makebasename(filename);
-        nim->fname = nifti_makehdrname(basename, nim->nifti_type, false, is_compressed);
-        nim->iname = nifti_makeimgname(basename, nim->nifti_type, false, is_compressed);
-        free(basename);
+        nifti_1_header nhdr = {0};
+        nhdr.sizeof_hdr = sizeof(nhdr);
+        nhdr.dim_info = 0;
 
         dim3 size = vol.size();
+        int ncomp = num_components(vol.voxel_type());
 
-        nim->xyz_units = NIFTI_UNITS_MM;
-        nim->dim[7] = nim->nw = 1;
-        nim->dim[6] = nim->nv = 1;
-        nim->dim[5] = nim->nu = 1;
-        nim->dim[4] = nim->nt = 1;
+        nhdr.dim[0] = ncomp == 1 ? 3 : 5;
+        nhdr.dim[1] = (short)size.x;
+        nhdr.dim[2] = (short)size.y;
+        nhdr.dim[3] = (short)size.z;
+        nhdr.dim[4] = 1;
+        nhdr.dim[5] = (short)ncomp;
+        nhdr.dim[6] = 1;
+        nhdr.dim[7] = 1;
 
-        nim->dim[1] = nim->nx = size.x;
-        nim->dim[2] = nim->ny = size.y;
-        nim->dim[3] = nim->nz = size.z;
+        // TODO: [nifti] Handle image meta data
+        // intent_p1, intent_p2, intent_p3
 
+        nhdr.intent_code = ncomp != 1 ? NIFTI_INTENT_VECTOR : 0;
 
         switch(base_type(vol.voxel_type()))
         {
         case Type_Float:
-            nim->datatype = NIFTI_TYPE_FLOAT32;
-            nim->nbyper = 4;
+            nhdr.datatype = NIFTI_TYPE_FLOAT32;
+            nhdr.bitpix = 32;
+            break;
         case Type_Double:
-            nim->datatype = NIFTI_TYPE_FLOAT64;
-            nim->nbyper = 8;            
+            nhdr.datatype = NIFTI_TYPE_FLOAT64;
+            nhdr.bitpix = 64;
+            break;
         case Type_UChar:
-            nim->datatype = NIFTI_TYPE_UINT8;
-            nim->nbyper = 1;
+            nhdr.datatype = NIFTI_TYPE_UINT8;
+            nhdr.bitpix = 8;
+            break;
+        default:
+            FATAL() << "Unsupported format";
         };
         
-        int ncomp = num_components(vol.voxel_type());
-        if (ncomp == 1) {
-            nim->ndim = 3;
-            num->dim[0] = 3;
-        }
-        else {
-
+        if (ncomp > 1) {
+            nhdr.bitpix *= (short)ncomp;
         }
 
-        nim->qform_code = 0;
-        nim->scl_slope = 1.0f;
-        nim->scl_inter = 0.0f;
+        nhdr.slice_start = 0; // TODO: [nifti] Handle image meta data
 
+        float qfac = 1.0f;
+        nhdr.pixdim[0] = qfac; // TODO: [nifti] Handle image meta data
 
-        nifti_image_free(nim);
+        float3 spacing = vol.spacing();
+        nhdr.pixdim[1] = spacing.x;
+        nhdr.pixdim[2] = spacing.y;
+        nhdr.pixdim[3] = spacing.z;
+        nhdr.pixdim[4] = 1.0f;
+        nhdr.pixdim[5] = 1.0f;
+        nhdr.pixdim[6] = 1.0f;
+        nhdr.pixdim[7] = 1.0f;
+
+        nhdr.vox_offset = sizeof(nhdr); // TODO: [nifti] Handle image meta data
+
+        nhdr.scl_slope = 1.0f; // TODO: [nifti] Handle slope/inter
+        nhdr.scl_inter = 0.0f; // TODO: [nifti] Handle slope/inter
+
+        // TODO: [nifti] Handle image meta data
+        nhdr.slice_end = 0;
+        nhdr.slice_code = 0;
+        nhdr.xyzt_units = NIFTI_UNITS_MM;
+        nhdr.cal_max = 0.0f;
+        nhdr.cal_min = 0.0f;
+        nhdr.slice_duration = 0.0f;
+        nhdr.toffset = 0.0f;
+
+        strncpy(nhdr.descrip, "STK", 3); // TODO: Version #
+        // nhdr.descripaux_file
+
+        // Only supported modes for now
+        nhdr.qform_code = NIFTI_XFORM_SCANNER_ANAT;
+        nhdr.sform_code = NIFTI_XFORM_UNKNOWN;
+        
+        // Set according to method 2 (nifti1.h)
+         
+        float3 origin = vol.origin();
+
+        nhdr.quatern_b = 0;
+        nhdr.quatern_c = 0;
+        nhdr.quatern_d = 0;
+
+        nhdr.qoffset_x = origin.x;
+        nhdr.qoffset_y = origin.y;
+        nhdr.qoffset_z = origin.z;
+
+        // srow_x, srow_y, srow_z (set to all zeros)
+        // intent_name
+        
+        strncpy(nhdr.magic, "n+1", 4); // Nifti1, data in same file as header
+
+        znzFile fp = znzopen(filename, "wb", nifti_is_gzfile(filename));
+        FATAL_IF(znz_isnull(fp)) 
+            << "Failed to open file " << filename << " for writing";
+
+        // Write header
+        size_t w = znzwrite(&nhdr, 1, sizeof(nhdr), fp);
+        if(w < sizeof(nhdr)) {
+            znzclose(fp);
+            FATAL() << "Failed to write to file " << filename;
+        }
+
+        // Write image data
+        size_t num_bytes = (nhdr.bitpix/8)*nhdr.dim[1]*nhdr.dim[2]*nhdr.dim[3];
+        w = znzwrite(vol.ptr(), 1, num_bytes, fp);
+        if(w < num_bytes) {
+            znzclose(fp);
+            FATAL() << "Failed to write to file " << filename;
+        }
+
+        znzclose(fp);
     }
 
     bool can_write(const char* filename)
     {
         return nifti_is_complete_filename(filename) > 0;
     }
-}
+        switch(base_type(vol.voxel_type()))
+        {
+        case Type_Float:
+            nhdr.datatype = NIFTI_TYPE_FLOAT32;
+            nhdr.bitpix = 32;
+            break;
+        case Type_Double:
+            nhdr.datatype = NIFTI_TYPE_FLOAT64;
+            nhdr.bitpix = 64;
+            break;
+        case Type_UChar:
+            nhdr.datatype = NIFTI_TYPE_UINT8;
+            nhdr.bitpix = 8;
+            break;
+        default:
+            FATAL() << "Unsupported format";
+        };
+
+        if (ncomp > 1) {
+            nhdr.bitpix *= (short)ncomp;
+        }
+
+        nhdr.slice_start = 0; // TODO: [nifti] Handle image meta data
+
+        float qfac = 1.0f;
+        nhdr.pixdim[0] = qfac; // TODO: [nifti] Handle image meta data
+
+        float3 spacing = vol.spacing();
+        nhdr.pixdim[1] = spacing.x;
+        nhdr.pixdim[2] = spacing.y;
+        nhdr.pixdim[3] = spacing.z;
+        nhdr.pixdim[4] = 1.0f;
+        nhdr.pixdim[5] = 1.0f;
+        nhdr.pixdim[6] = 1.0f;
+        nhdr.pixdim[7] = 1.0f;
+
+        nhdr.vox_offset = sizeof(nhdr); // TODO: [nifti] Handle image meta data
+
+        nhdr.scl_slope = 1.0f; // TODO: [nifti] Handle slope/inter
+        nhdr.scl_inter = 0.0f; // TODO: [nifti] Handle slope/inter
+
+        // TODO: [nifti] Handle image meta data
+        nhdr.slice_end = 0;
+        nhdr.slice_code = 0;
+        nhdr.xyzt_units = NIFTI_UNITS_MM;
+        nhdr.cal_max = 0.0f;
+        nhdr.cal_min = 0.0f;
+        nhdr.slice_duration = 0.0f;
+        nhdr.toffset = 0.0f;
+
+        strncpy(nhdr.descrip, "STK", 3); // TODO: Version #
+        // nhdr.descripaux_file
+
+        // Only supported modes for now
+        nhdr.qform_code = NIFTI_XFORM_SCANNER_ANAT;
+        nhdr.sform_code = NIFTI_XFORM_UNKNOWN;
+        
+        // Set according to method 2 (nifti1.h)
+         
+        float3 origin = vol.origin();
+
+        nhdr.quatern_b = 0;
+        nhdr.quatern_c = 0;
+        nhdr.quatern_d = 0;
+
+        nhdr.qoffset_x = origin.x;
+        nhdr.qoffset_y = origin.y;
+        nhdr.qoffset_z = origin.z;
+
+        // srow_x, srow_y, srow_z (set to all zeros)
+        // intent_name
+        
+        strncpy(nhdr.magic, "n+1", 4); // Nifti1, data in same file as header
+
+        znzFile fp = znzopen(filename, "wb", nifti_is_gzfile(filename));
+        FATAL_IF(znz_isnull(fp)) 
+            << "Failed to open file " << filename << " for writing";
+
+        // Write header
+        size_t w = znzwrite(&nhdr, 1, sizeof(nhdr), fp);
+        if(w < sizeof(nhdr)) {
+            znzclose(fp);
+            FATAL() << "Failed to write to file " << filename;
+        }
+
+        // Write image data
+        size_t num_bytes = (nhdr.bitpix/8)*nhdr.dim[1]*nhdr.dim[2]*nhdr.dim[3];
+        w = znzwrite(vol.ptr(), 1, num_bytes, fp);
+        if(w < num_bytes) {
+            znzclose(fp);
+            FATAL() << "Failed to write to file " << filename;
+        }
+
+        znzclose(fp);
+    }
+
+    bool can_write(const char* filename)
+    {
+        return nifti_is_complete_filename(filename) > 0;
+    }
+    
+} // namespace nifti
+} // namespace stk

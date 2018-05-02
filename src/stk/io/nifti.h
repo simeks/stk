@@ -2,6 +2,10 @@
 
 #include "io.h"
 
+// Module for nifti IO
+// TODO: Support for setting/getting QForm/SForm matrices.
+//       Currently both are ignored and we only read origin and spacing.
+
 namespace stk
 {
     namespace nifti
