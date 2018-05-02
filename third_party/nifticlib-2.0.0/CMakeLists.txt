@@ -48,13 +48,13 @@ ELSE("${ITK_VERSION_MAJOR}" GREATER 0.0)
   SET(NIFTI_INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin")
   SET(NIFTI_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
   SET(NIFTI_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/nifti")
-  SET(NIFTI_ZLIB_LIBRARIES "zlib")
+  SET(NIFTI_ZLIB_LIBRARIES "zlibstatic")
   SET(NIFTI_INSTALL_NO_DEVELOPMENT 0)
   SET(NIFTI_INSTALL_NO_LIBRARIES 0)
 
   #Needs an if clause and more work before testing can take place.
-  SUBDIRS(Testing)
-  SUBDIRS(nifticdf utils)
+  #SUBDIRS(Testing)
+  #SUBDIRS(nifticdf utils)
 
   OPTION(USE_FSL_CODE "If OFF, The copyright of this code is questionable for inclusion with nifti." OFF)
   MARK_AS_ADVANCED(USE_FSL_CODE)
