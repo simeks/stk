@@ -27,11 +27,17 @@ namespace nifti {
             return Volume();
         }
 
-        if (strcmp(nhdr.magic, "n+1") != 0) {
+        int nifti_v = NIFTI_VERSION(nhdr);
+        if (nifti_v != 1 || !NIFTI_ONEFILE(nhdr)) {
             LOG(Error) << "Failed to read " << filename 
                        << ": Only supports NIFTI-1 and single file images";
             znzclose(fp);
             return Volume();
+        }
+
+        bool need_swap =  NIFTI_NEEDS_SWAP(nhdr);
+        if (need_swap) {
+            swap_nifti_header(&nhdr, nifti_v);
         }
 
         if (!(nhdr.dim[0] == 3 
@@ -113,6 +119,11 @@ namespace nifti {
         }
 
         znzclose(fp);
+
+        int scalar_size = (int)type_size(base_type(voxel_type));
+        if (need_swap) {
+            nifti_swap_Nbytes(size.x*size.y*size.z*ncomp, scalar_size, vol.ptr());
+        }
 
         return vol;
     }
