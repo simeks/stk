@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
+option(STK_BUILD_EXAMPLES "Build examples" ON)
 option(STK_BUILD_TESTS "Build unit tests" ON)
 option(STK_ENABLE_CUDA "Enables CUDA support" OFF)
 option(STK_WARNINGS_ARE_ERRORS "Warnings are treated as errors" OFF)
@@ -87,6 +88,9 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_LI
 add_subdirectory(${THIRD_PARTY_DIR})
 add_subdirectory(src)
 
+if (STK_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 if (STK_BUILD_TESTS)
     add_subdirectory(test)
 endif()
