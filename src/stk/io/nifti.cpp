@@ -41,9 +41,11 @@ namespace nifti {
         }
 
         if (!(nhdr.dim[0] == 3 
-        || (nhdr.intent_code == NIFTI_INTENT_VECTOR && nhdr.dim[0] == 5))) {
+        || (nhdr.intent_code == NIFTI_INTENT_VECTOR && nhdr.dim[0] == 5)
+        || (nhdr.dim[0] == 4 && nhdr.dim[4] == 1))) { // Special-case
             LOG(Error) << "Failed to read " << filename 
                        << ": Only three dimensional volumes are supported";
+
             znzclose(fp);
             return Volume();
         }
