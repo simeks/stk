@@ -141,7 +141,7 @@ inline bool operator!=(char2 l, char2 r)
 
 inline bool operator==(char3 l, char3 r)
 {
-    return (l.x == r.x && l.y == r.y && l.y == r.y);
+    return (l.x == r.x && l.y == r.y && l.z == r.z);
 }
 inline bool operator!=(char3 l, char3 r)
 {
@@ -170,7 +170,7 @@ inline bool operator!=(uchar2 l, uchar2 r)
 
 inline bool operator==(uchar3 l, uchar3 r)
 {
-    return (l.x == r.x && l.y == r.y && l.y == r.y);
+    return (l.x == r.x && l.y == r.y && l.z == r.z);
 }
 inline bool operator!=(uchar3 l, uchar3 r)
 {
@@ -199,7 +199,7 @@ inline bool operator!=(short2 l, short2 r)
 
 inline bool operator==(short3 l, short3 r)
 {
-    return (l.x == r.x && l.y == r.y && l.y == r.y);
+    return (l.x == r.x && l.y == r.y && l.z == r.z);
 }
 inline bool operator!=(short3 l, short3 r)
 {
@@ -228,7 +228,7 @@ inline bool operator!=(ushort2 l, ushort2 r)
 
 inline bool operator==(ushort3 l, ushort3 r)
 {
-    return (l.x == r.x && l.y == r.y && l.y == r.y);
+    return (l.x == r.x && l.y == r.y && l.z == r.z);
 }
 inline bool operator!=(ushort3 l, ushort3 r)
 {
@@ -257,7 +257,7 @@ inline bool operator!=(int2 l, int2 r)
 
 inline bool operator==(int3 l, int3 r)
 {
-    return (l.x == r.x && l.y == r.y && l.y == r.y);
+    return (l.x == r.x && l.y == r.y && l.z == r.z);
 }
 inline bool operator!=(int3 l, int3 r)
 {
@@ -286,7 +286,7 @@ inline bool operator!=(uint2 l, uint2 r)
 
 inline bool operator==(uint3 l, uint3 r)
 {
-    return (l.x == r.x && l.y == r.y && l.y == r.y);
+    return (l.x == r.x && l.y == r.y && l.z == r.z);
 }
 inline bool operator!=(uint3 l, uint3 r)
 {
@@ -339,6 +339,38 @@ inline std::ostream& operator<<(std::ostream& s, const uchar4& v)
     return s;
 }
 
+inline std::ostream& operator<<(std::ostream& s, const short2& v)
+{
+    s << '(' << v.x << ' ' << v.y << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const short3& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const short4& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
+    return s;
+}
+
+inline std::ostream& operator<<(std::ostream& s, const ushort2& v)
+{
+    s << '(' << v.x << ' ' << v.y << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const ushort3& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const ushort4& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
+    return s;
+}
+
 inline std::ostream& operator<<(std::ostream& s, const int2& v)
 {
     s << '(' << v.x << ' ' << v.y << ')';
@@ -350,6 +382,22 @@ inline std::ostream& operator<<(std::ostream& s, const int3& v)
     return s;
 }
 inline std::ostream& operator<<(std::ostream& s, const int4& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
+    return s;
+}
+
+inline std::ostream& operator<<(std::ostream& s, const uint2& v)
+{
+    s << '(' << v.x << ' ' << v.y << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const uint3& v)
+{
+    s << '(' << v.x << ' ' << v.y << ' ' << v.z << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const uint4& v)
 {
     s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
     return s;
