@@ -44,6 +44,30 @@ TEST_CASE("io", "[io] [volume]")
 
 #define IO_TEST_EXTENSION(ext) \
     TEST_CASE("io_"#ext, "[io] [volume]") { \
+        IO_TEST_TYPE(ext, char); \
+        IO_TEST_TYPE(ext, char2); \
+        IO_TEST_TYPE(ext, char3); \
+        IO_TEST_TYPE(ext, char4); \
+        IO_TEST_TYPE(ext, uint8_t); \
+        IO_TEST_TYPE(ext, uchar2); \
+        IO_TEST_TYPE(ext, uchar3); \
+        IO_TEST_TYPE(ext, uchar4); \
+        IO_TEST_TYPE(ext, short); \
+        IO_TEST_TYPE(ext, short2); \
+        IO_TEST_TYPE(ext, short3); \
+        IO_TEST_TYPE(ext, short4); \
+        IO_TEST_TYPE(ext, uint16_t); \
+        IO_TEST_TYPE(ext, ushort2); \
+        IO_TEST_TYPE(ext, ushort3); \
+        IO_TEST_TYPE(ext, ushort4); \
+        IO_TEST_TYPE(ext, int); \
+        IO_TEST_TYPE(ext, int2); \
+        IO_TEST_TYPE(ext, int3); \
+        IO_TEST_TYPE(ext, int4); \
+        IO_TEST_TYPE(ext, uint32_t); \
+        IO_TEST_TYPE(ext, uint2); \
+        IO_TEST_TYPE(ext, uint3); \
+        IO_TEST_TYPE(ext, uint4); \
         IO_TEST_TYPE(ext, float); \
         IO_TEST_TYPE(ext, float2); \
         IO_TEST_TYPE(ext, float3); \
@@ -52,10 +76,6 @@ TEST_CASE("io", "[io] [volume]")
         IO_TEST_TYPE(ext, double2); \
         IO_TEST_TYPE(ext, double3); \
         IO_TEST_TYPE(ext, double4); \
-        IO_TEST_TYPE(ext, uint8_t); \
-        IO_TEST_TYPE(ext, uchar2); \
-        IO_TEST_TYPE(ext, uchar3); \
-        IO_TEST_TYPE(ext, uchar4); \
     }
 
 IO_TEST_EXTENSION(vtk);

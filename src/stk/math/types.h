@@ -86,15 +86,15 @@ struct STK_ALIGN(16) int4
 
 struct STK_ALIGN(8) uint2
 {
-    int x, y;
+    uint32_t x, y;
 };
 struct uint3
 {
-    int x, y, z;
+    uint32_t x, y, z;
 };
 struct STK_ALIGN(16) uint4
 {
-    int x, y, z, w;
+    uint32_t x, y, z, w;
 };
 
 
@@ -128,6 +128,37 @@ struct STK_ALIGN(16) double4
 
 #endif
 
+// char
+
+inline bool operator==(char2 l, char2 r)
+{
+    return (l.x == r.x && l.y == r.y);
+}
+inline bool operator!=(char2 l, char2 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(char3 l, char3 r)
+{
+    return (l.x == r.x && l.y == r.y && l.y == r.y);
+}
+inline bool operator!=(char3 l, char3 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(char4 l, char4 r)
+{
+    return (l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w);
+}
+inline bool operator!=(char4 l, char4 r)
+{
+    return !operator==(l, r);
+}
+
+// uchar
+
 inline bool operator==(uchar2 l, uchar2 r)
 {
     return (l.x == r.x && l.y == r.y);
@@ -154,6 +185,66 @@ inline bool operator!=(uchar4 l, uchar4 r)
 {
     return !operator==(l, r);
 }
+
+// short
+
+inline bool operator==(short2 l, short2 r)
+{
+    return (l.x == r.x && l.y == r.y);
+}
+inline bool operator!=(short2 l, short2 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(short3 l, short3 r)
+{
+    return (l.x == r.x && l.y == r.y && l.y == r.y);
+}
+inline bool operator!=(short3 l, short3 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(short4 l, short4 r)
+{
+    return (l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w);
+}
+inline bool operator!=(short4 l, short4 r)
+{
+    return !operator==(l, r);
+}
+
+// ushort
+
+inline bool operator==(ushort2 l, ushort2 r)
+{
+    return (l.x == r.x && l.y == r.y);
+}
+inline bool operator!=(ushort2 l, ushort2 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(ushort3 l, ushort3 r)
+{
+    return (l.x == r.x && l.y == r.y && l.y == r.y);
+}
+inline bool operator!=(ushort3 l, ushort3 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(ushort4 l, ushort4 r)
+{
+    return (l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w);
+}
+inline bool operator!=(ushort4 l, ushort4 r)
+{
+    return !operator==(l, r);
+}
+
+// int
 
 inline bool operator==(int2 l, int2 r)
 {
@@ -182,7 +273,55 @@ inline bool operator!=(int4 l, int4 r)
     return !operator==(l, r);
 }
 
+// uint
+
+inline bool operator==(uint2 l, uint2 r)
+{
+    return (l.x == r.x && l.y == r.y);
+}
+inline bool operator!=(uint2 l, uint2 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(uint3 l, uint3 r)
+{
+    return (l.x == r.x && l.y == r.y && l.y == r.y);
+}
+inline bool operator!=(uint3 l, uint3 r)
+{
+    return !operator==(l, r);
+}
+
+inline bool operator==(uint4 l, uint4 r)
+{
+    return (l.x == r.x && l.y == r.y && l.z == r.z && l.w == r.w);
+}
+inline bool operator!=(uint4 l, uint4 r)
+{
+    return !operator==(l, r);
+}
+
+
+
+
 // Overloads for convenient logging of types
+
+inline std::ostream& operator<<(std::ostream& s, const char2& v)
+{
+    s << '(' << int(v.x) << ' ' << int(v.y) << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const char3& v)
+{
+    s << '(' << int(v.x) << ' ' << int(v.y) << ' ' << int(v.z) << ')';
+    return s;
+}
+inline std::ostream& operator<<(std::ostream& s, const char4& v)
+{
+    s << '(' << int(v.x) << ' ' << int(v.y) << ' ' << int(v.z) << ' ' << int(v.w) << ')';
+    return s;
+}
 
 inline std::ostream& operator<<(std::ostream& s, const uchar2& v)
 {

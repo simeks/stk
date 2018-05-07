@@ -5,19 +5,101 @@
 
 TEST_CASE("math", "[math]")
 {
+    // char
+    REQUIRE(char2{1,2} == char2{1,2});
+    REQUIRE(char2{1,2} != char2{3,2});
+    REQUIRE(char2{1,2} != char2{1,3});
+
+    REQUIRE(char3{1,2,3} == char3{1,2,3});
+    REQUIRE(char3{1,2,3} != char3{4,2,3});
+    REQUIRE(char3{1,2,3} != char3{1,4,3});
+    REQUIRE(char3{1,2,3} != char3{1,2,4});
+
+    REQUIRE(char4{1,2,3,4} == char4{1,2,3,4});
+    REQUIRE(char4{1,2,3,4} != char4{5,2,3,4});
+    REQUIRE(char4{1,2,3,4} != char4{1,5,3,4});
+    REQUIRE(char4{1,2,3,4} != char4{1,2,5,4});
+    REQUIRE(char4{1,2,3,4} != char4{1,2,3,5});
+
+    // uchar
     REQUIRE(uchar2{1,2} == uchar2{1,2});
-    REQUIRE(uchar2{3,4} != uchar2{1,2});
+    REQUIRE(uchar2{1,2} != uchar2{3,2});
+    REQUIRE(uchar2{1,2} != uchar2{1,3});
+ 
     REQUIRE(uchar3{1,2,3} == uchar3{1,2,3});
-    REQUIRE(uchar3{4,5,6} != uchar3{1,2,3});
+    REQUIRE(uchar3{1,2,3} != uchar3{4,2,3});
+    REQUIRE(uchar3{1,2,3} != uchar3{1,4,3});
+    REQUIRE(uchar3{1,2,3} != uchar3{1,2,4});
+
     REQUIRE(uchar4{1,2,3,4} == uchar4{1,2,3,4});
-    REQUIRE(uchar4{5,6,7,8} != uchar4{1,2,3,4});
+    REQUIRE(uchar4{1,2,3,4} != uchar4{5,2,3,4});
+    REQUIRE(uchar4{1,2,3,4} != uchar4{1,5,3,4});
+    REQUIRE(uchar4{1,2,3,4} != uchar4{1,2,5,4});
+    REQUIRE(uchar4{1,2,3,4} != uchar4{1,2,3,5});
     
+    // short
+    REQUIRE(short2{1,2} == short2{1,2});
+    REQUIRE(short2{1,2} != short2{3,2});
+    REQUIRE(short2{1,2} != short2{1,3});
+
+    REQUIRE(short3{1,2,3} == short3{1,2,3});
+    REQUIRE(short3{1,2,3} != short3{4,2,3});
+    REQUIRE(short3{1,2,3} != short3{1,4,3});
+    REQUIRE(short3{1,2,3} != short3{1,2,4});
+
+    REQUIRE(short4{1,2,3,4} == short4{1,2,3,4});
+    REQUIRE(short4{1,2,3,4} != short4{5,2,3,4});
+    REQUIRE(short4{1,2,3,4} != short4{1,5,3,4});
+    REQUIRE(short4{1,2,3,4} != short4{1,2,5,4});
+    REQUIRE(short4{1,2,3,4} != short4{1,2,3,5});
+
+    // ushort
+    REQUIRE(ushort2{1,2} == ushort2{1,2});
+    REQUIRE(ushort2{1,2} != ushort2{3,2});
+    REQUIRE(ushort2{1,2} != ushort2{1,3});
+
+    REQUIRE(ushort3{1,2,3} == ushort3{1,2,3});
+    REQUIRE(ushort3{1,2,3} != ushort3{4,2,3});
+    REQUIRE(ushort3{1,2,3} != ushort3{1,4,3});
+    REQUIRE(ushort3{1,2,3} != ushort3{1,2,4});
+
+    REQUIRE(ushort4{1,2,3,4} == ushort4{1,2,3,4});
+    REQUIRE(ushort4{1,2,3,4} != ushort4{5,2,3,4});
+    REQUIRE(ushort4{1,2,3,4} != ushort4{1,5,3,4});
+    REQUIRE(ushort4{1,2,3,4} != ushort4{1,2,5,4});
+    REQUIRE(ushort4{1,2,3,4} != ushort4{1,2,3,5});
+
+    // int
     REQUIRE(int2{1,2} == int2{1,2});
-    REQUIRE(int2{3,4} != int2{1,2});
+    REQUIRE(int2{1,2} != int2{3,2});
+    REQUIRE(int2{1,2} != int2{1,3});
+
     REQUIRE(int3{1,2,3} == int3{1,2,3});
-    REQUIRE(int3{4,5,6} != int3{1,2,3});
+    REQUIRE(int3{1,2,3} != int3{4,2,3});
+    REQUIRE(int3{1,2,3} != int3{1,4,3});
+    REQUIRE(int3{1,2,3} != int3{1,2,4});
+    
     REQUIRE(int4{1,2,3,4} == int4{1,2,3,4});
-    REQUIRE(int4{5,6,7,8} != int4{1,2,3,4});
+    REQUIRE(int4{1,2,3,4} != int4{5,2,3,4});
+    REQUIRE(int4{1,2,3,4} != int4{1,5,3,4});
+    REQUIRE(int4{1,2,3,4} != int4{1,2,5,4});
+    REQUIRE(int4{1,2,3,4} != int4{1,2,3,5});
+
+    // uint
+    REQUIRE(uint2{1,2} == uint2{1,2});
+    REQUIRE(uint2{1,2} != uint2{3,2});
+    REQUIRE(uint2{1,2} != uint2{1,3});
+
+    REQUIRE(uint3{1,2,3} == uint3{1,2,3});
+    REQUIRE(uint3{1,2,3} != uint3{4,2,3});
+    REQUIRE(uint3{1,2,3} != uint3{1,4,3});
+    REQUIRE(uint3{1,2,3} != uint3{1,2,4});
+    
+    REQUIRE(uint4{1,2,3,4} == uint4{1,2,3,4});
+    REQUIRE(uint4{1,2,3,4} != uint4{5,2,3,4});
+    REQUIRE(uint4{1,2,3,4} != uint4{1,5,3,4});
+    REQUIRE(uint4{1,2,3,4} != uint4{1,2,5,4});
+    REQUIRE(uint4{1,2,3,4} != uint4{1,2,3,5});
 }
 
 TEST_CASE("math_float3_norm", "[math]")
@@ -103,6 +185,25 @@ TEST_CASE("math_int3_op", "[math]")
 }
 TEST_CASE("math_to_string", "[volume]")
 {
+    SECTION("char2")
+    {
+        std::ostringstream s;
+        s << char2{1, 2};
+        REQUIRE(s.str() == "(1 2)");
+    }
+    SECTION("char3")
+    {
+        std::ostringstream s;
+        s << char3{1, 2, 3};
+        REQUIRE(s.str() == "(1 2 3)");
+    }
+    SECTION("char4")
+    {
+        std::ostringstream s;
+        s << char4{1, 2, 3, 4};
+        REQUIRE(s.str() == "(1 2 3 4)");
+    }
+
     SECTION("uchar2")
     {
         std::ostringstream s;

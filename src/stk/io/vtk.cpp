@@ -69,6 +69,59 @@ namespace
             f.write((const char*)&c, 8);
         }
     }
+
+    stk::Type vtk_string_to_type(const std::string& data_type, int num_comp)
+    {
+        if (data_type == "char") {
+            if (num_comp == 1) return stk::Type_Char;
+            if (num_comp == 2) return stk::Type_Char2;
+            if (num_comp == 3) return stk::Type_Char3;
+            if (num_comp == 4) return stk::Type_Char4;
+        }
+        else if (data_type == "unsigned_char") {
+            if (num_comp == 1) return stk::Type_UChar;
+            if (num_comp == 2) return stk::Type_UChar2;
+            if (num_comp == 3) return stk::Type_UChar3;
+            if (num_comp == 4) return stk::Type_UChar4;
+        }
+        else if (data_type == "short") {
+            if (num_comp == 1) return stk::Type_Short;
+            if (num_comp == 2) return stk::Type_Short2;
+            if (num_comp == 3) return stk::Type_Short3;
+            if (num_comp == 4) return stk::Type_Short4;
+        }
+        else if (data_type == "unsigned_short") {
+            if (num_comp == 1) return stk::Type_UShort;
+            if (num_comp == 2) return stk::Type_UShort2;
+            if (num_comp == 3) return stk::Type_UShort3;
+            if (num_comp == 4) return stk::Type_UShort4;
+        }
+        else if (data_type == "int") {
+            if (num_comp == 1) return stk::Type_Int;
+            if (num_comp == 2) return stk::Type_Int2;
+            if (num_comp == 3) return stk::Type_Int3;
+            if (num_comp == 4) return stk::Type_Int4;
+        }
+        else if (data_type == "unsigned_int") {
+            if (num_comp == 1) return stk::Type_UInt;
+            if (num_comp == 2) return stk::Type_UInt2;
+            if (num_comp == 3) return stk::Type_UInt3;
+            if (num_comp == 4) return stk::Type_UInt4;
+        }
+        else if (data_type == "double") {
+            if (num_comp == 1) return stk::Type_Double;
+            if (num_comp == 2) return stk::Type_Double2;
+            if (num_comp == 3) return stk::Type_Double3;
+            if (num_comp == 4) return stk::Type_Double4;
+        }
+        else if (data_type == "float") {
+            if (num_comp == 1) return stk::Type_Float;
+            if (num_comp == 2) return stk::Type_Float2;
+            if (num_comp == 3) return stk::Type_Float3;
+            if (num_comp == 4) return stk::Type_Float4;
+        }
+        return stk::Type_Unknown;
+    }
 }
 
 #undef __byteswap_u16
@@ -177,24 +230,7 @@ namespace vtk {
                     num_comp = atoi(num_comp_s.c_str());
                 }
 
-                if (data_type == "double") {
-                    if (num_comp == 1) voxel_type = Type_Double;
-                    if (num_comp == 2) voxel_type = Type_Double2;
-                    if (num_comp == 3) voxel_type = Type_Double3;
-                    if (num_comp == 4) voxel_type = Type_Double4;
-                }
-                else if (data_type == "float") {
-                    if (num_comp == 1) voxel_type = Type_Float;
-                    if (num_comp == 2) voxel_type = Type_Float2;
-                    if (num_comp == 3) voxel_type = Type_Float3;
-                    if (num_comp == 4) voxel_type = Type_Float4;
-                }
-                else if (data_type == "unsigned_char") {
-                    if (num_comp == 1) voxel_type = Type_UChar;
-                    if (num_comp == 2) voxel_type = Type_UChar2;
-                    if (num_comp == 3) voxel_type = Type_UChar3;
-                    if (num_comp == 4) voxel_type = Type_UChar4;
-                }
+                voxel_type = vtk_string_to_type(data_type, num_comp);
 
                 if (voxel_type == Type_Unknown) {
                     error << "Unsupported data type: " << data_type << " " << num_comp;
@@ -205,6 +241,7 @@ namespace vtk {
             else if (key == "VECTORS")
             {
                 // VECTORS dataName dataType
+                // Vectors have 3 components
 
                 ss >> value; // dataName, don't know what this is good for
                 std::string data_type;
@@ -215,20 +252,8 @@ namespace vtk {
                     std::string num_comp_s;
                     ss >> num_comp_s;
                 }
-                num_comp = 3;
 
-                if (data_type == "double")
-                {
-                    voxel_type = Type_Double3;
-                }
-                else if (data_type == "float")
-                {
-                    voxel_type = Type_Float3;
-                }
-                else if (data_type == "unsigned_char")
-                {
-                    voxel_type = Type_UChar3;
-                }
+                voxel_type = vtk_string_to_type(data_type, 3);
 
                 // Assume that blob comes after this line
                 break;
@@ -349,56 +374,32 @@ namespace vtk {
         f << "SPACING " << spacing.x << " " << spacing.y << " " << spacing.z << "\n";
         f << "POINT_DATA " << size.x * size.y * size.z << "\n";
 
-        std::string data_type;
-        int num_comp = 1;
-        switch (vol.voxel_type()) {
-        case Type_Float:
-            data_type = "float";
-            num_comp = 1;
-            break;
-        case Type_Float2:
-            data_type = "float";
-            num_comp = 2;
-            break;
-        case Type_Float3:
-            data_type = "float";
-            num_comp = 3;
-            break;
-        case Type_Float4:
-            data_type = "float";
-            num_comp = 4;
-            break;
-        case Type_Double:
-            data_type = "double";
-            num_comp = 1;
-            break;
-        case Type_Double2:
-            data_type = "double";
-            num_comp = 2;
-            break;
-        case Type_Double3:
-            data_type = "double";
-            num_comp = 3;
-            break;
-        case Type_Double4:
-            data_type = "double";
-            num_comp = 4;
+        const char* data_type;
+        int num_comp = num_components(vol.voxel_type());
+        switch (base_type(vol.voxel_type())) {
+        case Type_Char:
+            data_type = "char";
             break;
         case Type_UChar:
             data_type = "unsigned_char";
-            num_comp = 1;
             break;
-        case Type_UChar2:
-            data_type = "unsigned_char";
-            num_comp = 2;
+        case Type_Short:
+            data_type = "short";
             break;
-        case Type_UChar3:
-            data_type = "unsigned_char";
-            num_comp = 3;
+        case Type_UShort:
+            data_type = "unsigned_short";
             break;
-        case Type_UChar4:
-            data_type = "unsigned_char";
-            num_comp = 4;
+        case Type_Int:
+            data_type = "int";
+            break;
+        case Type_UInt:
+            data_type = "unsigned_int";
+            break;
+        case Type_Float:
+            data_type = "float";
+            break;
+        case Type_Double:
+            data_type = "double";
             break;
         default:
             assert(false && "Unsupported format");

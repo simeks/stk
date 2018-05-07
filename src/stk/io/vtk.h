@@ -6,6 +6,10 @@
 /// This will in no way cover the whole VTK specs and have only 
 /// been tested on a small subset of different volumes.
 
+// TODO:
+// * long and unsigned_long
+
+
 namespace stk
 {
     namespace vtk
