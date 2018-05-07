@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stk/common/platform.h>
+
 #include <sstream>
 
 #ifdef STK_USE_CUDA
@@ -11,67 +13,118 @@
 #include <stdint.h>
 
 // Defines some types otherwise defined by CUDA SDK.
-// However, not the same guarantees on alignmnet.
 
-struct uchar2
+struct STK_ALIGN(2) char2
+{
+    char x, y;
+};
+struct char3
+{
+    char x, y, z;
+};
+struct STK_ALIGN(4) char4
+{
+    char x, y, z, w;
+};
+
+
+struct STK_ALIGN(2) uchar2
 {
     uint8_t x, y;
 };
-
 struct uchar3
 {
     uint8_t x, y, z;
 };
-
-struct uchar4
+struct STK_ALIGN(4) uchar4
 {
     uint8_t x, y, z, w;
 };
 
-struct int2
+
+struct STK_ALIGN(4) short2
+{
+    int16_t x, y;
+};
+struct short3
+{
+    int16_t x, y, z;
+};
+struct STK_ALIGN(8) short4
+{
+    int16_t x, y, z, w;
+};
+
+
+struct STK_ALIGN(4) ushort2
+{
+    uint16_t x, y;
+};
+struct ushort3
+{
+    uint16_t x, y, z;
+};
+struct STK_ALIGN(8) ushort4
+{
+    uint16_t x, y, z, w;
+};
+
+
+struct STK_ALIGN(8) int2
 {
     int x, y;
 };
-
 struct int3
 {
     int x, y, z;
 };
-
-struct int4
+struct STK_ALIGN(16) int4
 {
     int x, y, z, w;
 };
 
-struct float2
+
+struct STK_ALIGN(8) uint2
+{
+    int x, y;
+};
+struct uint3
+{
+    int x, y, z;
+};
+struct STK_ALIGN(16) uint4
+{
+    int x, y, z, w;
+};
+
+
+struct STK_ALIGN(8) float2
 {
     float x, y;
 };
-
 struct float3
 {
     float x, y, z;
 };
-
-struct float4
+struct STK_ALIGN(16) float4
 {
     float x, y, z, w;
 };
 
-struct double2
+
+struct STK_ALIGN(16) double2
 {
     double x, y;
 };
-
 struct double3
 {
     double x, y, z;
 };
-
-struct double4
+struct STK_ALIGN(16) double4
 {
     double x, y, z, w;
 };
+
 
 #endif
 
