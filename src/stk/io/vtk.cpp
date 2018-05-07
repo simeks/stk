@@ -202,6 +202,37 @@ namespace vtk {
                     return Volume();
                 }
             }
+            else if (key == "VECTORS")
+            {
+                // VECTORS dataName dataType
+
+                ss >> value; // dataName, don't know what this is good for
+                std::string data_type;
+                ss >> data_type;
+                
+                if (!ss.eof())
+                {
+                    std::string num_comp_s;
+                    ss >> num_comp_s;
+                }
+                num_comp = 3;
+
+                if (data_type == "double")
+                {
+                    voxel_type = Type_Double3;
+                }
+                else if (data_type == "float")
+                {
+                    voxel_type = Type_Float3;
+                }
+                else if (data_type == "unsigned_char")
+                {
+                    voxel_type = Type_UChar3;
+                }
+
+                // Assume that blob comes after this line
+                break;
+            }
             //LOOKUP_TABLE default
             else if (key == "LOOKUP_TABLE") {
                 ss >> value;
