@@ -56,23 +56,53 @@ namespace nifti {
         Type voxel_type = Type_Unknown;
         switch(nhdr.datatype)
         {
-        case NIFTI_TYPE_FLOAT32:
-                 if (ncomp == 1) voxel_type = Type_Float; 
-            else if (ncomp == 2) voxel_type = Type_Float2; 
-            else if (ncomp == 3) voxel_type = Type_Float3; 
-            else if (ncomp == 4) voxel_type = Type_Float4; 
-            break;
-        case NIFTI_TYPE_FLOAT64:
-                 if (ncomp == 1) voxel_type = Type_Double; 
-            else if (ncomp == 2) voxel_type = Type_Double2; 
-            else if (ncomp == 3) voxel_type = Type_Double3; 
-            else if (ncomp == 4) voxel_type = Type_Double4; 
+        case NIFTI_TYPE_INT8:
+                 if (ncomp == 1) voxel_type = Type_Char;
+            else if (ncomp == 2) voxel_type = Type_Char2;
+            else if (ncomp == 3) voxel_type = Type_Char3;
+            else if (ncomp == 4) voxel_type = Type_Char4;
             break;
         case NIFTI_TYPE_UINT8:
-                 if (ncomp == 1) voxel_type = Type_UChar; 
-            else if (ncomp == 2) voxel_type = Type_UChar2; 
-            else if (ncomp == 3) voxel_type = Type_UChar3; 
-            else if (ncomp == 4) voxel_type = Type_UChar4; 
+                 if (ncomp == 1) voxel_type = Type_UChar;
+            else if (ncomp == 2) voxel_type = Type_UChar2;
+            else if (ncomp == 3) voxel_type = Type_UChar3;
+            else if (ncomp == 4) voxel_type = Type_UChar4;
+            break;
+        case NIFTI_TYPE_INT16:
+                 if (ncomp == 1) voxel_type = Type_Short;
+            else if (ncomp == 2) voxel_type = Type_Short2;
+            else if (ncomp == 3) voxel_type = Type_Short3;
+            else if (ncomp == 4) voxel_type = Type_Short4;
+            break;
+        case NIFTI_TYPE_UINT16:
+                 if (ncomp == 1) voxel_type = Type_UShort;
+            else if (ncomp == 2) voxel_type = Type_UShort2;
+            else if (ncomp == 3) voxel_type = Type_UShort3;
+            else if (ncomp == 4) voxel_type = Type_UShort4;
+            break;
+        case NIFTI_TYPE_INT32:
+                 if (ncomp == 1) voxel_type = Type_Int;
+            else if (ncomp == 2) voxel_type = Type_Int2;
+            else if (ncomp == 3) voxel_type = Type_Int3;
+            else if (ncomp == 4) voxel_type = Type_Int4;
+            break;
+        case NIFTI_TYPE_UINT32:
+                 if (ncomp == 1) voxel_type = Type_UInt;
+            else if (ncomp == 2) voxel_type = Type_UInt2;
+            else if (ncomp == 3) voxel_type = Type_UInt3;
+            else if (ncomp == 4) voxel_type = Type_UInt4;
+            break;
+        case NIFTI_TYPE_FLOAT32:
+                 if (ncomp == 1) voxel_type = Type_Float;
+            else if (ncomp == 2) voxel_type = Type_Float2;
+            else if (ncomp == 3) voxel_type = Type_Float3;
+            else if (ncomp == 4) voxel_type = Type_Float4;
+            break;
+        case NIFTI_TYPE_FLOAT64:
+                 if (ncomp == 1) voxel_type = Type_Double;
+            else if (ncomp == 2) voxel_type = Type_Double2;
+            else if (ncomp == 3) voxel_type = Type_Double3;
+            else if (ncomp == 4) voxel_type = Type_Double4;
             break;
         };
 
@@ -173,6 +203,30 @@ namespace nifti {
 
         switch(base_type(vol.voxel_type()))
         {
+        case Type_Char:
+            nhdr.datatype = NIFTI_TYPE_INT8;
+            nhdr.bitpix = 8;
+            break;
+        case Type_UChar:
+            nhdr.datatype = NIFTI_TYPE_UINT8;
+            nhdr.bitpix = 8;
+            break;
+        case Type_Short:
+            nhdr.datatype = NIFTI_TYPE_INT16;
+            nhdr.bitpix = 16;
+            break;
+        case Type_UShort:
+            nhdr.datatype = NIFTI_TYPE_UINT16;
+            nhdr.bitpix = 16;
+            break;
+        case Type_Int:
+            nhdr.datatype = NIFTI_TYPE_INT32;
+            nhdr.bitpix = 32;
+            break;
+        case Type_UInt:
+            nhdr.datatype = NIFTI_TYPE_UINT32;
+            nhdr.bitpix = 32;
+            break;
         case Type_Float:
             nhdr.datatype = NIFTI_TYPE_FLOAT32;
             nhdr.bitpix = 32;
@@ -180,10 +234,6 @@ namespace nifti {
         case Type_Double:
             nhdr.datatype = NIFTI_TYPE_FLOAT64;
             nhdr.bitpix = 64;
-            break;
-        case Type_UChar:
-            nhdr.datatype = NIFTI_TYPE_UINT8;
-            nhdr.bitpix = 8;
             break;
         default:
             FATAL() << "Unsupported format";
