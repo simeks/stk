@@ -3,6 +3,9 @@
 #include "io.h"
 
 // Module for nifti IO
+// Implementation is still a bit sketchy and all meta-data except origin and
+//  spacing is thrown away. Will change whenver a system for handling meta-data
+//  is implemented.
 // TODO: Support for setting/getting QForm/SForm matrices.
 //       Currently both are ignored and we only read origin and spacing.
 

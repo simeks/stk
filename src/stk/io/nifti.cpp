@@ -113,6 +113,13 @@ namespace nifti {
             return Volume();
         }
 
+        mat44 mat = nifti_quatern_to_mat44(
+            nhdr.quatern_b, nhdr.quatern_c, nhdr.quatern_d,
+            nhdr.qoffset_x, nhdr.qoffset_y, nhdr.qoffset_z,
+            nhdr.pixdim[1], nhdr.pixdim[2], nhdr.pixdim[3],
+            nhdr.pixdim[0]
+        );
+
         Volume vol(size, voxel_type);
         vol.set_spacing({nhdr.pixdim[1], nhdr.pixdim[2], nhdr.pixdim[3]});
 
@@ -132,7 +139,11 @@ namespace nifti {
         
         // Set according to method 2 (nifti1.h)
          
-        vol.set_origin({nhdr.qoffset_x, nhdr.qoffset_y, nhdr.qoffset_z});
+        vol.set_origin({
+            -mat.m[0][3], 
+            -mat.m[1][3], 
+            mat.m[2][3]    
+        });
 
         // TODO: Ignoring orientation for now
 
@@ -245,7 +256,7 @@ namespace nifti {
 
         nhdr.slice_start = 0; // TODO: [nifti] Handle image meta data
 
-        float qfac = 1.0f;
+        float qfac = -1.0f;
         nhdr.pixdim[0] = qfac; // TODO: [nifti] Handle image meta data
 
         float3 spacing = vol.spacing();
@@ -282,13 +293,26 @@ namespace nifti {
          
         float3 origin = vol.origin();
 
-        nhdr.quatern_b = 0;
-        nhdr.quatern_c = 0;
-        nhdr.quatern_d = 0;
+        mat44 mat = nifti_make_orthog_mat44(-1, 0, 0,
+                                            0, 1, 0,
+                                            0, 0, 1);
 
-        nhdr.qoffset_x = origin.x;
-        nhdr.qoffset_y = origin.y;
-        nhdr.qoffset_z = origin.z;
+        mat.m[0][3] = -origin.x;
+        mat.m[1][3] = -origin.y;
+        mat.m[2][3] = origin.z;
+
+        nifti_mat44_to_quatern(mat, 
+            &nhdr.quatern_b,
+            &nhdr.quatern_c,
+            &nhdr.quatern_d,
+            &nhdr.qoffset_x,
+            &nhdr.qoffset_y,
+            &nhdr.qoffset_z,
+            nullptr,
+            nullptr,
+            nullptr,
+            nullptr
+        );
 
         // srow_x, srow_y, srow_z (set to all zeros)
         // intent_name
