@@ -8,6 +8,10 @@
 
 namespace stk {
 namespace nifti {
+    void initialize()
+    {
+        nifti_set_debug_level(0);
+    }
     Volume read(const char* filename)
     {
         // NIFTI-1

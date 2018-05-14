@@ -51,7 +51,7 @@ namespace stk
             readers.push_back(vtk_reader);
             writers.push_back(vtk_writer);
 
-            // VTK
+            // Nifti
             VolumeReader nii_reader = {
                 nifti::read,
                 nifti::signature_length,
@@ -64,6 +64,8 @@ namespace stk
 
             readers.push_back(nii_reader);
             writers.push_back(nii_writer);
+            
+            nifti::initialize();
         }
         std::vector<VolumeReader> readers;
         std::vector<VolumeWriter> writers;

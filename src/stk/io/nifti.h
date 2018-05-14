@@ -13,6 +13,9 @@ namespace stk
 {
     namespace nifti
     {
+        // Initializes, mostly setting up nifti global settings
+        void initialize();
+
         // Reading
 
         // Reads the specified file
