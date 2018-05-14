@@ -574,3 +574,114 @@ TEST_CASE("volume_helper", "[volume]")
         }
     }
 }
+TEST_CASE("find_min_max", "[volume]")
+{
+    SECTION("float") {
+        float val[] = {
+            2, 1, 
+            3, 7, 
+            3, 7, 
+            
+            8, 7,
+            3, 2,
+            1, 2,
+
+            3, 2,
+            1, 2,
+            4, 5,
+
+            3, 2,
+            1, 2,
+            4, 5
+        };
+
+        VolumeHelper<float> vol({2,3,4}, val);
+        
+        float min, max;
+        find_min_max(vol, min, max);
+
+        REQUIRE(min == Approx(1));
+        REQUIRE(max == Approx(8));
+    }
+    SECTION("double") {
+        double val[] = {
+            2, 1, 
+            3, 7, 
+            3, 7, 
+            
+            8, 7,
+            3, 2,
+            1, 2,
+
+            3, 2,
+            1, 2,
+            4, 5,
+
+            3, 2,
+            1, 2,
+            4, 5
+        };
+
+        VolumeHelper<double> vol({2,3,4}, val);
+        
+        double min, max;
+        find_min_max(vol, min, max);
+
+        REQUIRE(min == Approx(1));
+        REQUIRE(max == Approx(8));
+    }
+    SECTION("short") {
+        short val[] = {
+            2, 1, 
+            3, 7, 
+            3, 7, 
+            
+            8, 7,
+            3, 2,
+            1, 2,
+
+            3, 2,
+            1, 2,
+            4, 5,
+
+            3, 2,
+            1, 2,
+            4, 5
+        };
+
+        VolumeHelper<short> vol({2,3,4}, val);
+        
+        short min, max;
+        find_min_max(vol, min, max);
+
+        REQUIRE(min == Approx(1));
+        REQUIRE(max == Approx(8));
+    }
+    SECTION("ushort") {
+        uint16_t val[] = {
+            2, 1, 
+            3, 7, 
+            3, 7, 
+            
+            8, 7,
+            3, 2,
+            1, 2,
+
+            3, 2,
+            1, 2,
+            4, 5,
+
+            3, 2,
+            1, 2,
+            4, 5
+        };
+
+        VolumeHelper<uint16_t> vol({2,3,4}, val);
+        
+        uint16_t min, max;
+        find_min_max(vol, min, max);
+
+        REQUIRE(min == Approx(1));
+        REQUIRE(max == Approx(8));
+    }
+}

@@ -181,6 +181,11 @@ namespace stk
 
     };
 
+    // Finds the minimum and maximum values in a scalar volume.
+    // Does not work for multi-channel volumes. 
+    template<typename T>
+    void find_min_max(const VolumeHelper<T>& vol, T& min, T& max);
+
     typedef VolumeHelper<uint8_t> VolumeUChar;
     typedef VolumeHelper<uchar2>  VolumeUChar2;
     typedef VolumeHelper<uchar3>  VolumeUChar3;

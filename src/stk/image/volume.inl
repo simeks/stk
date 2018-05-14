@@ -339,4 +339,26 @@ inline size_t VolumeHelper<T>::offset(int x, int y, int z) const
     DASSERT(z < int(_size.z));
     return z * _stride * _size.y + y * _stride + x * sizeof(T);
 }
+
+template<typename T>
+void find_min_max(const VolumeHelper<T>& vol, T& min, T& max)
+{
+    ASSERT(num_components(vol.voxel_type()) == 1);
+
+    min = std::numeric_limits<T>::max();
+    max = std::numeric_limits<T>::lowest();
+
+    dim3 size = vol.size();
+    for (uint32_t z = 0; z < size.z; ++z)
+    {
+        for (uint32_t y = 0; y < size.y; ++y)
+        {
+            for (uint32_t x = 0; x < size.x; ++x)
+            {
+                min = std::min<T>(min, vol(x, y, z));
+                max = std::max<T>(max, vol(x, y, z));
+            }
+        }
+    }
+}
 } // namespace stk
