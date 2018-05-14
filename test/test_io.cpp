@@ -33,6 +33,7 @@ TEST_CASE("io", "[io] [volume]")
         write_volume("test_file_" #T "." #ext, vol); \
         VolumeHelper<T> read_vol = read_volume("test_file_" #T "." #ext); \
         REQUIRE(read_vol.valid()); \
+        REQUIRE(read_vol.voxel_type() == vol.voxel_type()); \
         REQUIRE(compare_volumes(read_vol, vol)); \
         CHECK(read_vol.origin().x == Approx(vol.origin().x)); \
         CHECK(read_vol.origin().y == Approx(vol.origin().y)); \
@@ -81,3 +82,4 @@ TEST_CASE("io", "[io] [volume]")
 IO_TEST_EXTENSION(vtk);
 IO_TEST_EXTENSION(nii);
 IO_TEST_EXTENSION(nii.gz);
+IO_TEST_EXTENSION(nrrd);

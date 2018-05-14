@@ -1,5 +1,6 @@
 #include "io.h"
 #include "nifti.h"
+#include "nrrd.h"
 #include "vtk.h"
 
 #include "stk/common/log.h"
@@ -66,6 +67,20 @@ namespace stk
             writers.push_back(nii_writer);
             
             nifti::initialize();
+            
+            // Nrrd
+            VolumeReader nrrd_reader = {
+                nrrd::read,
+                nrrd::signature_length,
+                nrrd::can_read
+            };
+            VolumeWriter nrrd_writer = {
+                nrrd::write,
+                nrrd::can_write
+            };
+
+            readers.push_back(nrrd_reader);
+            writers.push_back(nrrd_writer);
         }
         std::vector<VolumeReader> readers;
         std::vector<VolumeWriter> writers;

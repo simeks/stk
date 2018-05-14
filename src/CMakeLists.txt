@@ -7,6 +7,8 @@ set(STK_SRCS
     "stk/io/io.h"
     "stk/io/nifti.cpp"
     "stk/io/nifti.h"
+    "stk/io/nrrd.cpp"
+    "stk/io/nrrd.h"
     "stk/io/vtk.cpp"
     "stk/io/vtk.h"
     "stk/math/types.h"
@@ -21,5 +23,5 @@ set(STK_SRCS
 add_library(stk STATIC ${STK_SRCS})
 
 target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(stk niftiio)
+target_link_libraries(stk niftiio NrrdIO)
 
