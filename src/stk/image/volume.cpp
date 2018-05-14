@@ -91,6 +91,8 @@ void Volume::copy_from(const Volume& other)
 }
 Volume Volume::as_type(Type type) const
 {
+    ASSERT(valid());
+    ASSERT(type != Type_Unknown);
     if (_voxel_type == type)
         return *this;
 

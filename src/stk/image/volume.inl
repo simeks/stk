@@ -298,11 +298,15 @@ VolumeHelper<T>& VolumeHelper<T>::operator=(const VolumeHelper& other)
 template<typename T>
 VolumeHelper<T>& VolumeHelper<T>::operator=(const Volume& other)
 {
-    if (type_id<T>::id ==other.voxel_type())
-    {
+    if (type_id<T>::id == other.voxel_type()) {
         Volume::operator=(other);
         return *this;
     }
+    if (!other.valid()) {
+        release();
+        return *this;
+    }
+
     *this = other.as_type((Type)type_id<T>::id);
     return *this;
 }
