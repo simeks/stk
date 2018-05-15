@@ -157,6 +157,9 @@ namespace stk
         explicit VolumeHelper(const dim3& size, T* value);
         ~VolumeHelper();
 
+        // Note: Resets spacing and origin
+        void allocate(const dim3& size);
+
         // Fills the volume with the specified value
         void fill(const T& value);
 
@@ -186,20 +189,50 @@ namespace stk
     template<typename T>
     void find_min_max(const VolumeHelper<T>& vol, T& min, T& max);
 
-    typedef VolumeHelper<uint8_t> VolumeUChar;
-    typedef VolumeHelper<uchar2>  VolumeUChar2;
-    typedef VolumeHelper<uchar3>  VolumeUChar3;
-    typedef VolumeHelper<uchar4>  VolumeUChar4;
+    typedef VolumeHelper<char>      VolumeChar;
+    typedef VolumeHelper<char2>     VolumeChar2;
+    typedef VolumeHelper<char3>     VolumeChar3;
+    typedef VolumeHelper<char4>     VolumeChar4;
 
-    typedef VolumeHelper<float>  VolumeFloat;
-    typedef VolumeHelper<float2> VolumeFloat2;
-    typedef VolumeHelper<float3> VolumeFloat3;
-    typedef VolumeHelper<float4> VolumeFloat4;
+    typedef VolumeHelper<uint8_t>   VolumeUChar;
+    typedef VolumeHelper<uchar2>    VolumeUChar2;
+    typedef VolumeHelper<uchar3>    VolumeUChar3;
+    typedef VolumeHelper<uchar4>    VolumeUChar4;
 
-    typedef VolumeHelper<double>  VolumeDouble;
-    typedef VolumeHelper<double2> VolumeDouble2;
-    typedef VolumeHelper<double3> VolumeDouble3;
-    typedef VolumeHelper<double4> VolumeDouble4;
+    typedef VolumeHelper<short>     VolumeShort;
+    typedef VolumeHelper<short2>    VolumeShort2;
+    typedef VolumeHelper<short3>    VolumeShort3;
+    typedef VolumeHelper<short4>    VolumeShort4;
+
+    typedef VolumeHelper<uint16_t>  VolumeUShort;
+    typedef VolumeHelper<ushort2>   VolumeUShort2;
+    typedef VolumeHelper<ushort3>   VolumeUShort3;
+    typedef VolumeHelper<ushort4>   VolumeUShort4;
+
+    typedef VolumeHelper<int>       VolumeInt;
+    typedef VolumeHelper<int2>      VolumeInt2;
+    typedef VolumeHelper<int3>      VolumeInt3;
+    typedef VolumeHelper<int4>      VolumeInt4;
+
+    typedef VolumeHelper<uint32_t>  VolumeUInt;
+    typedef VolumeHelper<uint2>     VolumeUInt2;
+    typedef VolumeHelper<uint3>     VolumeUInt3;
+    typedef VolumeHelper<uint4>     VolumeUInt4;
+
+    typedef VolumeHelper<uint16_t>  VolumeUShort;
+    typedef VolumeHelper<ushort2>   VolumeUShort2;
+    typedef VolumeHelper<ushort3>   VolumeUShort3;
+    typedef VolumeHelper<ushort4>   VolumeUShort4;
+
+    typedef VolumeHelper<float>     VolumeFloat;
+    typedef VolumeHelper<float2>    VolumeFloat2;
+    typedef VolumeHelper<float3>    VolumeFloat3;
+    typedef VolumeHelper<float4>    VolumeFloat4;
+
+    typedef VolumeHelper<double>    VolumeDouble;
+    typedef VolumeHelper<double2>   VolumeDouble2;
+    typedef VolumeHelper<double3>   VolumeDouble3;
+    typedef VolumeHelper<double4>   VolumeDouble4;
 }
 
 #include "volume.inl"

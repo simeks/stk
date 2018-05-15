@@ -30,6 +30,11 @@ VolumeHelper<T>::~VolumeHelper()
 {
 }
 template<typename T>
+void VolumeHelper<T>::allocate(const dim3& size)
+{
+    Volume::allocate(size, (Type)type_id<T>::id);
+}
+template<typename T>
 void VolumeHelper<T>::fill(const T& value)
 {
     for (uint32_t z = 0; z < _size.z; ++z) {
