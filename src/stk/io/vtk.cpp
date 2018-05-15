@@ -340,8 +340,8 @@ namespace vtk {
 
     void write(const char* file, const Volume& vol)
     {
-        assert(vol.valid());
-        assert(vol.voxel_type() != Type_Unknown);
+        ASSERT(vol.valid());
+        ASSERT(vol.voxel_type() != Type_Unknown);
 
         //# vtk DataFile Version 3.0
         //<Title>
@@ -402,7 +402,7 @@ namespace vtk {
             data_type = "double";
             break;
         default:
-            assert(false && "Unsupported format");
+            FATAL() << "Unsupported format";
             return;
         };
 

@@ -193,6 +193,9 @@ namespace nifti {
 
     void write(const char* filename, const Volume& vol)
     {
+        ASSERT(vol.valid());
+        ASSERT(vol.voxel_type() != Type_Unknown);
+        
         // NIFTI-1
 
         nifti_1_header nhdr = {0};
