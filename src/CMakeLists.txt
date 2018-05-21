@@ -3,6 +3,8 @@ set(STK_SRCS
     "stk/common/error.h"
     "stk/common/log.cpp"
     "stk/common/log.h"
+    "stk/cuda/cuda.cpp"
+    "stk/cuda/cuda.h"
     "stk/io/io.cpp"
     "stk/io/io.h"
     "stk/io/nifti.cpp"
@@ -22,6 +24,6 @@ set(STK_SRCS
 
 add_library(stk STATIC ${STK_SRCS})
 
-target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(stk niftiio NrrdIO)
+target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CUDA_INCLUDE_DIRS})
+target_link_libraries(stk niftiio NrrdIO ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
 

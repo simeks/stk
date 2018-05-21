@@ -11,6 +11,11 @@ set(STK_TEST_SRCS
     "test_volume.cpp"
     )
 
+if (STK_USE_CUDA)
+    set(STK_TEST_SRCS ${STK_TEST_SRCS} "test_cuda.cpp")
+endif ()
+
+
 add_executable(stk_test ${STK_TEST_SRCS})
 add_test(stk_test stk_test)
 
