@@ -15,6 +15,8 @@ set(STK_SRCS
     "stk/io/vtk.h"
     "stk/math/types.h"
     "stk/image/dim3.h"
+    "stk/image/gpu_volume.cpp"
+    "stk/image/gpu_volume.h"
     "stk/image/types.cpp"
     "stk/image/types.h"
     "stk/image/volume.cpp"

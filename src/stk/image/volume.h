@@ -16,10 +16,6 @@ namespace stk
         Border_Replicate
     };
 
-#ifdef STK_USE_CUDA
-    struct GpuVolume;
-#endif // STK_USE_CUDA
-
     struct VolumeData
     {
         VolumeData();
@@ -107,25 +103,6 @@ namespace stk
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume(const Volume& other);
         Volume& operator=(const Volume& other);
-
-    #ifdef STK_USE_CUDA
-        // Creates a new volume on the CPU side and downloads the given volume from the gpu into it.
-        Volume(const GpuVolume& gpu_volume);
-
-        // Uploads this volume to a newly allocated GPU volume
-        // @remark Requires both volumes to be of same size and type
-        // @return Handle to newly created GPU volume
-        GpuVolume upload() const;
-
-        // Uploads this volume to given GPU volume
-        // @remark Requires both volumes to be of same size and type
-        void upload(const GpuVolume& gpu_volume) const;
-
-        // Downloads the given volume into this volume
-        // @remark Requires both volumes to be of same size and type
-        void download(const GpuVolume& gpu_volume);
-    #endif // STK_USE_CUDA
-
 
     protected:
         std::shared_ptr<VolumeData> _data;

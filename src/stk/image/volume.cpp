@@ -1,10 +1,3 @@
-#ifdef STK_USE_CUDA
-    #include <cuda_runtime.h>
-
-    #include "gpu_volume.h"
-    #include "helper_cuda.h"
-#endif
-
 #include "volume.h"
 #include "stk/common/assert.h"
 
@@ -209,59 +202,5 @@ void Volume::release()
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
 }
-
-#ifdef STK_USE_CUDA
-Volume::Volume(const GpuVolume& gpu_volume)
-{
-    allocate(gpu_volume.size, gpu::voxel_type(gpu_volume));
-    download(gpu_volume);
-}
-GpuVolume Volume::upload() const
-{
-    GpuVolume vol = gpu::allocate_volume(_voxel_type, _size);
-    upload(vol);
-    return vol;
-}
-void Volume::upload(const GpuVolume& gpu_volume) const
-{
-    assert(gpu_volume.ptr != NULL); // Requires gpu memory to be allocated
-    assert(valid()); // Requires cpu memory to be allocated as well
-
-    // We also assume both volumes have same dimensions
-    assert( gpu_volume.size.x == _size.x &&
-            gpu_volume.size.y == _size.y &&
-            gpu_volume.size.z == _size.z);
-
-    // TODO: Validate format?
-
-    cudaMemcpy3DParms params = { 0 };
-    params.srcPtr = make_cudaPitchedPtr(_ptr, _size.x * voxel::size(_voxel_type), _size.x, _size.y);
-    params.dstArray = gpu_volume.ptr;
-    params.extent = { gpu_volume.size.x, gpu_volume.size.y, gpu_volume.size.z };
-    params.kind = cudaMemcpyHostToDevice;
-    checkCudaErrors(cudaMemcpy3D(&params));
-}
-void Volume::download(const GpuVolume& gpu_volume)
-{
-    assert(gpu_volume.ptr != NULL); // Requires gpu memory to be allocated
-    assert(valid()); // Requires cpu memory to be allocated as well
-
-    // We also assume both volumes have same dimensions
-    assert( gpu_volume.size.x == _size.x &&
-            gpu_volume.size.y == _size.y &&
-            gpu_volume.size.z == _size.z);
-
-    // TODO: Validate format?
-
-    cudaMemcpy3DParms params = { 0 };
-    params.srcArray = gpu_volume.ptr;
-    params.dstPtr = make_cudaPitchedPtr(_ptr, _size.x * voxel::size(_voxel_type), _size.x, _size.y);
-    params.extent = { gpu_volume.size.x, gpu_volume.size.y, gpu_volume.size.z };
-    params.kind = cudaMemcpyDeviceToHost;
-    checkCudaErrors(cudaMemcpy3D(&params));
-}
-
-#endif // STK_USE_CUDA
-
 } // namespace stk
 

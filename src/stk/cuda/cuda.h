@@ -1,6 +1,6 @@
 #pragma once
 
-#define CUDA_CHECK_ERROR(val) \
+#define CUDA_CHECK_ERRORS(val) \
     if (val != cudaSuccess) { \
         cudaDeviceReset(); \
         FATAL() << "CUDA error: " << cudaGetErrorString(val); \

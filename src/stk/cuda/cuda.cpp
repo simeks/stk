@@ -18,7 +18,7 @@ namespace stk
 
         for (int i = 0; i < n; ++i) {
             cudaDeviceProp prop;
-            CUDA_CHECK_ERROR(cudaGetDeviceProperties(&prop, i));
+            CUDA_CHECK_ERRORS(cudaGetDeviceProperties(&prop, i));
 
             LOG(Info) << "[CUDA] Device: " << i << " name: " << prop.name;
         }
@@ -27,22 +27,22 @@ namespace stk
     int cuda::device_count()
     {
         int n;
-        CUDA_CHECK_ERROR(cudaGetDeviceCount(&n));
+        CUDA_CHECK_ERRORS(cudaGetDeviceCount(&n));
         return n;
     }
     void cuda::set_device(int device_id)
     {
-        CUDA_CHECK_ERROR(cudaSetDevice(device_id));
+        CUDA_CHECK_ERRORS(cudaSetDevice(device_id));
     }
     int cuda::device()
     {
         int device_id;
-        CUDA_CHECK_ERROR(cudaGetDevice(&device_id));
+        CUDA_CHECK_ERRORS(cudaGetDevice(&device_id));
         return device_id;
     }
     void cuda::reset_device()
     {
-        CUDA_CHECK_ERROR(cudaDeviceReset());
+        CUDA_CHECK_ERRORS(cudaDeviceReset());
     }
 }
 
