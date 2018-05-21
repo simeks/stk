@@ -5,11 +5,14 @@
 
 using namespace stk;
 
+namespace {
+    const uint32_t W = 2;
+    const uint32_t H = 3;
+    const uint32_t D = 4;
+}
+
 TEST_CASE("volume", "[volume]")
 {
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
     uint8_t test_data[W*H*D];
 
     for (uint32_t z = 0; z < D; ++z) {
@@ -72,10 +75,6 @@ TEST_CASE("volume_ref", "[volume]")
 {
     // Test reference handling
 
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
-
     uint8_t test_data[W*H*D];
     for (int i = 0; i < W*H*D; ++i)
         test_data[i] = uint8_t(i);
@@ -120,10 +119,6 @@ TEST_CASE("volume_ref", "[volume]")
 
 TEST_CASE("volume_types", "[volume]")
 {
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
-
     #define TYPE_TEST(T, T_id) \
         SECTION(#T) \
         { \
@@ -177,10 +172,6 @@ TEST_CASE("volume_meta_data", "[volume]")
 
 TEST_CASE("volume_clone", "[volume]")
 {
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
-
     float test_data[W*H*D];
     for (int i = 0; i < W*H*D; ++i)
         test_data[i] = float(i);
@@ -216,10 +207,6 @@ TEST_CASE("volume_clone", "[volume]")
 
 TEST_CASE("volume_copy_from", "[volume]")
 {
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
-
     float test_data[W*H*D];
     for (int i = 0; i < W*H*D; ++i)
         test_data[i] = float(i);
@@ -247,10 +234,6 @@ TEST_CASE("volume_copy_from", "[volume]")
 }
 TEST_CASE("volume_as_type", "[volume]")
 {
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
-
     // Currently we only support float => double
     SECTION("float_to_double")
     {
@@ -358,10 +341,6 @@ TEST_CASE("volume_as_type", "[volume]")
 }
 TEST_CASE("volume_helper", "[volume]")
 {
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
-
     SECTION("constructor")
     {
         VolumeHelper<float> vol;

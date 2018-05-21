@@ -9,9 +9,9 @@
 using namespace stk;
 
 namespace {
-    const int W = 2;
-    const int H = 3;
-    const int D = 4;
+    const uint32_t W = 2;
+    const uint32_t H = 3;
+    const uint32_t D = 4;
 }
 
 TEST_CASE("io", "[io] [volume]")
