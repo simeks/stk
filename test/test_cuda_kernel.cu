@@ -1,3 +1,5 @@
+#include "catch.hpp"
+
 #include <cuda_runtime.h>
 
 #include <stk/cuda/ptr.h>
@@ -14,16 +16,14 @@ namespace {
     const uint32_t D = 40;
 }
 
-__global__ void copy_kernel(cuda::VolumePtr in, cuda::VolumePtr out)
+
+__global__ void copy_kernel(cuda::VolumePtr<float> in, cuda::VolumePtr<float> out)
 {
     int x = blockIdx.x*blockDim.x + threadIdx.x;
     int y = blockIdx.y*blockDim.y + threadIdx.y;
     int z = blockIdx.z*blockDim.z + threadIdx.z;
 
-    if (x >= new_dims.width ||
-        y >= new_dims.height ||
-        z >= new_dims.depth)
-    {
+    if (x >= W || y >= H || z >= D) {
         return;
     }
 
@@ -36,7 +36,7 @@ TEST_CASE("cuda_copy_kernel", "[cuda]")
     SECTION("float")
     {
         float test_data[W*H*D];
-        TestDataGenerator::run(test_data, W, H, D);
+        TestDataGenerator<float>::run(test_data, W, H, D);
         
         VolumeHelper<float> in({W,H,D}, test_data);
         
@@ -58,6 +58,6 @@ TEST_CASE("cuda_copy_kernel", "[cuda]")
 
         Volume out = gpu_out.download();
 
-        REQUIRE(compare_volumes(in, out));
+        REQUIRE(compare_volumes<float>(in, out));
     }
 }

@@ -12,20 +12,16 @@ set(STK_TEST_SRCS
     "test_volume.cpp"
     )
 
-if (STK_USE_CUDA)
-    set(STK_TEST_SRCS ${STK_TEST_SRCS} "test_cuda.cpp")
 
-    set(STK_TEST_CUDA_SRCS
+if (STK_USE_CUDA)
+    set(STK_TEST_SRCS
+        ${STK_TEST_SRCS}
+        "test_cuda.cpp"
         "test_cuda_kernel.cu"
     )
-
-    cuda_compile(STK_TEST_CUDA_C_SRCS ${STK_TEST_CUDA_SRCS})
-    set(STK_TEST_SRCS ${STK_TEST_SRCS} ${STK_TEST_CUDA_C_SRCS})
-    
-
 endif ()
 
-add_executable(stk_test ${STK_TEST_SRCS})
+cuda_add_executable(stk_test ${STK_TEST_SRCS})
 add_test(stk_test stk_test)
 
 target_link_libraries(stk_test Catch stk)
