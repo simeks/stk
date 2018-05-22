@@ -84,6 +84,14 @@ namespace stk
         NullStream& operator<<(const T&) { return *this; }
     };
 
+    // Used by the LOG macros to make sure they have a void return.
+    // Avoids certain warnings and errors
+    struct LogFinisher
+    {
+        LogFinisher() {}
+        void operator&(std::ostream&) {}
+    };
+
     typedef void (LogCallback)(void*, LogLevel, const char*);
 
     // Initializes logging, should be called at application startup
@@ -113,15 +121,15 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
 }
 
 #ifdef STK_LOGGING_PREFIX_FILE
-    #define LOG(level) stk::LogMessage(stk::##level, __FILE__, __LINE__).stream()
+    #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::##level, __FILE__, __LINE__).stream()
     
     #ifdef NDEBUG
-        #define DLOG(level) stk::NullStream()
+        #define DLOG(level) stk::LogFinisher() & stk::NullStream()
     #else
         #define DLOG(level) LOG(level)
     #endif
 #else
-    #define LOG(level) stk::LogMessage(stk::##level).stream()
+    #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::##level).stream()
 #endif
 
 #define LOG_IF(level, expr) !(expr) ? (void)0 : LOG(level)

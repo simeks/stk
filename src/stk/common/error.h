@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "log.h"
+
 #define STK_USE_EXCEPTIONS 1
 
 #if STK_USE_EXCEPTIONS
@@ -40,6 +42,7 @@ namespace stk
         int _line;
     };
 
+
     // Logs the error message and either exits the application or throws an 
     //  exception depending on whether STK_USE_EXCEPTIONS is set or not.
     // Typically called through any of the error macros.
@@ -50,7 +53,7 @@ namespace stk
 #define FATAL() stk::FatalError(__FILE__, __LINE__).stream()
 
 // Usage: FATAL_IF(failed==true) << "Error message";
-#define FATAL_IF(expr) !(expr) ? (void)0 : FATAL()
+#define FATAL_IF(expr) !(expr) ? (void)0 : stk::LogFinisher() & FATAL()
 
 // Just a macro to identify "TODOs" in code
 #define NOT_IMPLEMENTED() FATAL()
