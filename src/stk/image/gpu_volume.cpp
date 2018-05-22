@@ -191,14 +191,14 @@ GpuVolumeData::~GpuVolumeData()
 GpuVolume::GpuVolume()
 {
     _size = {0};
-    _origin = {0};
-    _spacing = {0};
+    _origin = {0, 0, 0};
+    _spacing = {1, 1, 1};
 }
 GpuVolume::GpuVolume(const dim3& size, Type voxel_type, gpu::Usage usage)
 {
     _size = size;
-    _origin = {0};
-    _spacing = {0};
+    _origin = {0, 0, 0};
+    _spacing = {1, 1, 1};
     _data = allocate_gpu_volume(size, voxel_type, usage);
 }
 GpuVolume::~GpuVolume()
@@ -266,6 +266,9 @@ void GpuVolume::copy_from(const GpuVolume& other)
     );
     
     CUDA_CHECK_ERRORS(cudaMemcpy3D(&params));
+
+    _origin = other._origin;
+    _spacing = other._spacing;
 }
 bool GpuVolume::valid() const
 {

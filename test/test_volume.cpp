@@ -79,10 +79,10 @@ TEST_CASE("volume_ref", "[volume]")
     for (int i = 0; i < W*H*D; ++i)
         test_data[i] = uint8_t(i);
 
-    Volume vol({W,H,D}, Type_UChar, test_data);
-
     SECTION("assignment")
     {
+        Volume vol({W,H,D}, Type_UChar, test_data);
+
         // Create a soft copy, will be referencing the same memory
         Volume copy = vol;
         REQUIRE(copy.valid());
@@ -100,6 +100,8 @@ TEST_CASE("volume_ref", "[volume]")
     }
     SECTION("copy_constructor")
     {
+        Volume vol({W,H,D}, Type_UChar, test_data);
+
         // Create a soft copy, will be referencing the same memory
         Volume copy(vol);
         REQUIRE(copy.valid());

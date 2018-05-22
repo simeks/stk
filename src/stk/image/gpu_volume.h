@@ -47,6 +47,11 @@ namespace stk
             gpu::Usage usage = gpu::Usage_PitchedPointer);
         ~GpuVolume();
         
+        // Allocates volume memory for a volume with specified parameters
+        // Will release any previously allocated memory.
+        void allocate(const dim3& size, Type voxel_type,
+            gpu::Usage usage = gpu::Usage_PitchedPointer);
+
         // Releases the volume data
         void release();
 
@@ -83,7 +88,7 @@ namespace stk
         GpuVolume(const Volume& vol, gpu::Usage usage = gpu::Usage_PitchedPointer);
 
         // Downloads this volume to a new volume
-        // @return Handle to newly created GPU volume
+        // @return Handle to newly created volume
         Volume download() const;
 
         // Downloads this volume to given volume
@@ -114,9 +119,6 @@ namespace stk
         cudaPitchedPtr pitched_ptr() const;
 
     private:
-        void allocate(const dim3& size, Type voxel_type, 
-            gpu::Usage usage = gpu::Usage_PitchedPointer);
-
         std::shared_ptr<GpuVolumeData> _data;
 
         dim3 _size;

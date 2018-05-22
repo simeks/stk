@@ -2,6 +2,7 @@ set(STK_TEST_SRCS
     "test_dim3.cpp"
     "test_error.cpp"
     "test_filters.cpp"
+    "test_gpu_volume.cpp"
     "test_io.cpp"
     "test_main.cpp"
     "test_math.cpp"
