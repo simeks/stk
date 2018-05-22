@@ -4,8 +4,6 @@
 
 using namespace stk;
 
-#ifdef STK_USE_CUDA
-
 TEST_CASE("cuda", "[cuda]")
 {
     REQUIRE_NOTHROW(cuda::init());
@@ -20,4 +18,3 @@ TEST_CASE("cuda", "[cuda]")
     }
 }
 
-#endif // STK_USE_CUDA
