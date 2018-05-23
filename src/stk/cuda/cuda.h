@@ -2,7 +2,6 @@
 
 #define CUDA_CHECK_ERRORS(val) \
     if (val != cudaSuccess) { \
-        cudaDeviceReset(); \
         FATAL() << "[CUDA] " << cudaGetErrorString(val) << "(code=" << val << ")"; \
     }
 
