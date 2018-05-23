@@ -1,14 +1,61 @@
 #include "cuda.h"
+#include "stk/common/assert.h"
 #include "stk/common/error.h"
 #include "stk/common/log.h"
+#include "stk/image/gpu_volume.h"
 
 #ifdef STK_USE_CUDA
 
 #include <cuda_runtime.h>
 
-namespace stk
-{
-    void cuda::init()
+namespace stk {
+namespace cuda {
+    TextureObject::TextureObject(const GpuVolume& vol, const cudaTextureDesc& tex_desc)
+    {
+        ASSERT(vol.valid());
+        ASSERT(vol.usage() == gpu::Usage_Texture);
+
+        cudaResourceDesc res_desc;
+        memset(&res_desc, 0, sizeof(res_desc));
+        res_desc.resType = cudaResourceTypeArray;
+        res_desc.res.array.array = vol.array_ptr();
+
+        // TODO: Explore cost of creating/destroying texture/surface objects
+        CUDA_CHECK_ERRORS(cudaCreateTextureObject(&_obj, &res_desc, &tex_desc, nullptr)); \
+    }
+    TextureObject::~TextureObject()
+    {
+        CUDA_CHECK_ERRORS(cudaDestroyTextureObject(_obj));
+    }
+
+    TextureObject::operator cudaTextureObject_t() const 
+    {
+        return _obj;
+    }
+
+    SurfaceObject::SurfaceObject(const GpuVolume& vol)
+    {
+        ASSERT(vol.valid());
+        ASSERT(vol.usage() == gpu::Usage_Texture);
+
+        cudaResourceDesc desc;
+        memset(&desc, 0, sizeof(desc));
+        desc.resType = cudaResourceTypeArray;
+        desc.res.array.array = vol.array_ptr();
+
+        CUDA_CHECK_ERRORS(cudaCreateSurfaceObject(&_obj, &desc));
+    }
+    SurfaceObject::~SurfaceObject()
+    {
+        CUDA_CHECK_ERRORS(cudaDestroySurfaceObject(_obj));
+    }
+    SurfaceObject::operator cudaSurfaceObject_t() const
+    {
+        return _obj;
+    }
+
+
+    void init()
     {
         int n = device_count();
         if (n == 0) {
@@ -24,26 +71,28 @@ namespace stk
         }
         set_device(0);
     }
-    int cuda::device_count()
+    int device_count()
     {
         int n;
         CUDA_CHECK_ERRORS(cudaGetDeviceCount(&n));
         return n;
     }
-    void cuda::set_device(int device_id)
+    void set_device(int device_id)
     {
         CUDA_CHECK_ERRORS(cudaSetDevice(device_id));
     }
-    int cuda::device()
+    int device()
     {
         int device_id;
         CUDA_CHECK_ERRORS(cudaGetDevice(&device_id));
         return device_id;
     }
-    void cuda::reset_device()
+    void reset_device()
     {
         CUDA_CHECK_ERRORS(cudaDeviceReset());
     }
-}
+
+} // namespace cuda
+} // namespace stk
 
 #endif // STK_USE_CUDA

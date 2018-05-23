@@ -64,8 +64,8 @@ TEST_CASE("cuda_copy_kernel", "[cuda]")
                 (D + block_size.z - 1) / block_size.z \
             }; \
             copy_kernel<T><<<grid_size, block_size>>>( \
-                gpu_in.pitched_ptr(), \
-                gpu_out.pitched_ptr() \
+                gpu_in, \
+                gpu_out \
             ); \
             CUDA_CHECK_ERRORS(cudaDeviceSynchronize()); \
             Volume out = gpu_out.download(); \
@@ -115,26 +115,14 @@ TEST_CASE("cuda_copy_texture_kernel", "[cuda]")
             VolumeHelper<T> in({W,H,D}, test_data); \
             GpuVolume gpu_in(in, gpu::Usage_Texture); \
             GpuVolume gpu_out(gpu_in.size(), gpu_in.voxel_type(), gpu::Usage_Texture); \
-            cudaResourceDesc in_res_desc; \
-            memset(&in_res_desc, 0, sizeof(in_res_desc)); \
-            in_res_desc.resType = cudaResourceTypeArray; \
-            in_res_desc.res.array.array = gpu_in.array_ptr(); \
             cudaTextureDesc tex_desc; \
             memset(&tex_desc, 0, sizeof(tex_desc)); \
             tex_desc.addressMode[0] = cudaAddressModeClamp; \
             tex_desc.addressMode[1] = cudaAddressModeClamp; \
             tex_desc.addressMode[2] = cudaAddressModeClamp; \
             tex_desc.filterMode = cudaFilterModePoint; \
-            cudaTextureObject_t in_obj; \
-            memset(&in_obj, 0, sizeof(in_obj)); \
-            CUDA_CHECK_ERRORS(cudaCreateTextureObject(&in_obj, &in_res_desc, &tex_desc, nullptr)); \
-            cudaResourceDesc out_res_desc;\
-            memset(&out_res_desc, 0, sizeof(out_res_desc)); \
-            out_res_desc.resType = cudaResourceTypeArray; \
-            out_res_desc.res.array.array = gpu_out.array_ptr(); \
-            cudaSurfaceObject_t out_obj; \
-            memset(&out_obj, 0, sizeof(out_obj)); \
-            CUDA_CHECK_ERRORS(cudaCreateSurfaceObject(&out_obj, &out_res_desc)); \
+            cuda::TextureObject in_obj(gpu_in, tex_desc); \
+            cuda::SurfaceObject out_obj(gpu_out); \
             dim3 block_size{8,8,1}; \
             dim3 grid_size { \
                 (W + block_size.x - 1) / block_size.x, \
@@ -145,42 +133,41 @@ TEST_CASE("cuda_copy_texture_kernel", "[cuda]")
                 in_obj, \
                 out_obj \
             ); \
-            CUDA_CHECK_ERRORS(cudaGetLastError()); \
             CUDA_CHECK_ERRORS(cudaDeviceSynchronize()); \
-            CUDA_CHECK_ERRORS(cudaDestroyTextureObject(in_obj)); \
-            CUDA_CHECK_ERRORS(cudaDestroySurfaceObject(out_obj)); \
-            Volume out = gpu_out.download(); \
+            VolumeHelper<T> out = gpu_out.download(); \
+            printf("%f %f %f\n", in(0,0,0), in(1,0,0), in(1,1,1)); \
+            printf("%f %f %f\n", out(0,0,0), out(1,0,0), out(1,1,1)); \
             REQUIRE(compare_volumes<T>(in, out)); \
             delete [] test_data; \
         }
     
-    TEST_TYPE(char);
-    TEST_TYPE(char2);
-    TEST_TYPE(char4);
+    // TEST_TYPE(char);
+    // TEST_TYPE(char2);
+    // TEST_TYPE(char4);
 
-    TEST_TYPE(uint8_t);
-    TEST_TYPE(uchar2);
-    TEST_TYPE(uchar4);
+    // TEST_TYPE(uint8_t);
+    // TEST_TYPE(uchar2);
+    // TEST_TYPE(uchar4);
     
-    TEST_TYPE(short);
-    TEST_TYPE(short2);
-    TEST_TYPE(short4);
+    // TEST_TYPE(short);
+    // TEST_TYPE(short2);
+    // TEST_TYPE(short4);
 
-    TEST_TYPE(uint16_t);
-    TEST_TYPE(short2);
-    TEST_TYPE(short4);
+    // TEST_TYPE(uint16_t);
+    // TEST_TYPE(short2);
+    // TEST_TYPE(short4);
 
-    TEST_TYPE(int);
-    TEST_TYPE(int2);
-    TEST_TYPE(int4);
+    // TEST_TYPE(int);
+    // TEST_TYPE(int2);
+    // TEST_TYPE(int4);
 
-    TEST_TYPE(uint32_t);
-    TEST_TYPE(uint2);
-    TEST_TYPE(uint4);
+    // TEST_TYPE(uint32_t);
+    // TEST_TYPE(uint2);
+    // TEST_TYPE(uint4);
 
     TEST_TYPE(float);
-    TEST_TYPE(float2);
-    TEST_TYPE(float4);
+  //  TEST_TYPE(float2);
+//    TEST_TYPE(float4);
 
     #undef TEST_TYPE
 }
