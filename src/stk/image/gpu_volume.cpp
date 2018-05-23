@@ -117,25 +117,6 @@ namespace
 
         return vol;
     }
-    void release_gpu_volume(GpuVolumeData& vol)
-    {
-        if (vol.usage == gpu::Usage_PitchedPointer) {
-            if (vol.pitched_ptr.ptr == nullptr)
-                return; // not allocated;
-
-            // No error checks for free as that will cause problems if an error
-            //  has already been triggered and the system is shutting down.
-            cudaFree(vol.pitched_ptr.ptr);
-            vol.pitched_ptr.ptr = nullptr;
-        }
-        else {
-            if (vol.array_ptr == nullptr)
-                return; // not allocated;
-
-            cudaFreeArray(vol.array_ptr);
-            vol.array_ptr = nullptr;
-        }
-    }
 }
 
 namespace stk
@@ -150,32 +131,42 @@ namespace gpu
         if (format_desc.z > 0) ++num_comp;
         if (format_desc.w > 0) ++num_comp;
         
+        Type base_type = Type_Unknown;
         if (format_desc.f == cudaChannelFormatKindFloat) {
             if (format_desc.x != 32) {
                 FATAL() << "Unsupported format";
             }
 
-            Type voxel_type = Type_Unknown;
-            if (num_comp == 1) voxel_type = Type_Float;
-            if (num_comp == 2) voxel_type = Type_Float2;
-            if (num_comp == 3) voxel_type = Type_Float3;
-            if (num_comp == 4) voxel_type = Type_Float4;
-
-            return voxel_type;
+            base_type = Type_Float;
+        }
+        else if (format_desc.f == cudaChannelFormatKindSigned) {
+            if (format_desc.x == 8) {
+                base_type = Type_Char;
+            }
+            else if (format_desc.x == 16) {
+                base_type = Type_Short;
+            }
+            if (format_desc.x == 32) {
+                base_type = Type_Int;
+            }
         }
         else if (format_desc.f == cudaChannelFormatKindUnsigned) {
             if (format_desc.x == 8) {
-                Type voxel_type = Type_Unknown;
-                if (num_comp == 1) voxel_type = Type_UChar;
-                if (num_comp == 2) voxel_type = Type_UChar2;
-                if (num_comp == 3) voxel_type = Type_UChar3;
-                if (num_comp == 4) voxel_type = Type_UChar4;
-                return voxel_type;
+                base_type = Type_UChar;
+            }
+            else if (format_desc.x == 16) {
+                base_type = Type_UShort;
+            }
+            if (format_desc.x == 32) {
+                base_type = Type_UInt;
             }
         }
 
-        FATAL() << "Unsupported format";
-        return Type_Unknown;
+        Type type = build_type(base_type, num_comp);
+        FATAL_IF(type == Type_Unknown) 
+            << "Unsupported format";
+
+        return type;
     }
 }
 
@@ -188,7 +179,22 @@ GpuVolumeData::GpuVolumeData() :
 }
 GpuVolumeData::~GpuVolumeData()
 {
-    release_gpu_volume(*this);
+    if (usage == gpu::Usage_PitchedPointer) {
+        if (pitched_ptr.ptr == nullptr)
+            return; // not allocated;
+
+                    // No error checks for free as that will cause problems if an error
+                    //  has already been triggered and the system is shutting down.
+        cudaFree(pitched_ptr.ptr);
+        pitched_ptr.ptr = nullptr;
+    }
+    else {
+        if (array_ptr == nullptr)
+            return; // not allocated;
+
+        cudaFreeArray(array_ptr);
+        array_ptr = nullptr;
+    }
 }
 
 GpuVolume::GpuVolume()
