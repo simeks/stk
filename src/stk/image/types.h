@@ -9,6 +9,9 @@ namespace stk
 {
     enum Type : uint8_t
     {
+        // Do not change the orders of these entries as some functions are
+        //  dependent on this. E.g. build_type
+
         Type_Unknown = 0,
 
         Type_Char,
@@ -63,6 +66,10 @@ namespace stk
 
     // Returns the name of the type as a string
     const char* as_string(Type type);
+
+    // Combines a base type and number of components and returns the new type.
+    // base_type has to be a base type, e.g. Type_Float.
+    Type build_type(Type base_type, int num_comp);
 
     // Type traits
     template<typename T>

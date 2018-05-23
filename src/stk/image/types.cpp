@@ -171,6 +171,25 @@ namespace stk
         };
         return Type_Unknown;
     }
+    Type build_type(Type base_type, int num_comp)
+    {
+        if (base_type == Type_Unknown)
+            return Type_Unknown;
+
+        DASSERT(base_type == Type_Char || 
+                base_type == Type_UChar ||
+                base_type == Type_Short ||
+                base_type == Type_UShort ||
+                base_type == Type_Int ||
+                base_type == Type_UInt ||
+                base_type == Type_Float ||
+                base_type == Type_Double
+        );
+        ASSERT(0 < num_comp && num_comp <= 4);
+        
+        return (Type)((int)base_type + num_comp - 1);
+        
+    }
     const char* as_string(Type type)
     {
         const char* names[] =
