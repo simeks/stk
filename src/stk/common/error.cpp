@@ -21,6 +21,12 @@ namespace stk
     {
         _s << "Fatal error: ";
     }
+
+#if defined(_MSC_VER)
+    #pragma warning(push)
+    #pragma warning(disable: 4722) // warning C4722: destructor never returns...
+#endif
+
     FatalError::~FatalError() noexcept(false)
     {
         const char* file = nullptr;
@@ -46,6 +52,9 @@ namespace stk
         abort();
     #endif
     }
+#if defined(_MSC_VER)
+    #pragma warning(pop)
+#endif
     std::ostringstream& FatalError::stream()
     {
         return _s;

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef STK_USE_CUDA
+
 #include <cuda_runtime.h>
 
 #define CUDA_CHECK_ERRORS(val) \
@@ -9,7 +11,6 @@
 
 namespace stk
 {
-#ifdef STK_USE_CUDA
     class GpuVolume;
 
     namespace cuda
@@ -63,5 +64,5 @@ namespace stk
         // Resets the current device
         void reset_device();
     }
-#endif // STK_USE_CUDA
 }
+#endif // STK_USE_CUDA

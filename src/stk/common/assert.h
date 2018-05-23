@@ -12,4 +12,6 @@
 
 #ifndef NDEBUG
     #define DASSERT(expr) FATAL_IF(!(expr)) << "Assertion failed: " # expr
+#else
+    #define DASSERT(expr)
 #endif
