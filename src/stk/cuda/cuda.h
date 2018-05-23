@@ -3,7 +3,7 @@
 #define CUDA_CHECK_ERRORS(val) \
     if (val != cudaSuccess) { \
         cudaDeviceReset(); \
-        FATAL() << "CUDA error: " << cudaGetErrorString(val); \
+        FATAL() << "[CUDA] " << cudaGetErrorString(val) << "(code=" << val << ")"; \
     }
 
 namespace stk

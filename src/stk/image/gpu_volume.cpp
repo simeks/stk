@@ -111,6 +111,7 @@ namespace
         }
         else {
             cudaExtent extent = make_cudaExtent(size.x, size.y, size.z);
+            // TODO: What about cudaArraySurfaceLoadStore?
             CUDA_CHECK_ERRORS(cudaMalloc3DArray(&vol->array_ptr, &vol->format_desc, extent));
         }
 
@@ -122,14 +123,16 @@ namespace
             if (vol.pitched_ptr.ptr == nullptr)
                 return; // not allocated;
 
-            CUDA_CHECK_ERRORS(cudaFree(vol.pitched_ptr.ptr));
+            // No error checks for free as that will cause problems if an error
+            //  has already been triggered and the system is shutting down.
+            cudaFree(vol.pitched_ptr.ptr);
             vol.pitched_ptr.ptr = nullptr;
         }
         else {
             if (vol.array_ptr == nullptr)
                 return; // not allocated;
 
-            CUDA_CHECK_ERRORS(cudaFreeArray(vol.array_ptr));
+            cudaFreeArray(vol.array_ptr);
             vol.array_ptr = nullptr;
         }
     }
