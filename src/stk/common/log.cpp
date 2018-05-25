@@ -212,6 +212,8 @@ namespace stk
             }
             _s << "[" << file << ":" << std::setw(4) << line << "] ";
         }
+    #else
+        file; line;
     #endif
 
         _s << "| ";

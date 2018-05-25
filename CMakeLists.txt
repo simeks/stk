@@ -6,6 +6,7 @@ option(STK_USE_CUDA "Enables CUDA support" OFF)
 option(STK_WARNINGS_ARE_ERRORS "Warnings are treated as errors" OFF)
 option(STK_BUILD_WITH_DEBUG_INFO "Includes debug info in release builds" OFF)
 option(STK_ENABLE_FAST_MATH "Enables fast math" OFF)
+option(STK_LOGGING_PREFIX_FILE "Add file name as prefix to each log message" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting default build type: 'Release'")
@@ -79,6 +80,10 @@ endif()
 if (STK_USE_CUDA)
     add_definitions(-DSTK_USE_CUDA)
     find_package(CUDA REQUIRED)
+endif()
+
+if (STK_LOGGING_PREFIX_FILE)
+    add_definitions(-DSTK_LOGGING_PREFIX_FILE)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
