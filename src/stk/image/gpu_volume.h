@@ -80,7 +80,7 @@ namespace stk
         const float3& spacing() const;
 
         // Tries to extract the voxel-type for this volume
-        // See voxel::Type
+        // See stk::Type
         Type voxel_type() const;
 
         // Creates a new volume on the GPU side and uploads the given volume into it.
