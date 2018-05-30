@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 
 namespace stk
 {
@@ -10,10 +11,10 @@ namespace stk
     // File type and IO module is automatically identified. If the file
     //  could not be found, or the format is unsupported a invalid volume
     //  (Volume::valid() == false) is returned.
-    Volume read_volume(const char* filename);
+    Volume read_volume(const std::string& filename);
 
     // Attempts to write the given volume to the specified file.
     // Uses the extension of the filename to identify the target file format.
     // Triggers a fatal error if write failed (e.g. invalid file extension).
-    void write_volume(const char* filename, const Volume& vol);
+    void write_volume(const std::string&, const Volume& vol);
 }

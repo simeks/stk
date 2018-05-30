@@ -12,12 +12,12 @@ namespace nifti {
     {
         nifti_set_debug_level(0);
     }
-    Volume read(const char* filename)
+    Volume read(const std::string& filename)
     {
         // NIFTI-1
         // TODO: [nifti] Handle image meta data
 
-        znzFile fp = znzopen(filename, "rb", nifti_is_gzfile(filename));
+        znzFile fp = znzopen(filename.c_str(), "rb", nifti_is_gzfile(filename.c_str()));
         if (znz_isnull(fp)) {
             LOG(Error) << "Failed to open file " << filename << " for reading";
             return Volume();
@@ -180,18 +180,18 @@ namespace nifti {
         return 0;
     }
 
-    bool can_read(const char* filename, const char*, size_t)
+    bool can_read(const std::string& filename, const char*, size_t)
     {
         // TODO: Signature detection on nifti
         
-        int r = is_nifti_file(filename);
+        int r = is_nifti_file(filename.c_str());
         if (r > 0)
             return true;
 
         return false;
     }
 
-    void write(const char* filename, const Volume& vol)
+    void write(const std::string& filename, const Volume& vol)
     {
         ASSERT(vol.valid());
         ASSERT(vol.voxel_type() != Type_Unknown);
@@ -326,7 +326,7 @@ namespace nifti {
         
         strncpy(nhdr.magic, "n+1", 4); // Nifti1, data in same file as header
 
-        znzFile fp = znzopen(filename, "wb", nifti_is_gzfile(filename));
+        znzFile fp = znzopen(filename.c_str(), "wb", nifti_is_gzfile(filename.c_str()));
         FATAL_IF(znz_isnull(fp)) 
             << "Failed to open file " << filename << " for writing";
 
@@ -348,9 +348,9 @@ namespace nifti {
         znzclose(fp);
     }
 
-    bool can_write(const char* filename)
+    bool can_write(const std::string& filename)
     {
-        return nifti_is_complete_filename(filename) > 0;
+        return nifti_is_complete_filename(filename.c_str()) > 0;
     }
     
 } // namespace nifti

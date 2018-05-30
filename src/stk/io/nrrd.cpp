@@ -27,11 +27,11 @@ namespace
 
 namespace stk {
 namespace nrrd {
-    Volume read(const char* filename)
+    Volume read(const std::string& filename)
     {
         Nrrd* nimg = nrrdNew();
 
-        if (nrrdLoad(nimg, filename, nullptr)) {
+        if (nrrdLoad(nimg, filename.c_str(), nullptr)) {
             LOG(Error) << "Failed to read '" << filename << "':\n" << nrrd_error();
             nrrdNuke(nimg);
             return Volume();
@@ -216,13 +216,13 @@ namespace nrrd {
         return 4;
     }
 
-    bool can_read(const char* /*filename*/, const char* signature, size_t len)
+    bool can_read(const std::string& /*filename*/, const char* signature, size_t len)
     {
         return len >= signature_length() &&
                 memcmp(signature, "NRRD", 4) == 0;
     }
 
-    void write(const char* file, const Volume& vol)
+    void write(const std::string& file, const Volume& vol)
     {
         ASSERT(vol.valid());
         ASSERT(vol.voxel_type() != Type_Unknown);
@@ -324,7 +324,7 @@ namespace nrrd {
         }
         nio->endian = airEndianLittle;
 
-        if (nrrdSave(file, nimg, nio)) {
+        if (nrrdSave(file.c_str(), nimg, nio)) {
             nrrdIoStateNix(nio);
             nrrdNix(nimg);
             FATAL() << "Failed to write file '" << file << "':\n" << nrrd_error();
@@ -336,18 +336,18 @@ namespace nrrd {
         nrrdNix(nimg);
     }
 
-    bool can_write(const char* filename)
+    bool can_write(const std::string& filename)
     {
-        const char* ext = strrchr(filename, '.');
-        if (!ext)
+        size_t p = filename.rfind('.');
+        if (p == std::string::npos)
             return false;
 
-        std::string s_ext(ext+1); // Skip '.'
+        std::string ext = filename.substr(p+1); // Skip '.'
         
-        for (size_t i = 0; i < s_ext.length(); ++i) 
-            s_ext[i] = (char)::tolower(s_ext[i]);
+        for (size_t i = 0; i < ext.length(); ++i) 
+            ext[i] = (char)::tolower(ext[i]);
 
-        return s_ext == "nrrd";
+        return ext == "nrrd";
     }
 
 } // namespace nrrd

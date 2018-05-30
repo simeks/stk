@@ -15,7 +15,7 @@ namespace stk
     struct VolumeReader
     {
         // Reads the specified file
-        Volume (*read)(const char* filename);
+        Volume (*read)(const std::string& filename);
 
         // Length of the signature in the beginning of the file
         size_t (*signature_length)();
@@ -23,15 +23,15 @@ namespace stk
         // Determines based on the file signature if this reader can read it
         // Preferably each module should avoid opening the file by itself and just 
         //  use the provided signature to minimize the amount of reads.
-        bool (*can_read)(const char* filename, const char* signature, size_t len);
+        bool (*can_read)(const std::string& filename, const char* signature, size_t len);
     };
     struct VolumeWriter
     {
         // Writes the volume
-        void (*write)(const char* filename, const Volume& vol);
+        void (*write)(const std::string& filename, const Volume& vol);
         
         // Checks if the given filename (and extension) is supported by this format
-        bool (*can_write)(const char* filename);
+        bool (*can_write)(const std::string& filename);
     };
 
     struct IORegistry
@@ -92,7 +92,7 @@ namespace stk
     
     // Attempts to find a reader for the given file.
     // If no reader is found, VolumeReader{0} is returned
-    VolumeReader find_reader(const char* filename)
+    VolumeReader find_reader(const std::string& filename)
     {
         // To avoid having each IO module reopen the same file over and over we
         //  read the signature of the file first, then ask each module if it
@@ -124,7 +124,7 @@ namespace stk
         return {0};
     }
 
-    VolumeWriter find_writer(const char* filename)
+    VolumeWriter find_writer(const std::string& filename)
     {
         for (auto& w : _io_registry.writers) {
             if (w.can_write(filename))
@@ -133,7 +133,7 @@ namespace stk
         return {0};
     }
 
-    Volume read_volume(const char* filename)
+    Volume read_volume(const std::string& filename)
     {
         VolumeReader r = find_reader(filename);
         if (!r.read) {
@@ -142,7 +142,7 @@ namespace stk
         }
         return r.read(filename);
     }
-    void write_volume(const char* filename, const Volume& vol)
+    void write_volume(const std::string& filename, const Volume& vol)
     {
         VolumeWriter w = find_writer(filename);
         FATAL_IF(!w.write) << "No writer found for file " << filename;
