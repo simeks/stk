@@ -141,33 +141,33 @@ TEST_CASE("cuda_copy_texture_kernel", "[cuda]")
             delete [] test_data; \
         }
     
-    // TEST_TYPE(char);
-    // TEST_TYPE(char2);
-    // TEST_TYPE(char4);
+    TEST_TYPE(char);
+    TEST_TYPE(char2);
+    TEST_TYPE(char4);
 
-    // TEST_TYPE(uint8_t);
-    // TEST_TYPE(uchar2);
-    // TEST_TYPE(uchar4);
+    TEST_TYPE(uint8_t);
+    TEST_TYPE(uchar2);
+    TEST_TYPE(uchar4);
     
-    // TEST_TYPE(short);
-    // TEST_TYPE(short2);
-    // TEST_TYPE(short4);
+    TEST_TYPE(short);
+    TEST_TYPE(short2);
+    TEST_TYPE(short4);
 
-    // TEST_TYPE(uint16_t);
-    // TEST_TYPE(short2);
-    // TEST_TYPE(short4);
+    TEST_TYPE(uint16_t);
+    TEST_TYPE(short2);
+    TEST_TYPE(short4);
 
-    // TEST_TYPE(int);
-    // TEST_TYPE(int2);
-    // TEST_TYPE(int4);
+    TEST_TYPE(int);
+    TEST_TYPE(int2);
+    TEST_TYPE(int4);
 
-    // TEST_TYPE(uint32_t);
-    // TEST_TYPE(uint2);
-    // TEST_TYPE(uint4);
+    TEST_TYPE(uint32_t);
+    TEST_TYPE(uint2);
+    TEST_TYPE(uint4);
 
     TEST_TYPE(float);
-  //  TEST_TYPE(float2);
-//    TEST_TYPE(float4);
+    TEST_TYPE(float2);
+    TEST_TYPE(float4);
 
     #undef TEST_TYPE
 }

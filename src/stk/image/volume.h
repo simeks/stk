@@ -5,7 +5,7 @@
 #include "dim3.h"
 #include "types.h"
 
-
+#include <algorithm>
 #include <memory>
 
 namespace stk

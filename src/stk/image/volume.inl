@@ -155,7 +155,7 @@ inline T VolumeHelper<T>::linear_at(float x, float y, float z, BorderMode border
     #undef FAST_FLOOR
 }
 
-#ifdef DF_ENABLE_SSE_LINEAR_AT
+#ifdef STK_ENABLE_SSE_LINEAR_AT
 template<>
 inline float VolumeHelper<float>::linear_at(float x, float y, float z, BorderMode border_mode) const
 {
@@ -286,7 +286,7 @@ inline float VolumeHelper<float>::linear_at(float x, float y, float z, BorderMod
     #undef FAST_CEIL
     #undef FAST_FLOOR
 }
-#endif // DF_ENABLE_SSE_LINEAR_AT
+#endif // STK_ENABLE_SSE_LINEAR_AT
 
 template<typename T>
 T VolumeHelper<T>::linear_at(float3 p, BorderMode border_mode) const

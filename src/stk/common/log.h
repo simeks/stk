@@ -4,7 +4,7 @@
 
 #define STK_LOGGING_PREFIX_LEVEL
 #define STK_LOGGING_PREFIX_TIME
-#define STK_LOGGING_PREFIX_FILE
+
 
 // Logging utilities
 //
@@ -120,16 +120,16 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
     return s;
 }
 
-#ifdef STK_LOGGING_PREFIX_FILE
+#if STK_LOGGING_PREFIX_FILE
     #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::##level, __FILE__, __LINE__).stream()
-    
-    #ifdef NDEBUG
-        #define DLOG(level) stk::NullStream()
-    #else
-        #define DLOG(level) LOG(level)
-    #endif
 #else
     #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::##level).stream()
+#endif
+
+#ifdef NDEBUG
+    #define DLOG(level) stk::NullStream()
+#else
+    #define DLOG(level) LOG(level)
 #endif
 
 #define LOG_IF(level, expr) !(expr) ? (void)0 : LOG(level)
