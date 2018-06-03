@@ -130,7 +130,7 @@ namespace
 
 namespace stk {
 namespace vtk {
-    Volume read_volume(const char* file, std::stringstream& error)
+    Volume read_vtk_volume(const std::string& file, std::stringstream& error)
     {
         // Spec: http://www.vtk.org/wp-content/uploads/2015/04/file-formats.pdf
 
@@ -315,10 +315,10 @@ namespace vtk {
         return vol;
     }
 
-    Volume read(const char* filename)
+    Volume read(const std::string& filename)
     {
         std::stringstream ss;
-        Volume vol = read_volume(filename, ss);
+        Volume vol = read_vtk_volume(filename, ss);
         
         LOG_IF(Error, !vol.valid()) << ss.str();
         
@@ -332,13 +332,13 @@ namespace vtk {
         return 5;
     }
 
-    bool can_read(const char* /*filename*/, const char* signature, size_t len)
+    bool can_read(const std::string& /*filename*/, const char* signature, size_t len)
     {
         return len >= signature_length() &&
                 memcmp(signature, _vtk_signature, signature_length()) == 0;
     }
 
-    void write(const char* file, const Volume& vol)
+    void write(const std::string& file, const Volume& vol)
     {
         ASSERT(vol.valid());
         ASSERT(vol.voxel_type() != Type_Unknown);
@@ -425,18 +425,18 @@ namespace vtk {
         f.close();
     }
 
-    bool can_write(const char* filename)
+    bool can_write(const std::string& filename)
     {
-        const char* ext = strrchr(filename, '.');
-        if (!ext)
+        size_t p = filename.rfind('.');
+        if (p == std::string::npos)
             return false;
 
-        std::string s_ext(ext+1); // Skip '.'
+        std::string ext = filename.substr(p+1); // Skip '.'
         
-        for (size_t i = 0; i < s_ext.length(); ++i) 
-            s_ext[i] = (char)::tolower(s_ext[i]);
+        for (size_t i = 0; i < ext.length(); ++i) 
+            ext[i] = (char)::tolower(ext[i]);
 
-        return s_ext == "vtk";
+        return ext == "vtk";
     }
 
 } // namespace vtk
