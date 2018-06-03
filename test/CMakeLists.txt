@@ -21,7 +21,12 @@ if (STK_USE_CUDA)
     )
 endif ()
 
-add_executable(stk_test ${STK_TEST_SRCS})
+if (STK_USE_CUDA)
+    cuda_add_executable(stk_test ${STK_TEST_SRCS})
+else ()
+    add_executable(stk_test ${STK_TEST_SRCS})
+endif ()
+
 add_test(stk_test stk_test)
 
 target_link_libraries(stk_test Catch stk)

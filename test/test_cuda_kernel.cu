@@ -135,8 +135,6 @@ TEST_CASE("cuda_copy_texture_kernel", "[cuda]")
             ); \
             CUDA_CHECK_ERRORS(cudaDeviceSynchronize()); \
             VolumeHelper<T> out = gpu_out.download(); \
-            printf("%f %f %f\n", in(0,0,0), in(1,0,0), in(1,1,1)); \
-            printf("%f %f %f\n", out(0,0,0), out(1,0,0), out(1,1,1)); \
             REQUIRE(compare_volumes<T>(in, out)); \
             delete [] test_data; \
         }
