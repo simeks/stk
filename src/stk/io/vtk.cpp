@@ -241,18 +241,13 @@ namespace vtk {
             else if (key == "VECTORS")
             {
                 // VECTORS dataName dataType
-                // Vectors have 3 components
+                // Vectors always have 3 components
 
                 ss >> value; // dataName, don't know what this is good for
                 std::string data_type;
                 ss >> data_type;
                 
-                if (!ss.eof())
-                {
-                    std::string num_comp_s;
-                    ss >> num_comp_s;
-                }
-
+                num_comp = 3;
                 voxel_type = vtk_string_to_type(data_type, 3);
 
                 // Assume that blob comes after this line
