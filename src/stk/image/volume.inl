@@ -303,7 +303,7 @@ VolumeHelper<T>& VolumeHelper<T>::operator=(const VolumeHelper& other)
 template<typename T>
 VolumeHelper<T>& VolumeHelper<T>::operator=(const Volume& other)
 {
-    if (type_id<T>::id == other.voxel_type()) {
+    if (static_cast<enum stk::Type>(type_id<T>::id) == other.voxel_type()) {
         Volume::operator=(other);
         return *this;
     }

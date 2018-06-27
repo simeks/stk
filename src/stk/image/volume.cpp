@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "volume.h"
 #include "stk/common/assert.h"
 

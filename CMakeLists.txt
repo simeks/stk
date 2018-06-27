@@ -47,7 +47,7 @@ if (MSVC)
     if (STK_ENABLE_FAST_MATH)
         set(EXTRA_FLAGS "${extra_flags} /fp:fast")
     endif()
-elseif(CMAKE_CXX_COMPILER_ID matches "GNU")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(EXTRA_FLAGS "-Wall")
 
     if (STK_WARNINGS_ARE_ERRORS)
@@ -97,6 +97,9 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_LI
 
 # TODO: Determine QNANHIBIT for NrrdIO
 set(QNANHIBIT 1)
+
+find_package(NIFTI REQUIRED)
+find_package(ZLIB QUIET)
 
 add_subdirectory(${THIRD_PARTY_DIR})
 add_subdirectory(src)

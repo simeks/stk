@@ -32,7 +32,7 @@ namespace stk
     {
     public:
         FatalError(const char* file, int line);
-        __declspec(noreturn) ~FatalError() noexcept(false);
+        [[noreturn]] ~FatalError() noexcept(false);
 
         std::ostringstream& stream();
     private:

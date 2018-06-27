@@ -152,7 +152,7 @@ namespace nifti {
         // TODO: Ignoring orientation for now
 
         // Offset to image data
-        int vox_offset = (int)nhdr.vox_offset;
+        size_t vox_offset = (int)nhdr.vox_offset;
         ASSERT(vox_offset >= sizeof(nhdr));
 
         znzseek(fp, vox_offset, SEEK_SET);
@@ -289,7 +289,7 @@ namespace nifti {
         nhdr.slice_duration = 0.0f;
         nhdr.toffset = 0.0f;
 
-        strncpy(nhdr.descrip, "STK", 3); // TODO: Version #
+        strncpy(nhdr.descrip, "STK", 3+1); // TODO: Version #
         // nhdr.descripaux_file
 
         // Only supported modes for now

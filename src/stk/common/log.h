@@ -121,9 +121,9 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
 }
 
 #if STK_LOGGING_PREFIX_FILE
-    #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::##level, __FILE__, __LINE__).stream()
+    #define LOG(level) stk::LogFinisher() & stk::LogMessage(level, __FILE__, __LINE__).stream()
 #else
-    #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::##level).stream()
+    #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::level).stream()
 #endif
 
 #ifdef NDEBUG
