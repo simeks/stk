@@ -152,8 +152,8 @@ namespace nifti {
         // TODO: Ignoring orientation for now
 
         // Offset to image data
-        size_t vox_offset = (int)nhdr.vox_offset;
-        ASSERT(vox_offset >= sizeof(nhdr));
+        int vox_offset = (int)nhdr.vox_offset;
+        ASSERT((size_t)vox_offset >= sizeof(nhdr));
 
         znzseek(fp, vox_offset, SEEK_SET);
 
