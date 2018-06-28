@@ -98,7 +98,7 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_LI
 # TODO: Determine QNANHIBIT for NrrdIO
 set(QNANHIBIT 1)
 
-find_package(NIFTI REQUIRED)
+find_package(NIFTI QUIET)
 find_package(ZLIB QUIET)
 
 add_subdirectory(${THIRD_PARTY_DIR})
