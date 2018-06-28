@@ -1,6 +1,7 @@
 #include "log.h"
 
 #include <chrono>
+#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -21,6 +22,7 @@ namespace
         enum Type { Type_FileSink, Type_CallbackSink };
 
         Sink(stk::LogLevel level) : _level(level) {}
+        virtual ~Sink() {};
 
         virtual void write(stk::LogLevel level, const char* msg) = 0;
         virtual void flush() {}
@@ -37,7 +39,7 @@ namespace
         FileSink(stk::LogLevel level) : Sink(level)
         {
         }
-        ~FileSink()
+        virtual ~FileSink()
         {
             flush();
             _fs.close();
@@ -213,7 +215,7 @@ namespace stk
             _s << "[" << file << ":" << std::setw(4) << line << "] ";
         }
     #else
-        file; line;
+        (void) file; (void) line;
     #endif
 
         _s << "| ";

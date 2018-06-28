@@ -1,5 +1,6 @@
 #include "catch.hpp"
 
+#include <cstring>
 #include <stk/common/error.h>
 #include <stk/image/volume.h>
 

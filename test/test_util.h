@@ -63,7 +63,7 @@ bool compare_volumes(const stk::VolumeHelper<T>& a, const stk::VolumeHelper<T>& 
     return true;
 }
 
-template<typename T, typename BT=stk::type_id<T>::Base, int NC=stk::type_id<T>::num_comp>
+template<typename T, typename BT = typename stk::type_id<T>::Base, int NC=stk::type_id<T>::num_comp>
 struct TestDataGenerator
 {
     static void run(T* out, int w, int h, int d)
