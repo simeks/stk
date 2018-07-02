@@ -1,0 +1,17 @@
+version: '{branch}-{build}'
+
+image:
+  - Visual Studio 2017
+  - Ubuntu
+
+before_build:
+  - mkdir build
+  - cd build
+  - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - cmake .. -DSTK_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=Release
+
+build_script:
+  - cmake --build .
+
+test_script:
+  - test/deform_test
