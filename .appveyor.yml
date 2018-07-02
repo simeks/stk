@@ -12,6 +12,3 @@ before_build:
 
 build_script:
   - cmake --build .
-
-test_script:
-  - test/deform_test
