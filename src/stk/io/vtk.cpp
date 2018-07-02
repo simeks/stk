@@ -4,6 +4,7 @@
 #include "stk/image/volume.h"
 
 #include <assert.h>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <sstream>

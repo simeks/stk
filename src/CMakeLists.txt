@@ -26,6 +26,10 @@ set(STK_SRCS
 
 add_library(stk STATIC ${STK_SRCS})
 
-target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CUDA_INCLUDE_DIRS})
-target_link_libraries(stk niftiio NrrdIO ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
-
+if(${NIFTI_FOUND})
+    target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CUDA_INCLUDE_DIRS} ${NIFTI_INCLUDE_DIR})
+    target_link_libraries(stk NrrdIO ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY} ${NIFTI_LIBRARIES})
+else()
+    target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CUDA_INCLUDE_DIRS})
+    target_link_libraries(stk niftiio NrrdIO  ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
+endif()
