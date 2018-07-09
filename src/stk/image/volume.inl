@@ -3,7 +3,7 @@ namespace stk
 template<typename T>
 VolumeHelper<T>::VolumeHelper()
 {
-    _voxel_type = (Type)type_id<T>::id;
+    _voxel_type = type_id<T>::id();
 }
 template<typename T>
 VolumeHelper<T>::VolumeHelper(const Volume& other) : Volume()
@@ -11,18 +11,18 @@ VolumeHelper<T>::VolumeHelper(const Volume& other) : Volume()
     *this = other; // Operator performs conversion (if needed)
 }
 template<typename T>
-VolumeHelper<T>::VolumeHelper(const dim3& size) : Volume(size, (Type)type_id<T>::id)
+VolumeHelper<T>::VolumeHelper(const dim3& size) : Volume(size, type_id<T>::id())
 {
 }
 template<typename T>
-VolumeHelper<T>::VolumeHelper(const dim3& size, const T& value) : 
-    Volume(size, (Type)type_id<T>::id)
+VolumeHelper<T>::VolumeHelper(const dim3& size, const T& value) :
+    Volume(size, type_id<T>::id())
 {
     fill(value);
 }
 template<typename T>
-VolumeHelper<T>::VolumeHelper(const dim3& size, T* value) : 
-    Volume(size, (Type)type_id<T>::id, value)
+VolumeHelper<T>::VolumeHelper(const dim3& size, T* value) :
+    Volume(size, type_id<T>::id(), value)
 {
 }
 template<typename T>
@@ -32,7 +32,7 @@ VolumeHelper<T>::~VolumeHelper()
 template<typename T>
 void VolumeHelper<T>::allocate(const dim3& size)
 {
-    Volume::allocate(size, (Type)type_id<T>::id);
+    Volume::allocate(size, type_id<T>::id());
 }
 template<typename T>
 void VolumeHelper<T>::fill(const T& value)
@@ -52,11 +52,11 @@ T VolumeHelper<T>::at(int x, int y, int z, BorderMode border_mode) const
     #define FAST_CEIL(x_) ((int)x_ + (x_ > (int)x_))
     #define FAST_FLOOR(x_) ((int)x_ - (x_ < (int)x_))
 
-    if (border_mode == Border_Constant) 
+    if (border_mode == Border_Constant)
     {
         if (x < 0 || FAST_CEIL(x) >= int(_size.x) ||
             y < 0 || FAST_CEIL(y) >= int(_size.y) ||
-            z < 0 || FAST_CEIL(z) >= int(_size.z)) 
+            z < 0 || FAST_CEIL(z) >= int(_size.z))
         {
             return T{0};
         }
@@ -90,11 +90,11 @@ inline T VolumeHelper<T>::linear_at(float x, float y, float z, BorderMode border
     // We expect all indices to be positive therefore a regular cast should suffice
     #define FAST_FLOOR(x_) int(x_)
 
-    if (border_mode == Border_Constant) 
+    if (border_mode == Border_Constant)
     {
         if (x < 0 || FAST_CEIL(x) >= int(_size.x) ||
             y < 0 || FAST_CEIL(y) >= int(_size.y) ||
-            z < 0 || FAST_CEIL(z) >= int(_size.z)) 
+            z < 0 || FAST_CEIL(z) >= int(_size.z))
         {
             return T{0};
         }
@@ -129,20 +129,20 @@ inline T VolumeHelper<T>::linear_at(float x, float y, float z, BorderMode border
                     (xt) * operator()(x2, y1, z1) // s2
                 ) +
 
-                (yt) * 
+                (yt) *
                 (
                     (1 - xt) * operator()(x1, y2, z1) + // s3
                     (xt) * operator()(x2, y2, z1) // s4
                 )
             ) +
-        (zt) * 
+        (zt) *
             (
                 (1 - yt)*
                 (
                     (1 - xt)*operator()(x1, y1, z2) + // s5
                     (xt)*operator()(x2, y1, z2) // s6
                 ) +
-                
+
                 (yt)*
                 (
                     (1 - xt)*operator()(x1, y2, z2) + // s7
@@ -166,11 +166,11 @@ inline float VolumeHelper<float>::linear_at(float x, float y, float z, BorderMod
     #define FAST_CEIL(x_) ((int)x_ + (x_ > (int)x_))
     #define FAST_FLOOR(x_) int(x_)
 
-    if (border_mode == volume::Border_Constant) 
+    if (border_mode == volume::Border_Constant)
     {
         if (x < 0 || FAST_CEIL(x) >= int(_size.x) ||
             y < 0 || FAST_CEIL(y) >= int(_size.y) ||
-            z < 0 || FAST_CEIL(z) >= int(_size.z)) 
+            z < 0 || FAST_CEIL(z) >= int(_size.z))
         {
             return 0;
         }
@@ -296,14 +296,14 @@ T VolumeHelper<T>::linear_at(float3 p, BorderMode border_mode) const
 template<typename T>
 VolumeHelper<T>& VolumeHelper<T>::operator=(const VolumeHelper& other)
 {
-    ASSERT(type_id<T>::id == other.voxel_type()); // Sanity check
+    ASSERT(type_id<T>::id() == other.voxel_type()); // Sanity check
     Volume::operator=(other);
     return *this;
 }
 template<typename T>
 VolumeHelper<T>& VolumeHelper<T>::operator=(const Volume& other)
 {
-    if (static_cast<enum stk::Type>(type_id<T>::id) == other.voxel_type()) {
+    if (static_cast<enum stk::Type>(type_id<T>::id()) == other.voxel_type()) {
         Volume::operator=(other);
         return *this;
     }
@@ -312,7 +312,7 @@ VolumeHelper<T>& VolumeHelper<T>::operator=(const Volume& other)
         return *this;
     }
 
-    *this = other.as_type((Type)type_id<T>::id);
+    *this = other.as_type(type_id<T>::id());
     return *this;
 }
 

@@ -54,7 +54,7 @@ namespace stk
         Type_Double3,
         Type_Double4
     };
-    
+
     // Returns the total size in bytes of the specified type
     size_t type_size(Type type);
 
@@ -76,12 +76,8 @@ namespace stk
     struct type_id
     {
         typedef T Type;
-        enum {
-            id = Type_Unknown
-        };
+        static constexpr stk::Type id(void) {return Type_Unknown;};
     };
-
-    // TODO: Annoying thing: you'll have to explicitly typecast type_id<>::id into Type
 
     #define TYPE_ID(T, BT, Id, NumComp) \
         template<> \
@@ -89,10 +85,8 @@ namespace stk
         { \
             typedef T Type; \
             typedef BT Base; \
-            enum { \
-                id = Id, \
-                num_comp = NumComp \
-            }; \
+            static constexpr stk::Type id(void) {return Id;}; \
+            static constexpr int num_comp(void) {return NumComp;}; \
         };
 
     TYPE_ID(char, char, Type_Char, 1);
@@ -137,4 +131,3 @@ namespace stk
 
     #undef TYPE_ID
 }
-
