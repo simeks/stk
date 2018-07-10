@@ -40,7 +40,7 @@ Volume::Volume() : _ptr(NULL), _stride(0), _voxel_type(Type_Unknown)
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
 }
-Volume::Volume(const dim3& size, Type voxel_type, void* data) :
+Volume::Volume(const dim3& size, Type voxel_type, const void* data) :
     _size(size),
     _voxel_type(voxel_type)
 {
