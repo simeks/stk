@@ -53,7 +53,7 @@ namespace stk
         Volume();
         // If a data pointer is specified, the volume copies that data into its newly
         //  allocated memory.
-        Volume(const dim3& size, Type voxel_type, void* data = NULL);
+        Volume(const dim3& size, Type voxel_type, const void* data = NULL);
         ~Volume();
 
         // Note: Resets spacing and origin
