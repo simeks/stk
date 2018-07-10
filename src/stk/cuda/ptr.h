@@ -16,7 +16,7 @@ namespace stk
                 pitch(vol.pitched_ptr().pitch),
                 ysize(vol.pitched_ptr().ysize)
             {
-                ASSERT(vol.voxel_type() == type_id<T>::id);
+                ASSERT(vol.voxel_type() == type_id<T>::id());
                 ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
             }
 

@@ -77,7 +77,7 @@ TEST_CASE("volume_ref", "[volume]")
     // Test reference handling
 
     uint8_t test_data[W*H*D];
-    for (int i = 0; i < W*H*D; ++i)
+    for (uint32_t i = 0; i < W*H*D; ++i)
         test_data[i] = uint8_t(i);
 
     SECTION("assignment")
@@ -95,7 +95,7 @@ TEST_CASE("volume_ref", "[volume]")
         REQUIRE(!vol.valid());
         REQUIRE(copy.valid());
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<uint8_t*>(copy.ptr())[i] == test_data[i]);
         }
     }
@@ -114,7 +114,7 @@ TEST_CASE("volume_ref", "[volume]")
         REQUIRE(!vol.valid());
         REQUIRE(copy.valid());
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<uint8_t*>(copy.ptr())[i] == test_data[i]);
         }
     }
@@ -126,7 +126,7 @@ TEST_CASE("volume_types", "[volume]")
         SECTION(#T) \
         { \
             T test_data[W*H*D]; \
-            for (int i = 0; i < W*H*D; ++i) { \
+            for (uint32_t i = 0; i < W*H*D; ++i) { \
                 test_data[i] = T{0}; \
             } \
             Volume vol({W,H,D}, T_id, test_data); \
@@ -176,7 +176,7 @@ TEST_CASE("volume_meta_data", "[volume]")
 TEST_CASE("volume_clone", "[volume]")
 {
     float test_data[W*H*D];
-    for (int i = 0; i < W*H*D; ++i)
+    for (uint32_t i = 0; i < W*H*D; ++i)
         test_data[i] = float(i);
 
     Volume vol({W,H,D}, Type_Float, test_data);
@@ -199,7 +199,7 @@ TEST_CASE("volume_clone", "[volume]")
             
     REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
 
-    for (int i = 0; i < W*H*D; ++i) {
+    for (uint32_t i = 0; i < W*H*D; ++i) {
         REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
     }
 
@@ -211,7 +211,7 @@ TEST_CASE("volume_clone", "[volume]")
 TEST_CASE("volume_copy_from", "[volume]")
 {
     float test_data[W*H*D];
-    for (int i = 0; i < W*H*D; ++i)
+    for (uint32_t i = 0; i < W*H*D; ++i)
         test_data[i] = float(i);
 
     Volume vol({W,H,D}, Type_Float, test_data);
@@ -231,7 +231,7 @@ TEST_CASE("volume_copy_from", "[volume]")
     REQUIRE(copy.spacing().y == Approx(vol.spacing().y));
     REQUIRE(copy.spacing().z == Approx(vol.spacing().z));
 
-    for (int i = 0; i < W*H*D; ++i) {
+    for (uint32_t i = 0; i < W*H*D; ++i) {
         REQUIRE(static_cast<float*>(copy.ptr())[i] == Approx(test_data[i]));
     }
 }
@@ -241,7 +241,7 @@ TEST_CASE("volume_as_type", "[volume]")
     SECTION("float_to_double")
     {
         float test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = float(i);
 
         Volume vol({W,H,D}, Type_Float, test_data);
@@ -261,14 +261,14 @@ TEST_CASE("volume_as_type", "[volume]")
         REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
         REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
         
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<double*>(vol2.ptr())[i] == Approx(test_data[i]));
         }
     }
     SECTION("double_to_float")
     {
         double test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = double(i);
 
         Volume vol({W,H,D}, Type_Double, test_data);
@@ -278,14 +278,14 @@ TEST_CASE("volume_as_type", "[volume]")
         REQUIRE(vol2.voxel_type() == Type_Float);
         REQUIRE(vol2.ptr() != vol.ptr());
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
         }
     }
     SECTION("double4_to_float4")
     {
         double4 test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = double4{double(i), double(i+1), double(i+2), double(i+3)};
 
         Volume vol({W,H,D}, Type_Double4, test_data);
@@ -295,7 +295,7 @@ TEST_CASE("volume_as_type", "[volume]")
         REQUIRE(vol2.voxel_type() == Type_Float4);
         REQUIRE(vol2.ptr() != vol.ptr());
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             float4 s = static_cast<float4*>(vol2.ptr())[i];
             double4 t = test_data[i];
             REQUIRE(s.x == Approx(t.x));
@@ -307,7 +307,7 @@ TEST_CASE("volume_as_type", "[volume]")
     SECTION("float_to_float")
     {
         float test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = float(i);
 
         Volume vol({W,H,D}, Type_Float, test_data);
@@ -321,7 +321,7 @@ TEST_CASE("volume_as_type", "[volume]")
     SECTION("float_to_float2")
     {
         float test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = float(i);
 
         Volume vol({W,H,D}, Type_Float, test_data);
@@ -332,7 +332,7 @@ TEST_CASE("volume_as_type", "[volume]")
     SECTION("float_to_uchar")
     {
         float test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = float(i);
 
         Volume vol({W,H,D}, Type_Float, test_data);
@@ -356,7 +356,7 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(vol.valid());
         REQUIRE(vol.voxel_type() == Type_Float);
         
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             static_cast<float*>(vol.ptr())[i] = float(i);
         }
     }
@@ -366,7 +366,7 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(vol.valid());
         REQUIRE(vol.voxel_type() == Type_Float);
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<float*>(vol.ptr())[i] == Approx(3.0f));
         }
     }
@@ -375,7 +375,7 @@ TEST_CASE("volume_helper", "[volume]")
     SECTION("copy_constructor")
     {
         float test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = float(i);
 
         Volume src({W,H,D}, Type_Float, test_data);
@@ -386,7 +386,7 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(copy1.voxel_type() == Type_Float);
         REQUIRE(copy1.size() == dim3{W,H,D});
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<float*>(copy1.ptr())[i] == Approx(test_data[i]));
         }
 
@@ -396,7 +396,7 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(copy2.voxel_type() == Type_Double);
         REQUIRE(copy2.size() == dim3{W,H,D});
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<double*>(copy2.ptr())[i] == Approx(test_data[i]));
         }
 
@@ -407,7 +407,7 @@ TEST_CASE("volume_helper", "[volume]")
     SECTION("copy_assignment")
     {
         double4 test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = double4{double(i), double(i+1), double(i+2), double(i+3)};
 
         Volume src({W,H,D}, Type_Double4, test_data);
@@ -418,7 +418,7 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(copy1.voxel_type() == Type_Double4);
         REQUIRE(copy1.size() == dim3{W,H,D});
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             double4 s = static_cast<double4*>(copy1.ptr())[i];
             double4 t = test_data[i];
             REQUIRE(s.x == Approx(t.x));
@@ -433,7 +433,7 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(copy2.voxel_type() == Type_Float4);
         REQUIRE(copy2.size() == dim3{W,H,D});
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             float4 s = static_cast<float4*>(copy2.ptr())[i];
             double4 t = test_data[i];
             REQUIRE(s.x == Approx(t.x));
@@ -449,13 +449,13 @@ TEST_CASE("volume_helper", "[volume]")
     SECTION("indexing")
     {
         uchar3 test_data[W*H*D];
-        for (int i = 0; i < W*H*D; ++i)
+        for (uint32_t i = 0; i < W*H*D; ++i)
             test_data[i] = uchar3{uint8_t(i), uint8_t(i+1), uint8_t(i+2)};
 
         VolumeHelper<uchar3> vol({W,H,D}, test_data);
-        for (int z = 0; z < D; ++z) {
-            for (int y = 0; y < H; ++y) {
-                for (int x = 0; x < W; ++x) {
+        for (uint32_t z = 0; z < D; ++z) {
+            for (uint32_t y = 0; y < H; ++y) {
+                for (uint32_t x = 0; x < W; ++x) {
                     uchar3 s = vol(x,y,z);
                     uchar3 t = test_data[x + y * W + z * W * H];
                     REQUIRE(s.x == t.x);
@@ -478,7 +478,7 @@ TEST_CASE("volume_helper", "[volume]")
     {
         VolumeHelper<float> vol({W,H,D});
         vol.fill(5.5f);
-        for (int i = 0; i < W*H*D; ++i) {
+        for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<float*>(vol.ptr())[i] == Approx(5.5f));
         }
     }
