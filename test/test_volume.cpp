@@ -173,6 +173,25 @@ TEST_CASE("volume_meta_data", "[volume]")
     REQUIRE(vol.spacing().z == Approx(7.0f));
 }
 
+TEST_CASE("volume_copy_meta", "[volume]")
+{
+    Volume a({4,4,4}, Type_Float);
+
+    a.set_origin({2.0f, 3.0f, 4.0f});
+    a.set_spacing({5.0f, 6.0f, 7.0f});
+
+    Volume b({2,2,2}, Type_Float);
+    b.copy_meta_from(a);
+
+    REQUIRE(b.origin().x == Approx(2.0f));
+    REQUIRE(b.origin().y == Approx(3.0f));
+    REQUIRE(b.origin().z == Approx(4.0f));
+
+    REQUIRE(b.spacing().x == Approx(5.0f));
+    REQUIRE(b.spacing().y == Approx(6.0f));
+    REQUIRE(b.spacing().z == Approx(7.0f));
+}
+
 TEST_CASE("volume_clone", "[volume]")
 {
     float test_data[W*H*D];

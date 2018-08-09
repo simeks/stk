@@ -100,6 +100,9 @@ namespace stk
         const float3& origin() const;
         const float3& spacing() const;
 
+        // Copies meta data (origin, spacing, ...) from the provided volume.
+        void copy_meta_from(const Volume& other);
+
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume(const Volume& other);
         Volume& operator=(const Volume& other);

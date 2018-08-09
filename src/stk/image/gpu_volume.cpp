@@ -305,6 +305,11 @@ const float3& GpuVolume::spacing() const
 {
     return _spacing;
 }
+void GpuVolume::copy_meta_from(const GpuVolume& other)
+{
+    _origin = other._origin;
+    _spacing = other._spacing;
+}
 
 Type GpuVolume::voxel_type() const
 {

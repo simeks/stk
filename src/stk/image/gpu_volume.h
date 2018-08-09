@@ -79,6 +79,9 @@ namespace stk
         const float3& origin() const;
         const float3& spacing() const;
 
+        // Copies meta data (origin, spacing, ...) from the provided volume.
+        void copy_meta_from(const GpuVolume& other);
+
         // Tries to extract the voxel-type for this volume
         // See stk::Type
         Type voxel_type() const;

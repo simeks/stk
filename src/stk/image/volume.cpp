@@ -155,6 +155,11 @@ const float3& Volume::spacing() const
 {
     return _spacing;
 }
+void Volume::copy_meta_from(const Volume& other)
+{
+    _origin = other._origin;
+    _spacing = other._spacing;
+}
 
 Volume::Volume(const Volume& other) :
     _data(other._data),
