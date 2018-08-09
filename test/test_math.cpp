@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <stk/math/float3.h>
+#include <stk/math/float4.h>
 #include <stk/math/int3.h>
 
 TEST_CASE("math", "[math]")
@@ -144,6 +145,50 @@ TEST_CASE("math_float3_op", "[math]")
     REQUIRE(r6.x == Approx(4.4f / 8.8f));
     REQUIRE(r6.y == Approx(5.5f / 8.8f));
     REQUIRE(r6.z == Approx(6.6f / 8.8f));
+    
+}
+TEST_CASE("math_float4_op", "[math]")
+{
+    float4 v1{1.1f, 2.2f, 3.3f, 4.4f};
+    float4 v2{5.5f, 6.6f, 7.7f, 8.8f};
+
+    float4 r1 = v1 + v2;
+    REQUIRE(r1.x == Approx(1.1f + 5.5f));
+    REQUIRE(r1.y == Approx(2.2f + 6.6f));
+    REQUIRE(r1.z == Approx(3.3f + 7.7f));
+    REQUIRE(r1.w == Approx(4.4f + 8.8f));
+
+    float4 r2 = v1 - v2;
+    REQUIRE(r2.x == Approx(1.1f - 5.5f));
+    REQUIRE(r2.y == Approx(2.2f - 6.6f));
+    REQUIRE(r2.z == Approx(3.3f - 7.7f));
+    REQUIRE(r2.w == Approx(4.4f - 8.8f));
+
+    // Element-wise multiplication
+    float4 r3 = v1 * v2;
+    REQUIRE(r3.x == Approx(1.1f * 5.5f));
+    REQUIRE(r3.y == Approx(2.2f * 6.6f));
+    REQUIRE(r3.z == Approx(3.3f * 7.7f));
+    REQUIRE(r3.w == Approx(4.4f * 8.8f));
+
+    // Element-wise division
+    float4 r4 = v1 / v2;
+    REQUIRE(r4.x == Approx(1.1f / 5.5f));
+    REQUIRE(r4.y == Approx(2.2f / 6.6f));
+    REQUIRE(r4.z == Approx(3.3f / 7.7f));
+    REQUIRE(r4.w == Approx(4.4f / 8.8f));
+
+    float4 r5 = 9.9f * v1;
+    REQUIRE(r5.x == Approx(9.9f * 1.1f));
+    REQUIRE(r5.y == Approx(9.9f * 2.2f));
+    REQUIRE(r5.z == Approx(9.9f * 3.3f));
+    REQUIRE(r5.w == Approx(9.9f * 4.4f));
+    
+    float4 r6 = v2 / 10.10f;
+    REQUIRE(r6.x == Approx(5.5f / 10.10f));
+    REQUIRE(r6.y == Approx(6.6f / 10.10f));
+    REQUIRE(r6.z == Approx(7.7f / 10.10f));
+    REQUIRE(r6.w == Approx(8.8f / 10.10f));
     
 }
 TEST_CASE("math_int3_op", "[math]")
