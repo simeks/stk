@@ -10,7 +10,8 @@
 
 namespace stk {
 namespace cuda {
-    TextureObject::TextureObject(const GpuVolume& vol, const cudaTextureDesc& tex_desc)
+    TextureObject::TextureObject(const GpuVolume& vol, const cudaTextureDesc& tex_desc) : 
+        _vol(vol)
     {
         ASSERT(vol.valid());
         ASSERT(vol.usage() == gpu::Usage_Texture);
@@ -33,7 +34,7 @@ namespace cuda {
         return _obj;
     }
 
-    SurfaceObject::SurfaceObject(const GpuVolume& vol)
+    SurfaceObject::SurfaceObject(const GpuVolume& vol) : _vol(vol)
     {
         ASSERT(vol.valid());
         ASSERT(vol.usage() == gpu::Usage_Texture);
