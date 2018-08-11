@@ -31,4 +31,13 @@ inline CUDA_HOST_DEVICE float4 operator/(const float4& l, float r)
     return { l.x / r, l.y / r, l.z / r, l.w / r };
 }
 
+inline CUDA_HOST_DEVICE float4& operator+=(float4& l, const float4& r)
+{
+    l.x += r.x;
+    l.y += r.y;
+    l.z += r.z;
+    l.w += r.w;
+    return l; 
+}
+
 
