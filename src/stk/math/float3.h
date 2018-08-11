@@ -40,9 +40,25 @@ inline float3 operator*(float l, const float3& r)
 {
     return { r.x * l, r.y * l, r.z * l };
 }
+inline float3 operator*(double l, const float3& r)
+{
+    return { float(r.x * l), float(r.y * l), float(r.z * l) };
+}
+
 inline float3 operator/(const float3& l, float r)
 {
     return { l.x / r, l.y / r, l.z / r };
+}
+inline float3 operator/(const float3& l, double r)
+{
+    return { float(l.x / r), float(l.y / r), float(l.z / r) };
+}
+inline float3& operator+=(float3& l, const float3& r)
+{
+    l.x += r.x;
+    l.y += r.y;
+    l.z += r.z;
+    return l; 
 }
 
 
