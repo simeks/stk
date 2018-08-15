@@ -4,6 +4,8 @@
 #include <stk/image/gpu_volume.h>
 #include <stk/image/volume.h>
 
+#include <random>
+
 using namespace stk;
 
 namespace {
@@ -431,6 +433,53 @@ TEST_CASE("gpu_volume_copy_from", "[gpu_volume]")
 
     for (int i = 0; i < W*H*D; ++i) {
         REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
+    }
+}
+
+TEST_CASE("gpu_volume_min_max", "[gpu_volume]")
+{
+    dim3 sizes[] = {
+        {8, 8, 8},
+        {128, 128, 128},
+        {128, 32, 8},
+        {128, 32, 1},
+        {128, 1, 1},
+        {1, 128, 1},
+        {1, 1, 128},
+        {1, 1, 1},
+    };
+
+    for (int s = 0; s < 8; ++s) {
+        dim3 dim = sizes[s];
+
+        float* test_data = new float[dim.x*dim.y*dim.z];
+    
+        std::random_device rd;
+        std::mt19937 gen(4321);
+        std::uniform_int_distribution<> dis(0, 10000000);
+
+        float true_min = FLT_MAX;
+        float true_max = -FLT_MAX;
+        for (uint32_t i = 0; i < dim.x*dim.y*dim.z; ++i) {
+            test_data[i] = (float)dis(gen);
+
+            true_min = std::min(true_min, test_data[i]);
+            true_max = std::max(true_max, test_data[i]);
+        }
+
+        Volume vol(dim, Type_Float, test_data);
+        REQUIRE(vol.valid());
+
+        GpuVolume gpu_vol(vol, gpu::Usage_PitchedPointer);
+        REQUIRE(gpu_vol.valid());
+        
+        float min, max;
+        find_min_max(gpu_vol, min, max);
+
+        REQUIRE(min == Approx(true_min));
+        REQUIRE(max == Approx(true_max));
+
+        delete [] test_data;
     }
 }
 

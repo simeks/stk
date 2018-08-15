@@ -10,6 +10,7 @@
 
 #include <cuda_runtime.h>
 
+#include <stk/common/error.h>
 #include <stk/image/gpu_volume.h>
 
 #define CUDA_CHECK_ERRORS(val) \

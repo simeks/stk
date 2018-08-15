@@ -24,7 +24,18 @@ set(STK_SRCS
     "stk/image/volume.inl"
 )
 
-add_library(stk STATIC ${STK_SRCS})
+if (STK_USE_CUDA)
+    set(STK_SRCS
+        ${STK_SRCS}
+        "stk/image/gpu_volume.cu"
+    )
+endif()
+
+if (STK_USE_CUDA)
+    cuda_add_library(stk STATIC ${STK_SRCS})
+else()
+    add_library(stk STATIC ${STK_SRCS})
+endif()
 
 if(${NIFTI_FOUND})
     target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CUDA_INCLUDE_DIRS} ${NIFTI_INCLUDE_DIR})

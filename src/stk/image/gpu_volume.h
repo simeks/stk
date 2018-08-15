@@ -134,6 +134,11 @@ namespace stk
         // Tries to extract the voxel-type for this volume
         Type voxel_type(const GpuVolume& vol);
     }
+
+    // Finds the minimum and maximum values in a scalar volume.
+    // Only works for float32 volumes.
+    void find_min_max(const GpuVolume& vol, float& min, float& max);
+
 }
 
 #endif // STK_USE_CUDA
