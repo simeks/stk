@@ -137,9 +137,10 @@ namespace stk {
         float2* d_in;
         CUDA_CHECK_ERRORS(cudaMalloc(&d_in, 2*n*sizeof(float)));
 
+        GpuVolume in_vol = vol.as_usage(gpu::Usage_PitchedPointer); // TODO: Do min/max directly on texture?
         reduce_volume_min_max<<<grid_size, block_size, 
             uint32_t(2*sizeof(float)*512)>>>(
-            vol, vol.size(), d_out
+            in_vol, vol.size(), d_out
         );
 
         CUDA_CHECK_ERRORS(cudaPeekAtLastError());
