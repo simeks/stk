@@ -14,7 +14,8 @@ namespace gpu {
         const GpuVolume& src, 
         float min, 
         float max, 
-        GpuVolume* out=nullptr
+        GpuVolume* out=nullptr,
+        const dim3& block_size = {32, 32, 1}
     );
 }
 }

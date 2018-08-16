@@ -67,7 +67,8 @@ namespace gpu {
         const GpuVolume& src, 
         float min, 
         float max, 
-        GpuVolume* out
+        GpuVolume* out,
+        const dim3& block_size
     )
     {
         FATAL_IF(src.voxel_type() != stk::Type_Float)
@@ -90,7 +91,6 @@ namespace gpu {
         float range = float(max - min);
         float src_range = float(src_max - src_min);
 
-        dim3 block_size{8,8,1};
         dim3 grid_size {
             (dims.x + block_size.x - 1) / block_size.x,
             (dims.y + block_size.y - 1) / block_size.y,
