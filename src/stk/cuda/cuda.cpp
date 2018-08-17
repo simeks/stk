@@ -6,6 +6,7 @@
 
 #ifdef STK_USE_CUDA
 
+#include <cstring>
 #include <cuda_runtime.h>
 
 namespace stk {
