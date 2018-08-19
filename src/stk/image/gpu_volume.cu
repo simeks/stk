@@ -4,6 +4,7 @@
 #include "stk/cuda/ptr.h"
 
 #include <algorithm>
+#include <cfloat>
 
 
 /*
