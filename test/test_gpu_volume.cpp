@@ -454,7 +454,6 @@ TEST_CASE("gpu_volume_min_max", "[gpu_volume]")
 
         float* test_data = new float[dim.x*dim.y*dim.z];
     
-        std::random_device rd;
         std::mt19937 gen(4321);
         std::uniform_int_distribution<> dis(0, 10000000);
 
@@ -482,4 +481,3 @@ TEST_CASE("gpu_volume_min_max", "[gpu_volume]")
         delete [] test_data;
     }
 }
-
