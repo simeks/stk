@@ -27,6 +27,7 @@ set(STK_SRCS
 if (STK_USE_CUDA)
     set(STK_SRCS
         ${STK_SRCS}
+        "stk/filters/gpu/normalize.cu"
         "stk/image/gpu_volume.cu"
     )
 endif()

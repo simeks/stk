@@ -4,6 +4,7 @@
 #include <stk/image/gpu_volume.h>
 #include <stk/image/volume.h>
 
+#include <cfloat>
 #include <random>
 
 using namespace stk;
@@ -162,7 +163,7 @@ TEST_CASE("gpu_volume_copy_meta", "[gpu_volume]")
 TEST_CASE("gpu_volume_upload_download", "[gpu_volume]")
 {
     float test_data[W*H*D];
-    for (int i = 0; i < W*H*D; ++i)
+    for (int i = 0; i < int(W*H*D); ++i)
         test_data[i] = float(i);
 
     Volume vol({W,H,D}, Type_Float, test_data);
@@ -197,7 +198,7 @@ TEST_CASE("gpu_volume_upload_download", "[gpu_volume]")
         REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
         REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (int i = 0; i < int(W*H*D); ++i) {
             REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
         }
     }
@@ -228,7 +229,7 @@ TEST_CASE("gpu_volume_upload_download", "[gpu_volume]")
         REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
         REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (int i = 0; i < int(W*H*D); ++i) {
             REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
         }
     }
@@ -261,7 +262,7 @@ TEST_CASE("gpu_volume_upload_download", "[gpu_volume]")
         REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
         REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (int i = 0; i < int(W*H*D); ++i) {
             REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
         }
     }
@@ -294,7 +295,7 @@ TEST_CASE("gpu_volume_upload_download", "[gpu_volume]")
         REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
         REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (int i = 0; i < int(W*H*D); ++i) {
             REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
         }
     }
@@ -303,7 +304,7 @@ TEST_CASE("gpu_volume_upload_download", "[gpu_volume]")
 TEST_CASE("gpu_volume_clone", "[gpu_volume]")
 {
     float test_data[W*H*D];
-    for (int i = 0; i < W*H*D; ++i)
+    for (int i = 0; i < int(W*H*D); ++i)
         test_data[i] = float(i);
 
     Volume vol({W,H,D}, Type_Float, test_data);
@@ -329,7 +330,7 @@ TEST_CASE("gpu_volume_clone", "[gpu_volume]")
             
     REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
 
-    for (int i = 0; i < W*H*D; ++i) {
+    for (int i = 0; i < int(W*H*D); ++i) {
         REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
     }
 }
@@ -337,7 +338,7 @@ TEST_CASE("gpu_volume_clone", "[gpu_volume]")
 TEST_CASE("gpu_volume_clone_as", "[gpu_volume]")
 {
     float test_data[W*H*D];
-    for (int i = 0; i < W*H*D; ++i)
+    for (int i = 0; i < int(W*H*D); ++i)
         test_data[i] = float(i);
 
     Volume vol({W,H,D}, Type_Float, test_data);
@@ -366,7 +367,7 @@ TEST_CASE("gpu_volume_clone_as", "[gpu_volume]")
                 
         REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (int i = 0; i < int(W*H*D); ++i) {
             REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
         }
     }
@@ -392,7 +393,7 @@ TEST_CASE("gpu_volume_clone_as", "[gpu_volume]")
                 
         REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
 
-        for (int i = 0; i < W*H*D; ++i) {
+        for (int i = 0; i < int(W*H*D); ++i) {
             REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
         }
     }
@@ -401,7 +402,7 @@ TEST_CASE("gpu_volume_clone_as", "[gpu_volume]")
 TEST_CASE("gpu_volume_copy_from", "[gpu_volume]")
 {
     float test_data[W*H*D];
-    for (int i = 0; i < W*H*D; ++i)
+    for (int i = 0; i < int(W*H*D); ++i)
         test_data[i] = float(i);
 
     Volume vol({W,H,D}, Type_Float, test_data);
@@ -431,7 +432,7 @@ TEST_CASE("gpu_volume_copy_from", "[gpu_volume]")
             
     REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
 
-    for (int i = 0; i < W*H*D; ++i) {
+    for (int i = 0; i < int(W*H*D); ++i) {
         REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
     }
 }
@@ -454,7 +455,6 @@ TEST_CASE("gpu_volume_min_max", "[gpu_volume]")
 
         float* test_data = new float[dim.x*dim.y*dim.z];
     
-        std::random_device rd;
         std::mt19937 gen(4321);
         std::uniform_int_distribution<> dis(0, 10000000);
 
@@ -482,4 +482,3 @@ TEST_CASE("gpu_volume_min_max", "[gpu_volume]")
         delete [] test_data;
     }
 }
-

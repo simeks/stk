@@ -17,6 +17,7 @@ if (STK_USE_CUDA)
         ${STK_TEST_SRCS}
         "test_cuda.cpp"
         "test_cuda_kernel.cu"
+        "test_gpu_filters.cpp"
         "test_gpu_volume.cpp"
     )
 endif ()
