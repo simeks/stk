@@ -13,6 +13,9 @@
 // Otherwise defined in vector_types.h for CUDA
 struct dim3
 {
+    dim3(uint32_t vx = 1, uint32_t vy = 1, uint32_t vz = 1) 
+        : x(vx), y(vy), z(vz) {}
+
     uint32_t x;
     uint32_t y;
     uint32_t z;
