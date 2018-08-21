@@ -23,7 +23,7 @@ namespace cuda {
         res_desc.res.array.array = vol.array_ptr();
 
         // TODO: Explore cost of creating/destroying texture/surface objects
-        CUDA_CHECK_ERRORS(cudaCreateTextureObject(&_obj, &res_desc, &tex_desc, nullptr)); \
+        CUDA_CHECK_ERRORS(cudaCreateTextureObject(&_obj, &res_desc, &tex_desc, nullptr));
     }
     TextureObject::~TextureObject()
     {
