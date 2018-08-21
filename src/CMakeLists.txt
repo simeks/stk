@@ -5,6 +5,7 @@ set(STK_SRCS
     "stk/common/log.h"
     "stk/cuda/cuda.cpp"
     "stk/cuda/cuda.h"
+    "stk/cuda/volume.h"
     "stk/io/io.cpp"
     "stk/io/io.h"
     "stk/io/nifti.cpp"

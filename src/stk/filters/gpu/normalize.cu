@@ -2,7 +2,7 @@
 
 #include "stk/common/error.h"
 #include "stk/cuda/cuda.h"
-#include "stk/cuda/ptr.h"
+#include "stk/cuda/volume.h"
 #include "stk/image/gpu_volume.h"
 
 namespace cuda = stk::cuda;

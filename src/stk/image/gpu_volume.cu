@@ -1,7 +1,7 @@
 #include "gpu_volume.h"
 
 #include "stk/cuda/cuda.h"
-#include "stk/cuda/ptr.h"
+#include "stk/cuda/volume.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -25,7 +25,6 @@ namespace cuda = stk::cuda;
 
 __global__ void volume_min_max_kernel(
     const cuda::VolumePtr<float> in,
-    dim3 dims,
     float2* out)
 {
     #define REDUCE_2(a,b) {min(a.x, b.x), max(a.y, b.y)}
@@ -42,9 +41,9 @@ __global__ void volume_min_max_kernel(
     shared[tid].x = FLT_MAX;
     shared[tid].y = -FLT_MAX;
 
-    if (x < dims.x &&
-        y < dims.y &&
-        z < dims.z) {
+    if (x < in.size.x &&
+        y < in.size.y &&
+        z < in.size.z) {
         shared[tid].x = in(x,y,z);
         shared[tid].y = in(x,y,z);
     }
@@ -184,7 +183,7 @@ namespace stk {
         volume_min_max_kernel<<<grid_size, block_size, 
             uint32_t(2*sizeof(float)*block_size.x*block_size.y*block_size.z)>>>
         (
-            in_vol, vol.size(), d_out
+            in_vol, d_out
         );
 
         CUDA_CHECK_ERRORS(cudaPeekAtLastError());

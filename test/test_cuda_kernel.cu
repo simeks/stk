@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 #include <stk/cuda/cuda.h>
-#include <stk/cuda/ptr.h>
+#include <stk/cuda/volume.h>
 #include <stk/image/gpu_volume.h>
 #include <stk/image/volume.h>
 
@@ -24,7 +24,7 @@ __global__ void copy_kernel(cuda::VolumePtr<T> in, cuda::VolumePtr<T> out)
     int y = blockIdx.y*blockDim.y + threadIdx.y;
     int z = blockIdx.z*blockDim.z + threadIdx.z;
 
-    if (x >= W || y >= H || z >= D) {
+    if (x >= in.size.x || y >= in.size.y || z >= in.size.z) {
         return;
     }
 
