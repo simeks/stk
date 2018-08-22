@@ -4,6 +4,10 @@
 #include <stk/image/gpu_volume.h>
 #include <stk/image/types.h>
 
+#include <stk/math/float2.h>
+#include <stk/math/float3.h>
+#include <stk/math/float4.h>
+
 namespace stk
 {
     namespace cuda
@@ -63,17 +67,17 @@ namespace stk
             float yt = y - floorf(y);
             float zt = z - floorf(z);
 
-            float s111 = vol(x1, y1, z1);
-            float s211 = vol(x2, y1, z1);
+            T s111 = vol(x1, y1, z1);
+            T s211 = vol(x2, y1, z1);
 
-            float s121 = vol(x1, y2, z1);
-            float s221 = vol(x2, y2, z1);
+            T s121 = vol(x1, y2, z1);
+            T s221 = vol(x2, y2, z1);
 
-            float s112 = vol(x1, y1, z2);
-            float s212 = vol(x2, y1, z2);
+            T s112 = vol(x1, y1, z2);
+            T s212 = vol(x2, y1, z2);
 
-            float s122 = vol(x1, y2, z2);
-            float s222 = vol(x2, y2, z2);
+            T s122 = vol(x1, y2, z2);
+            T s222 = vol(x2, y2, z2);
 
             return T(
                 (1 - zt) *
