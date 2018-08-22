@@ -8,14 +8,18 @@ namespace stk
 {
     namespace cuda
     {
+        // Wrapper around pitched pointers in CUDA
+        // This class should be as lean as possible as we typically pass several
+        //  VolumePtr which may share properties when invoking a kernel. So no
+        //  volume size, origin, and spacing.
+        // TODO: Could probably change pitch and ysize to 32bit
         template<typename T>
         struct VolumePtr
         {
             VolumePtr(const GpuVolume& vol) : 
                 ptr((T*)vol.pitched_ptr().ptr),
                 pitch(vol.pitched_ptr().pitch),
-                ysize(vol.pitched_ptr().ysize),
-                size(vol.size())
+                ysize(vol.pitched_ptr().ysize)
             {
                 ASSERT(vol.voxel_type() == type_id<T>::id());
                 ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
@@ -33,13 +37,12 @@ namespace stk
             T* ptr;
             size_t pitch;
             size_t ysize;
-
-            dim3 size;
         };
 
 #ifdef __CUDACC__
         template<typename T>
-        __device__ T linear_at_border(VolumePtr<T> vol, float x, float y, float z)
+        __device__ T linear_at_border(const VolumePtr<T>& vol, const dim3& dims, 
+                                      float x, float y, float z)
         {
             int x1 = int(floorf(x));
             int y1 = int(floorf(y));
@@ -49,11 +52,11 @@ namespace stk
             int y2 = int(ceilf(y));
             int z2 = int(ceilf(z));
 
-            if (x1 < 0 || x2 >= int(vol.size.x) ||
-                y1 < 0 || y2 >= int(vol.size.y) ||
-                z1 < 0 || z2 >= int(vol.size.z))
+            if (x1 < 0 || x2 >= int(dims.x) ||
+                y1 < 0 || y2 >= int(dims.y) ||
+                z1 < 0 || z2 >= int(dims.z))
             {
-                return 0.0f;
+                return T{0};
             }
 
             float xt = x - floorf(x);
