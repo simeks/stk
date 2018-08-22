@@ -110,6 +110,70 @@ namespace stk
                 )
             );
         }
+        template<typename T>
+        __device__ T linear_at_clamp(const VolumePtr<T>& vol, const dim3& dims, 
+                                     float x, float y, float z)
+        {
+            // Clamp
+            x = max(0.0f, min(x, (float)dims.x-1));
+            y = max(0.0f, min(y, (float)dims.x-1));
+            z = max(0.0f, min(z, (float)dims.x-1));
+
+            int x1 = int(floorf(x));
+            int y1 = int(floorf(y));
+            int z1 = int(floorf(z));
+
+            int x2 = int(ceilf(x));
+            int y2 = int(ceilf(y));
+            int z2 = int(ceilf(z));
+
+            float xt = x - floorf(x);
+            float yt = y - floorf(y);
+            float zt = z - floorf(z);
+
+            T s111 = vol(x1, y1, z1);
+            T s211 = vol(x2, y1, z1);
+
+            T s121 = vol(x1, y2, z1);
+            T s221 = vol(x2, y2, z1);
+
+            T s112 = vol(x1, y1, z2);
+            T s212 = vol(x2, y1, z2);
+
+            T s122 = vol(x1, y2, z2);
+            T s222 = vol(x2, y2, z2);
+
+            return T(
+                (1 - zt) *
+                (
+                    (1 - yt) *
+                    (
+                        (1 - xt) * s111 +
+                        (xt) * s211
+                    ) +
+
+                    (yt) *
+                    (
+                        (1 - xt) * s121 +
+                        (xt) * s221
+                    )
+                ) +
+            (zt) *
+                (
+                    (1 - yt)*
+                    (
+                        (1 - xt)*s112 +
+                        (xt)*s212
+                    ) +
+
+                    (yt)*
+                    (
+                        (1 - xt)*s122 +
+                        (xt)*s222
+                    )
+                )
+            );
+        }
 #endif // __CUDACC__
     }
 }
