@@ -86,7 +86,7 @@ namespace stk
             typedef T Type; \
             typedef BT Base; \
             static constexpr stk::Type id(void) {return Id;}; \
-            static const int num_comp = NumComp; \
+            static constexpr int num_comp = NumComp; \
         };
 
     TYPE_ID(char, char, Type_Char, 1);
