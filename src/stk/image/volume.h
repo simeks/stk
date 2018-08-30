@@ -16,14 +16,29 @@ namespace stk
         Border_Replicate
     };
 
+    // Flags for allocation of the backing memory for the volumes. Currently only 
+    //  with CUDA. These flags allows for more efficient transfer of data between
+    //  CPU and GPU. However, use sparingly, as excessive use may degrade system
+    //  performance.
+    enum Usage
+    {
+    #ifdef STK_USE_CUDA
+        Usage_Pinned = 1,       // Pinned, or page-locked memory, for async operations with CUDA.
+        Usage_Mapped = 2,       // Mapped to CUDA address space
+        Usage_WriteCombined = 4 // Slow on read on CPUs but possibly a quicker transfer across PCIe
+    #endif // STK_USE_CUDA
+    };
+
     struct VolumeData
     {
         VolumeData();
-        VolumeData(size_t size);
+        VolumeData(size_t size, uint32_t flags);
         ~VolumeData();
 
         uint8_t* data;
         size_t size;
+
+        uint32_t flags;
     };
 
     // Volume is essentially a wrapper around a reference counted VolumeData. It represents
@@ -53,11 +68,12 @@ namespace stk
         Volume();
         // If a data pointer is specified, the volume copies that data into its newly
         //  allocated memory.
-        Volume(const dim3& size, Type voxel_type, const void* data = NULL);
+        // flags : See Usage
+        Volume(const dim3& size, Type voxel_type, const void* data = nullptr, uint32_t flags = 0);
         ~Volume();
 
         // Note: Resets spacing and origin
-        void allocate(const dim3& size, Type voxel_type);
+        void allocate(const dim3& size, Type voxel_type, uint32_t flags = 0);
 
         // Release any allocated data the volume is holding
         // This makes the volume object invalid

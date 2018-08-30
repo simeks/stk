@@ -3,6 +3,10 @@
 #include "volume.h"
 #include "stk/common/assert.h"
 
+#ifdef STK_USE_CUDA
+    #include <stk/cuda/cuda.h>
+#endif
+
 namespace
 {
     typedef void(*ConverterFn)(void*, void*, size_t num);
@@ -22,17 +26,46 @@ namespace
 
 namespace stk
 {
-VolumeData::VolumeData() : data(NULL), size(0)
+VolumeData::VolumeData() : data(NULL), size(0), flags(0)
 {
 }
-VolumeData::VolumeData(size_t size) : size(size)
+VolumeData::VolumeData(size_t size, uint32_t flags) : size(size), flags(flags)
 {
+#ifdef STK_USE_CUDA
+    if (flags & Usage_Pinned) {
+        CUDA_CHECK_ERRORS(cudaHostAlloc(&data, size, cudaHostAllocDefault));
+    }
+    else if (flags & Usage_Mapped) {
+        CUDA_CHECK_ERRORS(cudaHostAlloc(&data, size, cudaHostAllocMapped));
+    }
+    else if (flags & Usage_WriteCombined) {
+        CUDA_CHECK_ERRORS(cudaHostAlloc(&data, size, cudaHostAllocWriteCombined));
+    }
+    else {
+        data = (uint8_t*)malloc(size);
+    }
+#else
+    ASSERT(flags == 0);
     data = (uint8_t*)malloc(size);
+#endif
+
 }
 VolumeData::~VolumeData()
 {
+#ifdef STK_USE_CUDA
+    if (data)
+    {
+        if (flags & (Usage_Pinned | Usage_Mapped | Usage_WriteCombined)) {
+            CUDA_CHECK_ERRORS(cudaFreeHost(data));
+        }
+        else {
+            free(data);
+        }
+    }
+#else
     if (data)
         free(data);
+#endif
 }
 
 Volume::Volume() : _ptr(NULL), _stride(0), _voxel_type(Type_Unknown)
@@ -40,14 +73,14 @@ Volume::Volume() : _ptr(NULL), _stride(0), _voxel_type(Type_Unknown)
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
 }
-Volume::Volume(const dim3& size, Type voxel_type, const void* data) :
+Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t flags) :
     _size(size),
     _voxel_type(voxel_type)
 {
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
 
-    allocate(size, voxel_type);
+    allocate(size, voxel_type, flags);
     if (data) {
         size_t num_bytes = _size.x * _size.y *
             _size.z * type_size(_voxel_type);
@@ -60,7 +93,7 @@ Volume::~Volume()
 }
 Volume Volume::clone() const
 {
-    Volume copy(_size, _voxel_type);
+    Volume copy(_size, _voxel_type, nullptr, _data->flags);
     copy._origin = _origin;
     copy._spacing = _spacing;
 
@@ -94,7 +127,7 @@ Volume Volume::as_type(Type type) const
     FATAL_IF(num_components(type) != num_components(_voxel_type)) <<
         "Cannot convert between voxel types with different number of components.";
 
-    Volume dest(_size, type);
+    Volume dest(_size, type, nullptr, _data->flags);
     
     Type src_type = base_type(_voxel_type);
     Type dest_type = base_type(type);
@@ -184,7 +217,7 @@ Volume& Volume::operator=(const Volume& other)
     }
     return *this;
 }
-void Volume::allocate(const dim3& size, Type voxel_type)
+void Volume::allocate(const dim3& size, Type voxel_type, uint32_t flags)
 {
     ASSERT(voxel_type != Type_Unknown);
 
@@ -196,7 +229,7 @@ void Volume::allocate(const dim3& size, Type voxel_type)
     size_t num_bytes = _size.x * _size.y *
         _size.z * type_size(_voxel_type);
 
-    _data = std::make_shared<VolumeData>(num_bytes);
+    _data = std::make_shared<VolumeData>(num_bytes, flags);
     _ptr = _data->data;
     _stride = type_size(_voxel_type) * _size.x;
 }
