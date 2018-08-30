@@ -33,6 +33,12 @@ if(NOT NIFTI_FOUND)
             "/wd4100 /wd4244 /wd4245 /wd4267 /wd4304 /wd4456"
             )
     endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        set_target_properties(niftiio PROPERTIES COMPILE_FLAGS
+            "-Wno-misleading-indentation -Wno-unused-but-set-variable"
+            )
+    endif()
 endif()
 
 add_subdirectory(NrrdIO-1.11.0)

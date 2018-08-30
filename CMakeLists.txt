@@ -86,6 +86,8 @@ if (STK_LOGGING_PREFIX_FILE)
     add_definitions(-DSTK_LOGGING_PREFIX_FILE)
 endif()
 
+
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${EXTRA_FLAGS_RELEASE}")
 
@@ -111,6 +113,7 @@ if (STK_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 if (STK_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif()
 
