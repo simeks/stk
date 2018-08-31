@@ -13,6 +13,11 @@ namespace stk
 {
     class Volume;
 
+    namespace cuda
+    {
+        class Stream;
+    }
+
     namespace gpu
     {
         enum Usage
@@ -58,14 +63,30 @@ namespace stk
         // Clones this volume, creating a new volume with same content, type, and usage
         GpuVolume clone() const;
         
+        // Clones this volume, creating a new volume with same content, type, and usage
+        //  (non-blocking). The returned object will hold the allocated memory, but the
+        //  data within it is not ready until the stream has completed the copying.
+        GpuVolume clone(const cuda::Stream& stream) const;
+        
         // Clones this volume, creating a new volume with same content and type
         // usage : Specifies usage for the new volume
         GpuVolume clone_as(gpu::Usage usage) const;
+
+        // Clones this volume, creating a new volume with same content and type 
+        //  (non-blocking). The returned object will hold the allocated memory, but the
+        //  data within it is not ready until the stream has completed the copying.
+        // usage : Specifies usage for the new volume
+        GpuVolume clone_as(gpu::Usage usage, const cuda::Stream& stream) const;
 
         // Copies the data from the given volume
         // This assumes that both volumes are of the same size and data type
         // Compared to using clone, this does not perform any memory allocations.
         void copy_from(const GpuVolume& other);
+
+        // Copies the data from the given volume (non-blocking)
+        // This assumes that both volumes are of the same size and data type
+        // Compared to using clone, this does not perform any memory allocations.
+        void copy_from(const GpuVolume& other, const cuda::Stream& stream);
 
         // Returns true if the volume is valid (allocated and ready to use), false if not
         bool valid() const;
@@ -90,17 +111,42 @@ namespace stk
         // For usage parameter, see constructor GpuVolume(dim3, Type, Usage)
         GpuVolume(const Volume& vol, gpu::Usage usage = gpu::Usage_PitchedPointer);
 
+        // Creates a new volume on the GPU side and uploads the given volume into it.
+        // For usage parameter, see constructor GpuVolume(dim3, Type, Usage)
+        // (non-blocking). The constructor will allocate the backing memory and
+        //  invoke the data transfer but the data will not be ready for use until
+        //  the provided stream has completed.
+        GpuVolume(const Volume& vol, 
+                  const cuda::Stream& stream, 
+                  gpu::Usage usage = gpu::Usage_PitchedPointer);
+
         // Downloads this volume to a new volume
         // @return Handle to newly created volume
         Volume download() const;
+
+        // Downloads this volume to a new volume (non-blocking).
+        // Returned volume will contain allocated memory, but the data is not ready
+        //  until the transfer within the stream has completed.
+        // GpuVolume::download(Volume&) is prefered for async transfers, it also 
+        //  provides the possibility for page-locked memory within volumes.
+        // @return Handle to newly created volume
+        Volume download(const cuda::Stream& stream) const;
 
         // Downloads this volume to given volume
         // @remark Requires both volumes to be of same size and type
         void download(Volume& vol) const;
 
+        // Downloads this volume to given volume (non-blocking)
+        // @remark Requires both volumes to be of same size and type
+        void download(Volume& vol, const cuda::Stream& stream) const;
+
         // Uploads the given volume into this gpu volume
         // @remark Requires both volumes to be of same size and type
         void upload(const Volume& vol);
+
+        // Uploads the given volume into this gpu volume (non-blocking)
+        // @remark Requires both volumes to be of same size and type
+        void upload(const Volume& vol, const cuda::Stream& stream);
 
         // Returns the usage flags for this volume
         // Requires volume to be allocated

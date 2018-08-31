@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include <stk/common/error.h>
+#include <stk/cuda/stream.h>
 #include <stk/image/gpu_volume.h>
 #include <stk/image/volume.h>
 
@@ -482,3 +483,311 @@ TEST_CASE("gpu_volume_min_max", "[gpu_volume]")
         delete [] test_data;
     }
 }
+
+TEST_CASE("gpu_volume_copy_from_async", "[gpu_volume]")
+{
+    float test_data[W*H*D];
+    for (int i = 0; i < int(W*H*D); ++i)
+        test_data[i] = float(i);
+
+    Volume vol({W,H,D}, Type_Float, test_data);
+    vol.set_origin({2.0f, 3.0f, 4.0f});
+    vol.set_spacing({5.0f, 6.0f, 7.0f});
+    REQUIRE(vol.valid());
+
+    GpuVolume gpu_vol(vol, gpu::Usage_PitchedPointer);
+    GpuVolume gpu_vol_clone(vol.size(), vol.voxel_type(), gpu::Usage_PitchedPointer);
+
+    cuda::Stream stream;
+    gpu_vol_clone.copy_from(gpu_vol, stream);
+    stream.synchronize();
+    
+    REQUIRE(gpu_vol_clone.valid());
+    REQUIRE(gpu_vol_clone.usage() == gpu::Usage_PitchedPointer);
+
+    Volume clone = gpu_vol_clone.download();
+    REQUIRE(clone.valid());
+    REQUIRE(clone.size() == vol.size());
+    REQUIRE(clone.voxel_type() == vol.voxel_type());
+
+    // Meta data should be identical
+    REQUIRE(clone.origin().x == Approx(vol.origin().x));
+    REQUIRE(clone.origin().y == Approx(vol.origin().y));
+    REQUIRE(clone.origin().z == Approx(vol.origin().z));
+    REQUIRE(clone.spacing().x == Approx(vol.spacing().x));
+    REQUIRE(clone.spacing().y == Approx(vol.spacing().y));
+    REQUIRE(clone.spacing().z == Approx(vol.spacing().z));
+            
+    REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
+
+    for (int i = 0; i < int(W*H*D); ++i) {
+        REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
+    }
+}
+TEST_CASE("gpu_volume_upload_download_async", "[gpu_volume]")
+{
+    float test_data[W*H*D];
+    for (int i = 0; i < int(W*H*D); ++i)
+        test_data[i] = float(i);
+
+    Volume vol({W,H,D}, Type_Float, test_data);
+    vol.set_origin({2.0f, 3.0f, 4.0f});
+    vol.set_spacing({5.0f, 6.0f, 7.0f});
+    REQUIRE(vol.valid());
+
+    SECTION("constructor_pitched_pointer")
+    {
+        cuda::Stream stream;
+
+        GpuVolume gpu_vol(vol, stream, gpu::Usage_PitchedPointer);
+        REQUIRE(gpu_vol.valid());
+        REQUIRE(gpu_vol.size() == vol.size());
+        REQUIRE(gpu_vol.voxel_type() == vol.voxel_type());
+
+        // Should keep the meta data
+        REQUIRE(gpu_vol.origin().x == Approx(vol.origin().x));
+        REQUIRE(gpu_vol.origin().y == Approx(vol.origin().y));
+        REQUIRE(gpu_vol.origin().z == Approx(vol.origin().z));
+        REQUIRE(gpu_vol.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(gpu_vol.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(gpu_vol.spacing().z == Approx(vol.spacing().z));
+
+        Volume vol2 = gpu_vol.download(stream);
+
+        REQUIRE(vol2.valid());
+        REQUIRE(vol2.size() == vol.size());
+        REQUIRE(vol2.voxel_type() == vol.voxel_type());
+
+        REQUIRE(vol2.origin().x == Approx(vol.origin().x));
+        REQUIRE(vol2.origin().y == Approx(vol.origin().y));
+        REQUIRE(vol2.origin().z == Approx(vol.origin().z));
+        REQUIRE(vol2.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
+
+        stream.synchronize(); // Synchronize to make sure data is ready
+
+        for (int i = 0; i < int(W*H*D); ++i) {
+            REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
+        }
+    }
+    SECTION("constructor_texture")
+    {
+        cuda::Stream stream;
+
+        GpuVolume gpu_vol(vol, stream, gpu::Usage_Texture);
+        REQUIRE(gpu_vol.valid());
+        REQUIRE(gpu_vol.size() == vol.size());
+        REQUIRE(gpu_vol.voxel_type() == vol.voxel_type());
+
+        // Should keep the meta data
+        REQUIRE(gpu_vol.origin().x == Approx(vol.origin().x));
+        REQUIRE(gpu_vol.origin().y == Approx(vol.origin().y));
+        REQUIRE(gpu_vol.origin().z == Approx(vol.origin().z));
+        REQUIRE(gpu_vol.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(gpu_vol.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(gpu_vol.spacing().z == Approx(vol.spacing().z));
+
+        Volume vol2 = gpu_vol.download(stream);
+        REQUIRE(vol2.valid());
+        REQUIRE(vol2.size() == vol.size());
+        REQUIRE(vol2.voxel_type() == vol.voxel_type());
+
+        REQUIRE(vol2.origin().x == Approx(vol.origin().x));
+        REQUIRE(vol2.origin().y == Approx(vol.origin().y));
+        REQUIRE(vol2.origin().z == Approx(vol.origin().z));
+        REQUIRE(vol2.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
+
+        stream.synchronize(); // Synchronize to make sure data is ready
+
+        for (int i = 0; i < int(W*H*D); ++i) {
+            REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
+        }
+    }
+    SECTION("method_pitched_pointer") // In-place download
+    {
+        cuda::Stream stream;
+
+        GpuVolume gpu_vol(vol.size(), vol.voxel_type(), gpu::Usage_PitchedPointer);
+        gpu_vol.upload(vol, stream);
+        REQUIRE(gpu_vol.valid());
+        REQUIRE(gpu_vol.size() == vol.size());
+        REQUIRE(gpu_vol.voxel_type() == vol.voxel_type());
+
+        // Should keep the meta data
+        REQUIRE(gpu_vol.origin().x == Approx(vol.origin().x));
+        REQUIRE(gpu_vol.origin().y == Approx(vol.origin().y));
+        REQUIRE(gpu_vol.origin().z == Approx(vol.origin().z));
+        REQUIRE(gpu_vol.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(gpu_vol.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(gpu_vol.spacing().z == Approx(vol.spacing().z));
+
+        Volume vol2 = vol.clone(); // For in-place download
+        gpu_vol.download(vol2, stream);
+
+        REQUIRE(vol2.valid());
+        REQUIRE(vol2.size() == vol.size());
+        REQUIRE(vol2.voxel_type() == vol.voxel_type());
+
+        REQUIRE(vol2.origin().x == Approx(vol.origin().x));
+        REQUIRE(vol2.origin().y == Approx(vol.origin().y));
+        REQUIRE(vol2.origin().z == Approx(vol.origin().z));
+        REQUIRE(vol2.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
+
+        stream.synchronize(); // Synchronize to make sure data is ready
+
+        for (int i = 0; i < int(W*H*D); ++i) {
+            REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
+        }
+    }
+    SECTION("method_texture") // In-place download
+    {
+        cuda::Stream stream;
+
+        GpuVolume gpu_vol(vol.size(), vol.voxel_type(), gpu::Usage_Texture);
+        gpu_vol.upload(vol, stream);
+        REQUIRE(gpu_vol.valid());
+        REQUIRE(gpu_vol.size() == vol.size());
+        REQUIRE(gpu_vol.voxel_type() == vol.voxel_type());
+
+        // Should keep the meta data
+        REQUIRE(gpu_vol.origin().x == Approx(vol.origin().x));
+        REQUIRE(gpu_vol.origin().y == Approx(vol.origin().y));
+        REQUIRE(gpu_vol.origin().z == Approx(vol.origin().z));
+        REQUIRE(gpu_vol.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(gpu_vol.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(gpu_vol.spacing().z == Approx(vol.spacing().z));
+
+        Volume vol2 = vol.clone(); // For in-place download
+        gpu_vol.download(vol2, stream);
+        REQUIRE(vol2.valid());
+        REQUIRE(vol2.size() == vol.size());
+        REQUIRE(vol2.voxel_type() == vol.voxel_type());
+
+        REQUIRE(vol2.origin().x == Approx(vol.origin().x));
+        REQUIRE(vol2.origin().y == Approx(vol.origin().y));
+        REQUIRE(vol2.origin().z == Approx(vol.origin().z));
+        REQUIRE(vol2.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
+
+        stream.synchronize(); // Synchronize to make sure data is ready
+
+        for (int i = 0; i < int(W*H*D); ++i) {
+            REQUIRE(static_cast<float*>(vol2.ptr())[i] == Approx(test_data[i]));
+        }
+    }
+}
+TEST_CASE("gpu_volume_clone_async", "[gpu_volume]")
+{
+    cuda::Stream stream;
+    
+    float test_data[W*H*D];
+    for (int i = 0; i < int(W*H*D); ++i)
+        test_data[i] = float(i);
+
+    Volume vol({W,H,D}, Type_Float, test_data);
+    vol.set_origin({2.0f, 3.0f, 4.0f});
+    vol.set_spacing({5.0f, 6.0f, 7.0f});
+    REQUIRE(vol.valid());
+
+    GpuVolume gpu_vol(vol, gpu::Usage_PitchedPointer);
+    GpuVolume gpu_vol_clone = gpu_vol.clone(stream);
+
+    stream.synchronize();
+
+    Volume clone = gpu_vol_clone.download();
+    REQUIRE(clone.valid());
+    REQUIRE(clone.size() == vol.size());
+    REQUIRE(clone.voxel_type() == vol.voxel_type());
+
+    // Meta data should be identical
+    REQUIRE(clone.origin().x == Approx(vol.origin().x));
+    REQUIRE(clone.origin().y == Approx(vol.origin().y));
+    REQUIRE(clone.origin().z == Approx(vol.origin().z));
+    REQUIRE(clone.spacing().x == Approx(vol.spacing().x));
+    REQUIRE(clone.spacing().y == Approx(vol.spacing().y));
+    REQUIRE(clone.spacing().z == Approx(vol.spacing().z));
+            
+    REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
+
+    for (int i = 0; i < int(W*H*D); ++i) {
+        REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
+    }
+}
+TEST_CASE("gpu_volume_clone_as_async", "[gpu_volume]")
+{
+    float test_data[W*H*D];
+    for (int i = 0; i < int(W*H*D); ++i)
+        test_data[i] = float(i);
+
+    Volume vol({W,H,D}, Type_Float, test_data);
+    vol.set_origin({2.0f, 3.0f, 4.0f});
+    vol.set_spacing({5.0f, 6.0f, 7.0f});
+
+    SECTION("pitched_pointer_to_texture")
+    {
+        cuda::Stream stream;
+
+        GpuVolume gpu_vol(vol, gpu::Usage_PitchedPointer);
+        GpuVolume gpu_vol_clone = gpu_vol.clone_as(gpu::Usage_Texture, stream);
+        REQUIRE(gpu_vol_clone.valid());
+        REQUIRE(gpu_vol_clone.usage() == gpu::Usage_Texture);
+
+        Volume clone = gpu_vol_clone.download(stream);
+        REQUIRE(clone.valid());
+        REQUIRE(clone.size() == vol.size());
+        REQUIRE(clone.voxel_type() == vol.voxel_type());
+
+        // Meta data should be identical
+        REQUIRE(clone.origin().x == Approx(vol.origin().x));
+        REQUIRE(clone.origin().y == Approx(vol.origin().y));
+        REQUIRE(clone.origin().z == Approx(vol.origin().z));
+        REQUIRE(clone.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(clone.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(clone.spacing().z == Approx(vol.spacing().z));
+                
+        REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
+
+        stream.synchronize(); // Synchronize to make sure data is ready
+
+        for (int i = 0; i < int(W*H*D); ++i) {
+            REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
+        }
+    }
+    SECTION("texture_to_pitched_pointer")
+    {
+        cuda::Stream stream;
+
+        GpuVolume gpu_vol(vol, gpu::Usage_Texture);
+        GpuVolume gpu_vol_clone = gpu_vol.clone_as(gpu::Usage_PitchedPointer, stream);
+        REQUIRE(gpu_vol_clone.valid());
+        REQUIRE(gpu_vol_clone.usage() == gpu::Usage_PitchedPointer);
+
+        Volume clone = gpu_vol_clone.download(stream);
+        REQUIRE(clone.valid());
+        REQUIRE(clone.size() == vol.size());
+        REQUIRE(clone.voxel_type() == vol.voxel_type());
+
+        // Meta data should be identical
+        REQUIRE(clone.origin().x == Approx(vol.origin().x));
+        REQUIRE(clone.origin().y == Approx(vol.origin().y));
+        REQUIRE(clone.origin().z == Approx(vol.origin().z));
+        REQUIRE(clone.spacing().x == Approx(vol.spacing().x));
+        REQUIRE(clone.spacing().y == Approx(vol.spacing().y));
+        REQUIRE(clone.spacing().z == Approx(vol.spacing().z));
+                
+        REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
+
+        stream.synchronize(); // Synchronize to make sure data is ready
+
+        for (int i = 0; i < int(W*H*D); ++i) {
+            REQUIRE(static_cast<float*>(clone.ptr())[i] == Approx(test_data[i]));
+        }
+    }
+}
+

@@ -4,6 +4,7 @@
 #include "volume.h"
 
 #include "stk/cuda/cuda.h"
+#include "stk/cuda/stream.h"
 
 #include <cuda_runtime.h>
 
@@ -220,21 +221,25 @@ void GpuVolume::release()
 GpuVolume GpuVolume::clone() const
 {
     GpuVolume copy(_size, voxel_type(), usage());
-    copy._origin = _origin;
-    copy._spacing = _spacing;
-
     copy.copy_from(*this);
-
+    return copy;
+}
+GpuVolume GpuVolume::clone(const cuda::Stream& stream) const
+{
+    GpuVolume copy(_size, voxel_type(), usage());
+    copy.copy_from(*this, stream);
     return copy;
 }
 GpuVolume GpuVolume::clone_as(gpu::Usage usage) const
 {
     GpuVolume copy(_size, voxel_type(), usage);
-    copy._origin = _origin;
-    copy._spacing = _spacing;
-
     copy.copy_from(*this);
-
+    return copy;
+}
+GpuVolume GpuVolume::clone_as(gpu::Usage usage, const cuda::Stream& stream) const
+{
+    GpuVolume copy(_size, voxel_type(), usage);
+    copy.copy_from(*this, stream);
     return copy;
 }
 void GpuVolume::copy_from(const GpuVolume& other)
@@ -267,17 +272,47 @@ void GpuVolume::copy_from(const GpuVolume& other)
     else {
         params.dstArray = array_ptr();
     }
-
-    params.extent = make_cudaExtent(
-        _size.x * per_voxel,
-        _size.y, 
-        _size.z
-    );
+    params.extent = make_cudaExtent(_size.x * per_voxel, _size.y, _size.z);
     
     CUDA_CHECK_ERRORS(cudaMemcpy3D(&params));
 
-    _origin = other._origin;
-    _spacing = other._spacing;
+    copy_meta_from(other);
+}
+void GpuVolume::copy_from(const GpuVolume& other, const cuda::Stream& stream)
+{
+    ASSERT(valid());
+    ASSERT(other.valid());
+    ASSERT(_size == other._size);
+    ASSERT(voxel_type() == other.voxel_type());
+
+    cudaMemcpy3DParms params = {0};
+    params.kind = cudaMemcpyDeviceToDevice;
+
+    // Extent width is defined in terms of elements if any cudaArray is present,
+    //  otherwise in number of bytes (for pitched pointer)
+    size_t per_voxel = 1;
+    if (usage() == gpu::Usage_PitchedPointer && other.usage() == gpu::Usage_PitchedPointer) {
+        per_voxel = (_data->format_desc.x + _data->format_desc.y + _data->format_desc.z + _data->format_desc.w) / 8;
+    }
+
+    if (other.usage() == gpu::Usage_PitchedPointer) {
+        params.srcPtr = other.pitched_ptr();
+    }
+    else {
+        params.srcArray = other.array_ptr();
+    }
+    
+    if (usage() == gpu::Usage_PitchedPointer) {
+        params.dstPtr = pitched_ptr();
+    }
+    else {
+        params.dstArray = array_ptr();
+    }
+    params.extent = make_cudaExtent(_size.x * per_voxel, _size.y, _size.z);
+    
+    CUDA_CHECK_ERRORS(cudaMemcpy3DAsync(&params, stream));
+
+    copy_meta_from(other);
 }
 bool GpuVolume::valid() const
 {
@@ -324,6 +359,14 @@ GpuVolume::GpuVolume(const Volume& vol, gpu::Usage usage)
     set_origin(vol.origin());
     set_spacing(vol.spacing());
 }
+GpuVolume::GpuVolume(const Volume& vol, const cuda::Stream& stream, gpu::Usage usage)
+{
+    allocate(vol.size(), vol.voxel_type(), usage);
+    upload(vol, stream);
+
+    set_origin(vol.origin());
+    set_spacing(vol.spacing());
+}
 Volume GpuVolume::download() const
 {
     // Requires gpu memory to be allocated
@@ -334,6 +377,16 @@ Volume GpuVolume::download() const
     download(vol);
     return vol;
 }
+Volume GpuVolume::download(const cuda::Stream& stream) const
+{
+    // Requires gpu memory to be allocated
+    if (!valid()) 
+        return Volume();
+
+    Volume vol(_size, voxel_type());
+    download(vol, stream);
+    return vol;
+}
 void GpuVolume::download(Volume& vol) const
 {
     ASSERT(valid()); // Requires gpu memory to be allocated
@@ -341,8 +394,7 @@ void GpuVolume::download(Volume& vol) const
 
     // We also assume both volumes have same dimensions
     ASSERT(vol.size() == _size);
-
-    // TODO: Validate format?
+    ASSERT(vol.voxel_type() == voxel_type());
 
     cudaMemcpy3DParms params = {0};
     params.kind = cudaMemcpyDeviceToHost;
@@ -368,6 +420,39 @@ void GpuVolume::download(Volume& vol) const
     vol.set_origin(_origin);
     vol.set_spacing(_spacing);
 }
+void GpuVolume::download(Volume& vol, const cuda::Stream& stream) const
+{
+    ASSERT(valid()); // Requires gpu memory to be allocated
+    ASSERT(vol.valid()); // Requires cpu memory to be allocated as well
+
+    // We also assume both volumes have same dimensions
+    ASSERT(vol.size() == _size);
+    ASSERT(vol.voxel_type() == voxel_type());
+
+    cudaMemcpy3DParms params = {0};
+    params.kind = cudaMemcpyDeviceToHost;
+    params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+        _size.x * type_size(vol.voxel_type()), _size.x, _size.y);
+
+    // Extent width is defined in terms of elements if any cudaArray is present,
+    //  otherwise in number of bytes (for pitched pointer)
+    size_t per_voxel = 1;
+    if (usage() == gpu::Usage_PitchedPointer) {
+        params.srcPtr = pitched_ptr();
+        per_voxel = type_size(vol.voxel_type());
+    }
+    else {
+        params.srcArray = array_ptr();
+        per_voxel = 1;
+    }
+
+    params.extent = make_cudaExtent(_size.x * per_voxel, _size.y, _size.z);
+
+    CUDA_CHECK_ERRORS(cudaMemcpy3DAsync(&params, stream));
+
+    vol.set_origin(_origin);
+    vol.set_spacing(_spacing);
+}
 void GpuVolume::upload(const Volume& vol)
 {
     ASSERT(valid()); // Requires gpu memory to be allocated
@@ -375,15 +460,13 @@ void GpuVolume::upload(const Volume& vol)
 
     // We also assume both volumes have same dimensions
     ASSERT(vol.size() == _size);
-
-    // TODO: Validate format?
+    ASSERT(vol.voxel_type() == voxel_type());
 
     cudaMemcpy3DParms params = {0};
     params.kind = cudaMemcpyHostToDevice;
     params.srcPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
         _size.x * type_size(vol.voxel_type()), _size.x, _size.y);
 
-    
     // Extent width is defined in terms of elements if any cudaArray is present,
     //  otherwise in number of bytes (for pitched pointer)
     size_t per_voxel = 1;
@@ -402,6 +485,38 @@ void GpuVolume::upload(const Volume& vol)
     set_origin(vol.origin());
     set_spacing(vol.spacing());
 }
+void GpuVolume::upload(const Volume& vol, const cuda::Stream& stream)
+{
+    ASSERT(valid()); // Requires gpu memory to be allocated
+    ASSERT(vol.valid()); // Requires cpu memory to be allocated as well
+
+    // We also assume both volumes have same dimensions
+    ASSERT(vol.size() == _size);
+    ASSERT(vol.voxel_type() == voxel_type());
+
+    cudaMemcpy3DParms params = {0};
+    params.kind = cudaMemcpyHostToDevice;
+    params.srcPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+        _size.x * type_size(vol.voxel_type()), _size.x, _size.y);
+
+    // Extent width is defined in terms of elements if any cudaArray is present,
+    //  otherwise in number of bytes (for pitched pointer)
+    size_t per_voxel = 1;
+    if (usage() == gpu::Usage_PitchedPointer) {
+        params.dstPtr = pitched_ptr();
+        per_voxel = type_size(vol.voxel_type());
+    }
+    else {
+        params.dstArray = array_ptr();
+        per_voxel = 1;
+    }
+    params.extent = make_cudaExtent(_size.x * per_voxel, _size.y, _size.z);
+    
+    CUDA_CHECK_ERRORS(cudaMemcpy3DAsync(&params, stream));
+
+    set_origin(vol.origin());
+    set_spacing(vol.spacing());
+}
 gpu::Usage GpuVolume::usage() const
 {
     ASSERT(valid());
@@ -414,10 +529,7 @@ GpuVolume GpuVolume::as_usage(gpu::Usage usage) const
         return *this;
 
     GpuVolume copy(_size, voxel_type(), usage);
-    copy._origin = _origin;
-    copy._spacing = _spacing;
-
-    copy.copy_from(*this);
+    copy.copy_from(*this); // Copies meta as well
 
     return copy;
 }
