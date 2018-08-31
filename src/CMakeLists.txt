@@ -3,8 +3,6 @@ set(STK_SRCS
     "stk/common/error.h"
     "stk/common/log.cpp"
     "stk/common/log.h"
-    "stk/cuda/cuda.cpp"
-    "stk/cuda/cuda.h"
     "stk/cuda/volume.h"
     "stk/io/io.cpp"
     "stk/io/io.h"
@@ -19,8 +17,6 @@ set(STK_SRCS
     "stk/math/float4.h"
     "stk/math/types.h"
     "stk/image/dim3.h"
-    "stk/image/gpu_volume.cpp"
-    "stk/image/gpu_volume.h"
     "stk/image/types.cpp"
     "stk/image/types.h"
     "stk/image/volume.cpp"
@@ -31,8 +27,14 @@ set(STK_SRCS
 if (STK_USE_CUDA)
     set(STK_SRCS
         ${STK_SRCS}
+        "stk/cuda/cuda.cpp"
+        "stk/cuda/cuda.h"
+        "stk/cuda/stream.cpp"
+        "stk/cuda/stream.h"
         "stk/filters/gpu/normalize.cu"
+        "stk/image/gpu_volume.cpp"
         "stk/image/gpu_volume.cu"
+        "stk/image/gpu_volume.h"
     )
 endif()
 
