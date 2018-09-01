@@ -41,10 +41,13 @@ if(NOT NIFTI_FOUND)
     endif()
 endif()
 
-add_subdirectory(NrrdIO-1.11.0)
-target_include_directories(NrrdIO INTERFACE "NrrdIO-1.11.0")
-if (WIN32)
-    set_target_properties(NrrdIO PROPERTIES COMPILE_FLAGS
-        "/wd4127 /wd4701 /wd4706 /wd4996"
-        )
+if(NOT NrrdIO_FOUND)
+    add_subdirectory(NrrdIO-1.11.0)
+    target_include_directories(NrrdIO INTERFACE "NrrdIO-1.11.0")
+    if (WIN32)
+        set_target_properties(NrrdIO PROPERTIES COMPILE_FLAGS
+            "/wd4127 /wd4701 /wd4706 /wd4996"
+            )
+    endif()
 endif()
+
