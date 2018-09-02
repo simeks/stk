@@ -129,7 +129,7 @@ Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range&
     }
 
     if (x.begin != 0 && x.end != (int)_size.x) {
-        ptr += y.begin * _strides[0];
+        ptr += x.begin * _strides[0];
         _contiguous = false;
     }
 

@@ -153,6 +153,7 @@ namespace stk
 
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume(const Volume& other);
+        // @remark This does not copy the data, use clone if you want a separate copy.
         Volume& operator=(const Volume& other);
 
     protected:
