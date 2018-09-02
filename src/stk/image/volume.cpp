@@ -158,11 +158,11 @@ void Volume::copy_from(const Volume& other)
     else {
         size_t row_bytes = _strides[1];
 
-        for (int z = 0; z < _size.z; ++z) {
+        for (int z = 0; z < (int)_size.z; ++z) {
             uint8_t* dst_row = reinterpret_cast<uint8_t*>(_ptr) + z * _strides[2];
             uint8_t* src_row = reinterpret_cast<uint8_t*>(other._ptr) + z * other._strides[2];
 
-            for (int y = 0; y < _size.y; ++y) {
+            for (int y = 0; y < (int)_size.y; ++y) {
                 memcpy(dst_row, src_row, row_bytes);
 
                 dst_row += _strides[1];
@@ -179,7 +179,7 @@ Volume Volume::as_type(Type type) const
     ASSERT(valid());
     ASSERT(type != Type_Unknown);
     // Non-contiguous not supported for now, this function is gonna be refactored anyway
-    ASSERT(is_contiguous() && other.is_contiguous());
+    ASSERT(is_contiguous());
     if (_voxel_type == type)
         return *this;
 

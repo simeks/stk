@@ -12,6 +12,7 @@
 namespace stk
 {
     class Volume;
+    struct Range;
 
     namespace cuda
     {
@@ -43,6 +44,12 @@ namespace stk
     {
     public:
         GpuVolume();
+        
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        GpuVolume(const GpuVolume& other);
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        GpuVolume& operator=(const GpuVolume& other);
+
         // The usage parameter specified whether this volume should be accessed
         //  as a pitched pointer, i.e.
         //      void kernel(ptr) { x = ptr[0]; }
@@ -50,6 +57,12 @@ namespace stk
         //      void kernel(ptr) { x = tex3D(vol, px, py, pz); }
         GpuVolume(const dim3& size, Type voxel_type, 
             gpu::Usage usage = gpu::Usage_PitchedPointer);
+        
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        GpuVolume(const GpuVolume& other, const Range& x, const Range& y, const Range& z);
         ~GpuVolume();
         
         // Allocates volume memory for a volume with specified parameters
@@ -167,12 +180,20 @@ namespace stk
         // Only valid when usage is set to pitched pointer
         cudaPitchedPtr pitched_ptr() const;
 
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        GpuVolume operator()(const Range& x, const Range& y, const Range& z);
+
     private:
         std::shared_ptr<GpuVolumeData> _data;
 
         dim3 _size;
         float3 _origin;
         float3 _spacing;
+
+        cudaPitchedPtr _ptr; // For pitched pointer usage only
     };
 
     namespace gpu

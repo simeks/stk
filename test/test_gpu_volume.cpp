@@ -809,35 +809,37 @@ TEST_CASE("gpu_volume_region", "[volume]")
         45, 46, 47, 48
     };
     
-    SECTION("upload_download") {
+    SECTION("sub_volume") {
+        cuda::Stream stream;
+
         VolumeInt vol({4, 4, 3}, val);
-        
+        GpuVolume gpu_vol(vol, stream);
+        GpuVolume gpu_sub = gpu_vol({1,3}, {1,3}, {1,3});
+
         // Should be:
         // 22, 23
         // 26, 27
         //
         // 38, 39
         // 42, 43
-        VolumeInt sub(vol, {1,3}, {1,3}, {1, 3});
-        GpuVolume gpu_sub({2, 2, 2}, stk::Type_Int);
-        gpu_sub.upload(sub);
+        VolumeInt sub = gpu_sub.download(stream);
+        stream.synchronize();
 
-        VolumeInt sub2 = gpu_sub.download();
-        REQUIRE(sub2.size().x == 2);
-        REQUIRE(sub2.size().y == 2);
-        REQUIRE(sub2.size().z == 2);
-        REQUIRE(sub2.is_contiguous() == true);
+        REQUIRE(sub.size().x == 2);
+        REQUIRE(sub.size().y == 2);
+        REQUIRE(sub.size().z == 2);
+        REQUIRE(sub.is_contiguous() == true);
         
-        REQUIRE(sub2(0,0,0) == 22);
-        REQUIRE(sub2(1,0,0) == 23);
-        REQUIRE(sub2(0,1,0) == 26);
-        REQUIRE(sub2(1,1,0) == 27);
-        REQUIRE(sub2(0,0,1) == 38);
-        REQUIRE(sub2(1,0,1) == 39);
-        REQUIRE(sub2(0,1,1) == 42);
-        REQUIRE(sub2(1,1,1) == 43);
+        REQUIRE(sub(0,0,0) == 22);
+        REQUIRE(sub(1,0,0) == 23);
+        REQUIRE(sub(0,1,0) == 26);
+        REQUIRE(sub(1,1,0) == 27);
+        REQUIRE(sub(0,0,1) == 38);
+        REQUIRE(sub(1,0,1) == 39);
+        REQUIRE(sub(0,1,1) == 42);
+        REQUIRE(sub(1,1,1) == 43);
     }
-    SECTION("upload_download_stream") {
+    SECTION("upload_download") {
         cuda::Stream stream;
 
         VolumeInt vol({4, 4, 3}, val);
@@ -852,13 +854,13 @@ TEST_CASE("gpu_volume_region", "[volume]")
         GpuVolume gpu_sub({2, 2, 2}, stk::Type_Int);
         gpu_sub.upload(sub, stream);
 
-        VolumeInt sub2 = gpu_sub.download(stream);
+        VolumeInt sub2(sub.size());
+        gpu_sub.download(sub2, stream);
         stream.synchronize();
 
         REQUIRE(sub2.size().x == 2);
         REQUIRE(sub2.size().y == 2);
         REQUIRE(sub2.size().z == 2);
-        REQUIRE(sub2.is_contiguous() == true);
         
         REQUIRE(sub2(0,0,0) == 22);
         REQUIRE(sub2(1,0,0) == 23);
