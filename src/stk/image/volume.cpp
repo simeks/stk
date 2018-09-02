@@ -142,14 +142,7 @@ Volume::~Volume()
 Volume Volume::clone() const
 {
     Volume copy(_size, _voxel_type, nullptr, _data->flags);
-    copy._origin = _origin;
-    copy._spacing = _spacing;
-
-    size_t num_bytes = _size.x * _size.y * 
-        _size.z * type_size(_voxel_type);
-    
-    memcpy(copy._ptr, _ptr, num_bytes);
-
+    copy.copy_from(*this);
     return copy;
 }
 void Volume::copy_from(const Volume& other)
@@ -157,10 +150,26 @@ void Volume::copy_from(const Volume& other)
     ASSERT(_size == other._size);
     ASSERT(_voxel_type == other._voxel_type);
 
-    size_t num_bytes = _size.x * _size.y * 
-        _size.z * type_size(_voxel_type);
+    if (is_contiguous() && other.is_contiguous()) {
+        size_t num_bytes = _size.x * _size.y * 
+            _size.z * type_size(_voxel_type);
+        memcpy(_ptr, other._ptr, num_bytes);
+    }
+    else {
+        size_t row_bytes = _strides[1];
 
-    memcpy(_ptr, other._ptr, num_bytes);
+        for (int z = 0; z < _size.z; ++z) {
+            uint8_t* dst_row = reinterpret_cast<uint8_t*>(_ptr) + z * _strides[2];
+            uint8_t* src_row = reinterpret_cast<uint8_t*>(other._ptr) + z * other._strides[2];
+
+            for (int y = 0; y < _size.y; ++y) {
+                memcpy(dst_row, src_row, row_bytes);
+
+                dst_row += _strides[1];
+                src_row += other._strides[1];
+            }
+        }
+    }
     
     _origin = other._origin;
     _spacing = other._spacing;
@@ -169,6 +178,8 @@ Volume Volume::as_type(Type type) const
 {
     ASSERT(valid());
     ASSERT(type != Type_Unknown);
+    // Non-contiguous not supported for now, this function is gonna be refactored anyway
+    ASSERT(is_contiguous() && other.is_contiguous());
     if (_voxel_type == type)
         return *this;
 
