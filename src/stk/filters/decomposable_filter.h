@@ -27,7 +27,7 @@ public:
      */
     FilterKernel(const std::vector<T>& entries)
         : _kernel (entries)
-        , _radius (entries.size() / 2)
+        , _radius ((int)entries.size() / 2)
     {
         if (0 == entries.size() % 2) {
             LOG(Error) << "Expected odd number of kernel entries";
