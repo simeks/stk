@@ -236,6 +236,10 @@ const float3& Volume::spacing() const
 {
     return _spacing;
 }
+const size_t* Volume::strides() const
+{
+    return _strides;
+}
 void Volume::copy_meta_from(const Volume& other)
 {
     _origin = other._origin;

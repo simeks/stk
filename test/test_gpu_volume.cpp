@@ -790,4 +790,84 @@ TEST_CASE("gpu_volume_clone_as_async", "[gpu_volume]")
         }
     }
 }
+TEST_CASE("gpu_volume_region", "[volume]")
+{
+    int val[] = {
+         1,  2,  3,  4,
+         5,  6,  7,  8,
+         9, 10, 11, 12,
+        13, 14, 15, 16,
+
+        17, 18, 19, 20,
+        21, 22, 23, 24,
+        25, 26, 27, 28,
+        29, 30, 31, 32,
+
+        33, 34, 35, 36,
+        37, 38, 39, 40,
+        41, 42, 43, 44,
+        45, 46, 47, 48
+    };
+    
+    SECTION("upload_download") {
+        VolumeInt vol({4, 4, 3}, val);
+        
+        // Should be:
+        // 22, 23
+        // 26, 27
+        //
+        // 38, 39
+        // 42, 43
+        VolumeInt sub(vol, {1,3}, {1,3}, {1, 3});
+        GpuVolume gpu_sub({2, 2, 2}, stk::Type_Int);
+        gpu_sub.upload(sub);
+
+        VolumeInt sub2 = gpu_sub.download();
+        REQUIRE(sub2.size().x == 2);
+        REQUIRE(sub2.size().y == 2);
+        REQUIRE(sub2.size().z == 2);
+        REQUIRE(sub2.is_contiguous() == true);
+        
+        REQUIRE(sub2(0,0,0) == 22);
+        REQUIRE(sub2(1,0,0) == 23);
+        REQUIRE(sub2(0,1,0) == 26);
+        REQUIRE(sub2(1,1,0) == 27);
+        REQUIRE(sub2(0,0,1) == 38);
+        REQUIRE(sub2(1,0,1) == 39);
+        REQUIRE(sub2(0,1,1) == 42);
+        REQUIRE(sub2(1,1,1) == 43);
+    }
+    SECTION("upload_download_stream") {
+        cuda::Stream stream;
+
+        VolumeInt vol({4, 4, 3}, val);
+        
+        // Should be:
+        // 22, 23
+        // 26, 27
+        //
+        // 38, 39
+        // 42, 43
+        VolumeInt sub(vol, {1,3}, {1,3}, {1, 3});
+        GpuVolume gpu_sub({2, 2, 2}, stk::Type_Int);
+        gpu_sub.upload(sub, stream);
+
+        VolumeInt sub2 = gpu_sub.download(stream);
+        stream.synchronize();
+
+        REQUIRE(sub2.size().x == 2);
+        REQUIRE(sub2.size().y == 2);
+        REQUIRE(sub2.size().z == 2);
+        REQUIRE(sub2.is_contiguous() == true);
+        
+        REQUIRE(sub2(0,0,0) == 22);
+        REQUIRE(sub2(1,0,0) == 23);
+        REQUIRE(sub2(0,1,0) == 26);
+        REQUIRE(sub2(1,1,0) == 27);
+        REQUIRE(sub2(0,0,1) == 38);
+        REQUIRE(sub2(1,0,1) == 39);
+        REQUIRE(sub2(0,1,1) == 42);
+        REQUIRE(sub2(1,1,1) == 43);
+    }
+}
 

@@ -134,6 +134,9 @@ namespace stk
         const float3& origin() const;
         const float3& spacing() const;
 
+        // Strides for x, y, z
+        const size_t* strides() const;
+
         // Copies meta data (origin, spacing, ...) from the provided volume.
         void copy_meta_from(const Volume& other);
 

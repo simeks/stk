@@ -398,8 +398,15 @@ void GpuVolume::download(Volume& vol) const
 
     cudaMemcpy3DParms params = {0};
     params.kind = cudaMemcpyDeviceToHost;
-    params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
-        _size.x * type_size(vol.voxel_type()), _size.x, _size.y);
+    if (vol.is_contiguous()) {
+        params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+            vol.strides()[1], _size.x, _size.y);
+    } else {
+        // For non-contiguous volumes, the ysize of the pitched pointer needs
+        //  to match the height (in voxels) of the original volume memory.
+        params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+            vol.strides()[1], _size.x, vol.strides()[1]/vol.strides()[0]);
+    }
 
     // Extent width is defined in terms of elements if any cudaArray is present,
     //  otherwise in number of bytes (for pitched pointer)
@@ -431,8 +438,15 @@ void GpuVolume::download(Volume& vol, const cuda::Stream& stream) const
 
     cudaMemcpy3DParms params = {0};
     params.kind = cudaMemcpyDeviceToHost;
-    params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
-        _size.x * type_size(vol.voxel_type()), _size.x, _size.y);
+    if (vol.is_contiguous()) {
+        params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+            vol.strides()[1], _size.x, _size.y);
+    } else {
+        // For non-contiguous volumes, the ysize of the pitched pointer needs
+        //  to match the height (in voxels) of the original volume memory.
+        params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+            vol.strides()[1], _size.x, vol.strides()[1]/vol.strides()[0]);
+    }
 
     // Extent width is defined in terms of elements if any cudaArray is present,
     //  otherwise in number of bytes (for pitched pointer)
@@ -464,8 +478,15 @@ void GpuVolume::upload(const Volume& vol)
 
     cudaMemcpy3DParms params = {0};
     params.kind = cudaMemcpyHostToDevice;
-    params.srcPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
-        _size.x * type_size(vol.voxel_type()), _size.x, _size.y);
+    if (vol.is_contiguous()) {
+        params.srcPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+            vol.strides()[1], _size.x, _size.y);
+    } else {
+        // For non-contiguous volumes, the ysize of the pitched pointer needs
+        //  to match the height (in voxels) of the original volume memory.
+        params.srcPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
+            vol.strides()[1], _size.x, vol.strides()[1]/vol.strides()[0]);
+    }
 
     // Extent width is defined in terms of elements if any cudaArray is present,
     //  otherwise in number of bytes (for pitched pointer)
@@ -497,7 +518,7 @@ void GpuVolume::upload(const Volume& vol, const cuda::Stream& stream)
     cudaMemcpy3DParms params = {0};
     params.kind = cudaMemcpyHostToDevice;
     params.srcPtr = make_cudaPitchedPtr(const_cast<void*>(vol.ptr()),
-        _size.x * type_size(vol.voxel_type()), _size.x, _size.y);
+        vol.strides()[1], _size.x, _size.y);
 
     // Extent width is defined in terms of elements if any cudaArray is present,
     //  otherwise in number of bytes (for pitched pointer)
