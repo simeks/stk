@@ -29,6 +29,12 @@ namespace stk
     #endif // STK_USE_CUDA
     };
 
+    // [begin, end)
+    struct Range
+    {
+        int begin, end;
+    };
+
     struct VolumeData
     {
         VolumeData();
@@ -66,10 +72,18 @@ namespace stk
     {
     public:
         Volume();
+
         // If a data pointer is specified, the volume copies that data into its newly
         //  allocated memory.
         // flags : See Usage
         Volume(const dim3& size, Type voxel_type, const void* data = nullptr, uint32_t flags = 0);
+        
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        Volume(const Volume& other, const Range& x, const Range& y, const Range& z);
+
         ~Volume();
 
         // Note: Resets spacing and origin
@@ -102,9 +116,13 @@ namespace stk
         bool valid() const;
 
         // Raw pointer to the volume data
+        // Access through raw pointer should be avoided as the data can be non-contiguous.
+        //  Use `is_contiguous` to verify.
         void* ptr();
 
         // Raw pointer to the volume data
+        // Access through raw pointer should be avoided as the data can be non-contiguous.
+        //  Use `is_contiguous` to verify.
         void const* ptr() const;
 
         Type voxel_type() const;
@@ -119,6 +137,17 @@ namespace stk
         // Copies meta data (origin, spacing, ...) from the provided volume.
         void copy_meta_from(const Volume& other);
 
+        // Returns true if the volume resides contigiuously in memory.
+        // Volumes are typically contiguous, however, if the volume references
+        //  a sub region of a larger volume, the memory is not contiguous.
+        bool is_contiguous() const;
+
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        Volume operator()(const Range& x, const Range& y, const Range& z);
+
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume(const Volume& other);
         Volume& operator=(const Volume& other);
@@ -126,13 +155,20 @@ namespace stk
     protected:
         std::shared_ptr<VolumeData> _data;
         void* _ptr; // Pointer to a location in _data
-        size_t _stride; // Size of a single row in bytes
+        
+        // Strides in allocated volume memory (in bytes)
+        // _step[0] : Size of element (x)
+        // _step[1] : Size of one row (y)
+        // _step[2] : Size of one slice (z)
+        size_t _strides[3];
 
         dim3 _size;
         Type _voxel_type;
 
         float3 _origin; // Origin in world coordinates
         float3 _spacing; // Size of a voxel
+
+        bool _contiguous;
     };
 
     template<typename T>
@@ -147,10 +183,17 @@ namespace stk
         VolumeHelper(const Volume& other);
         // Creates a new volume of the specified size
         VolumeHelper(const dim3& size);
+
         // Creates a new volume of the specified size and initializes it with the given value
         explicit VolumeHelper(const dim3& size, const T& value);
         // Creates a new volume and copies the given data
         explicit VolumeHelper(const dim3& size, T* value);
+
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        VolumeHelper(const VolumeHelper& other, const Range& x, const Range& y, const Range& z);
         ~VolumeHelper();
 
         // Note: Resets spacing and origin
@@ -174,6 +217,12 @@ namespace stk
         
         const T& operator()(const int3& p) const;
         T& operator()(const int3& p);
+
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        VolumeHelper operator()(const Range& x, const Range& y, const Range& z);
 
         // Offset in bytes to the specified element
         size_t offset(int x, int y, int z) const;
