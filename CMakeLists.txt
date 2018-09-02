@@ -104,6 +104,7 @@ set(QNANHIBIT 1)
 if(NOT WIN32)
     find_package(ZLIB QUIET)
     find_package(NIFTI QUIET)
+    find_package(NrrdIO QUIET)
 endif()
 
 add_subdirectory(${THIRD_PARTY_DIR})
