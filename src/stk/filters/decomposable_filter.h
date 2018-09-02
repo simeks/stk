@@ -7,7 +7,7 @@
 #include <vector>
 
 
-namespace filters
+namespace stk
 {
 /*!
  * \brief Class representing a filter kernel.
@@ -85,7 +85,7 @@ struct FilterKernel3
 template <typename TKernelType, typename TOutputType>
 stk::Volume decomposable_filter_3d(
         const stk::Volume& volume,
-        const filters::FilterKernel3<TKernelType> kernel,
+        const FilterKernel3<TKernelType> kernel,
         const stk::BorderMode border_mode
         );
 
@@ -96,12 +96,12 @@ stk::Volume decomposable_filter_3d(
 template <typename TKernelType>
 stk::Volume decomposable_filter_3d(
         const stk::Volume& volume,
-        const filters::FilterKernel3<TKernelType> kernel,
+        const FilterKernel3<TKernelType> kernel,
         const stk::BorderMode border_mode
         );
 
 
-} // namespace filters
+} // namespace stk
 
 #include "decomposable_filter.inl"
 

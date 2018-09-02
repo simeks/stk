@@ -2,7 +2,7 @@
 
 #include "decomposable_filter.h"
 
-namespace filters {
+namespace stk {
 
 /*!
  * \brief Compute the Sobel operator along dimension `dim`.
@@ -37,4 +37,4 @@ stk::Volume sobel(const stk::Volume& volume)
  */
 stk::Volume sobel(const stk::Volume& volume);
 
-} // namespace filters
+} // namespace stk

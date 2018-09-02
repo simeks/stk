@@ -1,8 +1,8 @@
 #include "sobel.h"
 
-stk::Volume filters::sobel(const stk::Volume& volume)
+stk::Volume stk::sobel(const stk::Volume& volume)
 {
-    using namespace filters;
+    using namespace stk;
 
     const float3 s = {
         1 / volume.spacing().x,

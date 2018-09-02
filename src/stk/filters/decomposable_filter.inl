@@ -9,7 +9,7 @@ namespace
 template<typename TVoxelType, typename TKernelType, typename TOutputType = TVoxelType>
 stk::VolumeHelper<TOutputType> decomposable_filter_3d(
         const stk::VolumeHelper<TVoxelType>& img,
-        const filters::FilterKernel3<TKernelType>& kernel,
+        const stk::FilterKernel3<TKernelType>& kernel,
         const stk::BorderMode border_mode
         )
 {
@@ -84,12 +84,12 @@ stk::VolumeHelper<TOutputType> decomposable_filter_3d(
 } // namespace
 
 
-namespace filters {
+namespace stk {
 
 template <typename TKernelType, typename TOutputType>
 stk::Volume decomposable_filter_3d(
             const stk::Volume& volume,
-            const filters::FilterKernel3<TKernelType> kernel,
+            const FilterKernel3<TKernelType> kernel,
             const stk::BorderMode border_mode
             )
 {
@@ -114,7 +114,7 @@ stk::Volume decomposable_filter_3d(
 template <typename TKernelType>
 stk::Volume decomposable_filter_3d(
             const stk::Volume& volume,
-            const filters::FilterKernel3<TKernelType> kernel,
+            const FilterKernel3<TKernelType> kernel,
             const stk::BorderMode border_mode
             )
 {
@@ -136,5 +136,5 @@ stk::Volume decomposable_filter_3d(
 }
 
 
-} // namespace filters
+} // namespace stk
 
