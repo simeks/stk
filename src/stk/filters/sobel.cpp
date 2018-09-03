@@ -2,8 +2,6 @@
 
 stk::Volume stk::sobel(const stk::Volume& volume)
 {
-    using namespace stk;
-
     const float3 s = {
         1 / volume.spacing().x,
         1 / volume.spacing().y,
