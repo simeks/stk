@@ -806,70 +806,281 @@ TEST_CASE("gpu_volume_region", "[volume]")
         33, 34, 35, 36,
         37, 38, 39, 40,
         41, 42, 43, 44,
-        45, 46, 47, 48
+        45, 46, 47, 48,
+
+        49, 50, 51, 52,
+        53, 54, 55, 56,
+        57, 58, 59, 60,
+        61, 62, 63, 64
     };
+    int sub_val[] = {
+        1, 2,
+        3, 4,
+
+        5, 6,
+        7, 8
+    };
+
     
-    SECTION("sub_volume") {
-        cuda::Stream stream;
+    SECTION("constructor") {
+        VolumeInt vol({4, 4, 4}, val);
+        GpuVolume gpu_vol(vol);
+        GpuVolume gpu_sub = gpu_vol({1,4}, {1,4}, {1,4});
+        REQUIRE(gpu_sub.size().x == 3);
+        REQUIRE(gpu_sub.size().y == 3);
+        REQUIRE(gpu_sub.size().z == 3);
 
-        VolumeInt vol({4, 4, 3}, val);
-        GpuVolume gpu_vol(vol, stream);
-        GpuVolume gpu_sub = gpu_vol({1,3}, {1,3}, {1,3});
+        {
+            VolumeInt sub = gpu_sub.download();
+            REQUIRE(sub(0,0,0) == 22);
+            REQUIRE(sub(1,0,0) == 23);
+            REQUIRE(sub(0,1,0) == 26);
+            REQUIRE(sub(1,1,0) == 27);
+            REQUIRE(sub(0,0,1) == 38);
+            REQUIRE(sub(1,0,1) == 39);
+            REQUIRE(sub(0,1,1) == 42);
+            REQUIRE(sub(1,1,1) == 43);
+        }
 
-        // Should be:
-        // 22, 23
-        // 26, 27
-        //
-        // 38, 39
-        // 42, 43
-        VolumeInt sub = gpu_sub.download(stream);
-        stream.synchronize();
+        GpuVolume gpu_sub2(gpu_sub, {1,2}, {1,2}, {0,2});
+        REQUIRE(gpu_sub2.size().x == 1);
+        REQUIRE(gpu_sub2.size().y == 1);
+        REQUIRE(gpu_sub2.size().z == 2);
 
-        REQUIRE(sub.size().x == 2);
-        REQUIRE(sub.size().y == 2);
-        REQUIRE(sub.size().z == 2);
-        REQUIRE(sub.is_contiguous() == true);
-        
-        REQUIRE(sub(0,0,0) == 22);
-        REQUIRE(sub(1,0,0) == 23);
-        REQUIRE(sub(0,1,0) == 26);
-        REQUIRE(sub(1,1,0) == 27);
-        REQUIRE(sub(0,0,1) == 38);
-        REQUIRE(sub(1,0,1) == 39);
-        REQUIRE(sub(0,1,1) == 42);
-        REQUIRE(sub(1,1,1) == 43);
+        {
+            VolumeInt sub = gpu_sub2.download();
+            REQUIRE(sub(0,0,0) == 27);
+            REQUIRE(sub(0,0,1) == 43);
+        }
+
+        GpuVolume gpu_sub3(gpu_vol, {0,3}, {0,3}, {0,3});
+        REQUIRE(gpu_sub3.size().x == 3);
+        REQUIRE(gpu_sub3.size().y == 3);
+        REQUIRE(gpu_sub3.size().z == 3);
+
+        {
+            VolumeInt sub = gpu_sub3.download();
+            REQUIRE(sub(0,0,0) == 1);
+            REQUIRE(sub(1,0,0) == 2);
+            REQUIRE(sub(2,0,0) == 3);
+            
+            REQUIRE(sub(0,2,0) == 9);
+            REQUIRE(sub(1,2,0) == 10);
+            REQUIRE(sub(2,2,0) == 11);
+
+            REQUIRE(sub(0,0,2) == 33);
+            REQUIRE(sub(1,0,2) == 34);
+            REQUIRE(sub(2,0,2) == 35);
+            
+            REQUIRE(sub(0,2,2) == 41);
+            REQUIRE(sub(1,2,2) == 42);
+            REQUIRE(sub(2,2,2) == 43);
+        }
     }
+
+    SECTION("copy_from") {
+        // SubVol -> SubVol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            GpuVolume gpu_vol(vol);
+
+            GpuVolume gpu_dst = gpu_vol({2,4}, {2,4}, {2,4});
+            GpuVolume gpu_src = gpu_vol({0,2}, {0,2}, {0,2});
+            gpu_dst.copy_from(gpu_src);
+
+            VolumeInt dst = gpu_dst.download();
+            VolumeInt src = gpu_src.download();
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // SubVol -> Vol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            GpuVolume gpu_vol(vol);
+
+            GpuVolume gpu_dst({2,2,2}, stk::Type_Int);
+            GpuVolume gpu_src = gpu_vol({0,2}, {0,2}, {0,2});
+            gpu_dst.copy_from(gpu_src);
+
+            VolumeInt dst = gpu_dst.download();
+            VolumeInt src = gpu_src.download();
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // Vol -> SubVol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            GpuVolume gpu_vol(vol);
+
+            VolumeInt src = VolumeInt({2,2,2}, sub_val);
+            GpuVolume gpu_src(src);
+            GpuVolume gpu_dst = gpu_vol({1,3}, {1,3}, {1,3});
+
+            gpu_dst.copy_from(gpu_src);
+
+            VolumeInt dst = gpu_dst.download();
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+    }
+    
     SECTION("upload_download") {
-        cuda::Stream stream;
-
-        VolumeInt vol({4, 4, 3}, val);
+        // [Sub]Volume => GpuVolume::upload
+        {
+            VolumeInt vol({4, 4, 4}, val);
         
-        // Should be:
-        // 22, 23
-        // 26, 27
-        //
-        // 38, 39
-        // 42, 43
-        VolumeInt sub(vol, {1,3}, {1,3}, {1, 3});
-        GpuVolume gpu_sub({2, 2, 2}, stk::Type_Int);
-        gpu_sub.upload(sub, stream);
+            VolumeInt src(vol, {1, 3}, {1, 3}, {1, 3});
+            GpuVolume gpu_sub(src);
+            VolumeInt dst = gpu_sub.download();
 
-        VolumeInt sub2(sub.size());
-        gpu_sub.download(sub2, stream);
-        stream.synchronize();
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
 
-        REQUIRE(sub2.size().x == 2);
-        REQUIRE(sub2.size().y == 2);
-        REQUIRE(sub2.size().z == 2);
-        
-        REQUIRE(sub2(0,0,0) == 22);
-        REQUIRE(sub2(1,0,0) == 23);
-        REQUIRE(sub2(0,1,0) == 26);
-        REQUIRE(sub2(1,1,0) == 27);
-        REQUIRE(sub2(0,0,1) == 38);
-        REQUIRE(sub2(1,0,1) == 39);
-        REQUIRE(sub2(0,1,1) == 42);
-        REQUIRE(sub2(1,1,1) == 43);
+        // [Sub]Volume => [Sub]GpuVolume::upload
+        {
+            VolumeInt vol({4, 4, 4}, val);
+
+            VolumeInt src(vol, {2, 4}, {2, 4}, {2, 4});
+            GpuVolume gpu_vol(vol);
+            GpuVolume gpu_sub(gpu_vol, {2, 4}, {2, 4}, {2, 4});
+
+            VolumeInt dst = gpu_sub.download();
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // Volume      => [Sub]GpuVolume::upload
+        {
+            VolumeInt vol({4, 4, 4}, val);
+
+            VolumeInt src({2,2,2}, sub_val);
+            GpuVolume gpu_vol(vol);
+            GpuVolume gpu_sub(gpu_vol, {2, 4}, {2, 4}, {2, 4});
+            gpu_sub.upload(src);
+
+            VolumeInt dst = gpu_sub.download();
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // GpuVolume::download => [Sub]Volume
+        {
+            VolumeInt vol({4, 4, 4}, val);
+
+            VolumeInt dst(vol, {1, 3}, {1, 3}, {1, 3});
+            VolumeInt src({2,2,2}, sub_val);
+            GpuVolume gpu_vol(src);
+
+            gpu_vol.download(dst);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // [Sub]GpuVolume::download => [Sub]Volume
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            VolumeInt src(vol, {0, 2}, {0, 2}, {0, 2});
+            
+            GpuVolume gpu_vol(vol);
+            GpuVolume gpu_sub(gpu_vol, {0, 2}, {0, 2}, {0, 2});
+            
+            VolumeInt dst(vol, {2, 4}, {2, 4}, {2, 4});
+            gpu_sub.download(dst);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // [Sub]GpuVolume::download => Volume
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            VolumeInt src(vol, {0, 2}, {0, 2}, {0, 2});
+            
+            GpuVolume gpu_vol(vol);
+            GpuVolume gpu_sub(gpu_vol, {0, 2}, {0, 2}, {0, 2});
+            
+            VolumeInt dst({2,2,2});
+            gpu_sub.download(dst);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+    }
+    SECTION("referencing") {
+        // Just to check that they actually reference the same memory
+
+        VolumeInt vol({4, 4, 4}, val);
+        GpuVolume gpu_vol(vol);
+        GpuVolume gpu_sub(gpu_vol, {0,2}, {0, 2}, {0, 2});
+
+        VolumeInt subvol({2,2,2}, -1);
+        GpuVolume gpu_sub2(subvol);
+
+        gpu_sub.copy_from(gpu_sub2);
+
+        VolumeInt test = gpu_vol.download();
+
+        for (int z = 0; z < 4; ++z) {
+        for (int y = 0; y < 4; ++y) {
+        for (int x = 0; x < 4; ++x) {
+            if (x < 2 && y < 2 && z < 2) {
+                REQUIRE(test(x,y,z) == -1);
+            }
+            else {
+                REQUIRE(test(x,y,z) != -1);
+            }
+        }
+        }
+        }
     }
 }
 

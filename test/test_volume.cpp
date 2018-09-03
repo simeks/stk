@@ -713,12 +713,6 @@ TEST_CASE("volume_region", "[volume]")
     SECTION("constructor") {
         VolumeInt vol({4, 4, 4}, val);
         
-        // Should be:
-        // 22, 23
-        // 26, 27
-        //
-        // 38, 39
-        // 42, 43
         VolumeInt sub(vol, {1,4}, {1,4}, {1, 4});
         REQUIRE(sub.size().x == 3);
         REQUIRE(sub.size().y == 3);
@@ -764,29 +758,6 @@ TEST_CASE("volume_region", "[volume]")
         REQUIRE(sub3(0,2,2) == 41);
         REQUIRE(sub3(1,2,2) == 42);
         REQUIRE(sub3(2,2,2) == 43);
-    }
-    SECTION("operator") {
-        VolumeInt vol({4, 4, 4}, val);
-        
-        // Should be:
-        // 22, 23
-        // 26, 27
-        //
-        // 38, 39
-        // 42, 43
-        VolumeInt sub = vol({1,3}, {1,3}, {1, 3});
-        REQUIRE(sub.size().x == 2);
-        REQUIRE(sub.size().y == 2);
-        REQUIRE(sub.size().z == 2);
-        
-        REQUIRE(sub(0,0,0) == 22);
-        REQUIRE(sub(1,0,0) == 23);
-        REQUIRE(sub(0,1,0) == 26);
-        REQUIRE(sub(1,1,0) == 27);
-        REQUIRE(sub(0,0,1) == 38);
-        REQUIRE(sub(1,0,1) == 39);
-        REQUIRE(sub(0,1,1) == 42);
-        REQUIRE(sub(1,1,1) == 43);
     }
     SECTION("copy_from") {
         // SubVol -> SubVol
@@ -848,5 +819,31 @@ TEST_CASE("volume_region", "[volume]")
             }
         }
     }
-    
+    SECTION("referencing") {
+        // Just to check that they actually reference the same memory
+
+        VolumeInt vol({4, 4, 4}, val);
+        VolumeInt subvol(vol, {0,2}, {0, 2}, {0, 2});
+
+        for (int z = 0; z < 2; ++z) {
+        for (int y = 0; y < 2; ++y) {
+        for (int x = 0; x < 2; ++x) {
+            subvol(x,y,z) = -1;
+        }
+        }
+        }
+
+        for (int z = 0; z < 4; ++z) {
+        for (int y = 0; y < 4; ++y) {
+        for (int x = 0; x < 4; ++x) {
+            if (x < 2 && y < 2 && z < 2) {
+                REQUIRE(vol(x,y,z) == -1);
+            }
+            else {
+                REQUIRE(vol(x,y,z) != -1);
+            }
+        }
+        }
+        }
+    }
 }
