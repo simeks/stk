@@ -115,21 +115,12 @@ Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range&
     int ny = y.end - y.begin;
     int nz = z.end - z.begin;
 
-    uint8_t* ptr = reinterpret_cast<uint8_t*>(_ptr);
+    uint8_t* ptr = reinterpret_cast<uint8_t*>(_ptr)
+        + x.begin * _strides[0] + y.begin * _strides[1] + z.begin * _strides[2];
     
-    _contiguous = true;
-    if (z.begin != 0 && z.end != (int)_size.z) {
         // any offset in z axis does not break contiguity 
-        ptr += z.begin * _strides[2];
-    }
-
-    if (y.begin != 0 && y.end != (int)_size.y) {
-        ptr += y.begin * _strides[1];
-        _contiguous = false;
-    }
-
-    if (x.begin != 0 && x.end != (int)_size.x) {
-        ptr += x.begin * _strides[0];
+    _contiguous = true;
+    if (nx != (int)other._size.x || ny != (int)other._size.y) {
         _contiguous = false;
     }
 
