@@ -83,10 +83,10 @@ struct FilterKernel3
  * \param border_mode Policy on image boundary.
  */
 template <typename TKernelType, typename TOutputType>
-stk::Volume decomposable_filter_3d(
-        const stk::Volume& volume,
+Volume decomposable_filter_3d(
+        const Volume& volume,
         const FilterKernel3<TKernelType> kernel,
-        const stk::BorderMode border_mode
+        const BorderMode border_mode
         );
 
 
@@ -94,10 +94,10 @@ stk::Volume decomposable_filter_3d(
  * \brief Overloaded version with output type matching the input type.
  */
 template <typename TKernelType>
-stk::Volume decomposable_filter_3d(
-        const stk::Volume& volume,
+Volume decomposable_filter_3d(
+        const Volume& volume,
         const FilterKernel3<TKernelType> kernel,
-        const stk::BorderMode border_mode
+        const BorderMode border_mode
         );
 
 

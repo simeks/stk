@@ -1,3 +1,23 @@
+namespace {
+
+/*!
+ * \brief Mirror an index ranging from 0 to n-1.
+ */
+static inline int mirror(int x, const int n)
+{
+    while (x < 0 || x >= n) {
+        if (x < 0) {
+            x = -x;
+        }
+        if (x >= n) {
+            x = 2 * (n - 1) - x;
+        }
+    }
+    return x;
+}
+
+} // namespace
+
 namespace stk
 {
 template<typename T>
@@ -69,6 +89,18 @@ T VolumeHelper<T>::at(int x, int y, int z, BorderMode border_mode) const
         y = std::min(y, int(_size.y - 1));
         z = std::max(z, 0);
         z = std::min(z, int(_size.z - 1));
+    }
+    else if (border_mode == Border_Mirror)
+    {
+        x = ::mirror(x, _size.x);
+        y = ::mirror(y, _size.y);
+        z = ::mirror(z, _size.z);
+    }
+    else if (border_mode == Border_Cyclic)
+    {
+        x = x % _size.x;
+        y = y % _size.y;
+        z = z % _size.z;
     }
 
     return *((T const*)(((uint8_t*)_ptr) + offset(x, y, z)));

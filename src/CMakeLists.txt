@@ -6,6 +6,8 @@ set(STK_SRCS
     "stk/cuda/volume.h"
     "stk/filters/decomposable_filter.h"
     "stk/filters/decomposable_filter.inl"
+    "stk/filters/gaussian_filter.cpp"
+    "stk/filters/gaussian_filter.h"
     "stk/filters/sobel.cpp"
     "stk/filters/sobel.h"
     "stk/io/io.cpp"

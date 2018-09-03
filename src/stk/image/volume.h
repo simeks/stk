@@ -12,8 +12,10 @@ namespace stk
 {
     enum BorderMode
     {
-        Border_Constant, // Zero padding outside volume
-        Border_Replicate
+        Border_Constant,  // Zero padding outside volume
+        Border_Replicate, // Clamp to edge
+        Border_Mirror,    // Mirror 
+        Border_Cyclic,    // Wrap indices around
     };
 
     // Flags for allocation of the backing memory for the volumes. Currently only 

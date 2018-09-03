@@ -87,52 +87,52 @@ stk::VolumeHelper<TOutputType> decomposable_filter_3d(
 namespace stk {
 
 template <typename TKernelType, typename TOutputType>
-stk::Volume decomposable_filter_3d(
-            const stk::Volume& volume,
+Volume decomposable_filter_3d(
+            const Volume& volume,
             const FilterKernel3<TKernelType> kernel,
-            const stk::BorderMode border_mode
+            const BorderMode border_mode
             )
 {
     switch (volume.voxel_type())
     {
-    case stk::Type_Float:
+    case Type_Float:
         return ::decomposable_filter_3d<float, TKernelType, TOutputType>(
                 volume, {kernel.x, kernel.y, kernel.z}, border_mode);
-    case stk::Type_Double:
+    case Type_Double:
         return ::decomposable_filter_3d<double, TKernelType, TOutputType>(
                 volume, {kernel.x, kernel.y, kernel.z}, border_mode);
-    case stk::Type_Float3:
+    case Type_Float3:
         return ::decomposable_filter_3d<float3, TKernelType, TOutputType>(
                 volume, {kernel.x, kernel.y, kernel.z}, border_mode);
     default:
         FATAL() << "Unsupported voxel format";
     };
-    return stk::Volume();
+    return Volume();
 }
 
 
 template <typename TKernelType>
-stk::Volume decomposable_filter_3d(
-            const stk::Volume& volume,
+Volume decomposable_filter_3d(
+            const Volume& volume,
             const FilterKernel3<TKernelType> kernel,
-            const stk::BorderMode border_mode
+            const BorderMode border_mode
             )
 {
     switch (volume.voxel_type())
     {
-    case stk::Type_Float:
+    case Type_Float:
         return ::decomposable_filter_3d<float, TKernelType, float>(
                 volume, {kernel.x, kernel.y, kernel.z}, border_mode);
-    case stk::Type_Double:
+    case Type_Double:
         return ::decomposable_filter_3d<double, TKernelType, double>(
                 volume, {kernel.x, kernel.y, kernel.z}, border_mode);
-    case stk::Type_Float3:
+    case Type_Float3:
         return ::decomposable_filter_3d<float3, TKernelType, float3>(
                 volume, {kernel.x, kernel.y, kernel.z}, border_mode);
     default:
         FATAL() << "Unsupported voxel format";
     };
-    return stk::Volume();
+    return Volume();
 }
 
 
