@@ -702,11 +702,16 @@ TEST_CASE("volume_region", "[volume]")
         33, 34, 35, 36,
         37, 38, 39, 40,
         41, 42, 43, 44,
-        45, 46, 47, 48
+        45, 46, 47, 48,
+
+        49, 50, 51, 52,
+        53, 54, 55, 56,
+        57, 58, 59, 60,
+        61, 62, 63, 64
     };
     
     SECTION("constructor") {
-        VolumeInt vol({4, 4, 3}, val);
+        VolumeInt vol({4, 4, 4}, val);
         
         // Should be:
         // 22, 23
@@ -714,10 +719,10 @@ TEST_CASE("volume_region", "[volume]")
         //
         // 38, 39
         // 42, 43
-        VolumeInt sub(vol, {1,3}, {1,3}, {1, 3});
-        REQUIRE(sub.size().x == 2);
-        REQUIRE(sub.size().y == 2);
-        REQUIRE(sub.size().z == 2);
+        VolumeInt sub(vol, {1,4}, {1,4}, {1, 4});
+        REQUIRE(sub.size().x == 3);
+        REQUIRE(sub.size().y == 3);
+        REQUIRE(sub.size().z == 3);
         REQUIRE(sub.is_contiguous() == false);
         
         REQUIRE(sub(0,0,0) == 22);
@@ -728,9 +733,40 @@ TEST_CASE("volume_region", "[volume]")
         REQUIRE(sub(1,0,1) == 39);
         REQUIRE(sub(0,1,1) == 42);
         REQUIRE(sub(1,1,1) == 43);
+
+        VolumeInt sub2(sub, {1,2}, {1,2}, {0,2});
+        REQUIRE(sub2.size().x == 1);
+        REQUIRE(sub2.size().y == 1);
+        REQUIRE(sub2.size().z == 2);
+        REQUIRE(sub2.is_contiguous() == false);
+
+        REQUIRE(sub2(0,0,0) == 27);
+        REQUIRE(sub2(0,0,1) == 43);
+
+        VolumeInt sub3(vol, {0,3}, {0,3}, {0,3});
+        REQUIRE(sub3.size().x == 3);
+        REQUIRE(sub3.size().y == 3);
+        REQUIRE(sub3.size().z == 3);
+        REQUIRE(sub3.is_contiguous() == false);
+
+        REQUIRE(sub3(0,0,0) == 1);
+        REQUIRE(sub3(1,0,0) == 2);
+        REQUIRE(sub3(2,0,0) == 3);
+        
+        REQUIRE(sub3(0,2,0) == 9);
+        REQUIRE(sub3(1,2,0) == 10);
+        REQUIRE(sub3(2,2,0) == 11);
+
+        REQUIRE(sub3(0,0,2) == 33);
+        REQUIRE(sub3(1,0,2) == 34);
+        REQUIRE(sub3(2,0,2) == 35);
+        
+        REQUIRE(sub3(0,2,2) == 41);
+        REQUIRE(sub3(1,2,2) == 42);
+        REQUIRE(sub3(2,2,2) == 43);
     }
     SECTION("operator") {
-        VolumeInt vol({4, 4, 3}, val);
+        VolumeInt vol({4, 4, 4}, val);
         
         // Should be:
         // 22, 23
@@ -752,4 +788,65 @@ TEST_CASE("volume_region", "[volume]")
         REQUIRE(sub(0,1,1) == 42);
         REQUIRE(sub(1,1,1) == 43);
     }
+    SECTION("copy_from") {
+        // SubVol -> SubVol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            VolumeInt dst = vol({2,4}, {2,4}, {2,4});
+            VolumeInt src = vol({0,2}, {0,2}, {0,2});
+            dst.copy_from(src);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // SubVol -> Vol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            VolumeInt dst = VolumeInt({2,2,2});
+            VolumeInt src = vol({0,2}, {0,2}, {0,2});
+
+            dst.copy_from(src);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // Vol -> SubVol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+
+            int sub_val[] = {
+                1, 2,
+                3, 4,
+
+                5, 6,
+                7, 8
+            };
+
+            VolumeInt dst = vol({1,3}, {1,3}, {1,3});
+            VolumeInt src = VolumeInt({2,2,2}, sub_val);
+
+            dst.copy_from(src);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+    }
+    
 }
