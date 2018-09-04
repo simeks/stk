@@ -147,7 +147,7 @@ void Volume::copy_from(const Volume& other)
         memcpy(_ptr, other._ptr, num_bytes);
     }
     else {
-        size_t row_bytes = _strides[1];
+        size_t row_bytes = type_size(voxel_type()) * _size.x;
 
         for (int z = 0; z < (int)_size.z; ++z) {
             uint8_t* dst_row = reinterpret_cast<uint8_t*>(_ptr) + z * _strides[2];
