@@ -14,34 +14,17 @@ stk::VolumeHelper<TVoxelType> gaussian_filter_3d(
         return img.clone();
     }
 
-    auto kernel = stk::gaussian_kernel(sigma);
-    stk::FilterKernel3<float> kernels = {kernel, kernel, kernel};
+    stk::FilterKernel3<float> kernels = {
+        stk::gaussian_kernel<float>(sigma, img.spacing().x),
+        stk::gaussian_kernel<float>(sigma, img.spacing().y),
+        stk::gaussian_kernel<float>(sigma, img.spacing().z),
+    };
 
     return stk::decomposable_filter_3d<float>(img, kernels, stk::Border_Mirror);
 }
 
 } // namespace
 
-
-stk::FilterKernel<float> stk::gaussian_kernel(const float sigma)
-{
-    int r = (int) std::ceil(2 * sigma); // filter radius
-    std::vector<float> kernel (2 * r + 1);
-
-    const float k = -1.0 / (2.0 * sigma * sigma);
-    float sum = 0.0;
-    for (int i = 0; i < 2*r + 1; ++i) {
-        kernel[i] = std::exp(k * (i - r) * (i - r));
-        sum += kernel[i];
-    }
-
-    // Normalise
-    for (int i = 0; i < 2*r + 1; ++i) {
-        kernel[i] /= sum;
-    }
-
-    return FilterKernel<float>(kernel);
-}
 
 stk::Volume stk::gaussian_filter_3d(const stk::Volume& volume, float sigma)
 {
