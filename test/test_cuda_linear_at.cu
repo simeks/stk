@@ -27,8 +27,6 @@ __global__ void linear_at_border_kernel(cuda::VolumePtr<T> in, cuda::VolumePtr<T
 
 TEST_CASE("cuda_linear_at", "[cuda]")
 {
-    cuda::init();
-
     dim3 dims{2,2,2};
     
     VolumeFloat in(dims, 1.0f);

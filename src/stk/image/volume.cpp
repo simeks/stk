@@ -68,14 +68,20 @@ VolumeData::~VolumeData()
 #endif
 }
 
-Volume::Volume() : _ptr(NULL), _stride(0), _voxel_type(Type_Unknown)
+Volume::Volume() : 
+    _ptr(NULL),
+    _strides{0,0,0},
+    _voxel_type(Type_Unknown), 
+    _contiguous(true)
 {
+    
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
 }
 Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t flags) :
     _size(size),
-    _voxel_type(voxel_type)
+    _voxel_type(voxel_type),
+    _contiguous(true)
 {
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
@@ -88,20 +94,46 @@ Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t fla
         memcpy(_ptr, data, num_bytes);
     }
 }
+Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range& z) :
+    _data(other._data),
+    _ptr(other._ptr),
+    _voxel_type(other._voxel_type),
+    _origin(other._origin),
+    _spacing(other._spacing)
+{
+    ASSERT(other.valid());
+    ASSERT(x.begin <= x.end && y.begin <= y.end && z.begin <= z.end);
+    ASSERT(0 <= x.begin && x.end <= (int)other._size.x);
+    ASSERT(0 <= y.begin && y.end <= (int)other._size.y);
+    ASSERT(0 <= z.begin && z.end <= (int)other._size.z);
+
+    _strides[0] = other._strides[0];
+    _strides[1] = other._strides[1];
+    _strides[2] = other._strides[2];
+
+    int nx = x.end - x.begin;
+    int ny = y.end - y.begin;
+    int nz = z.end - z.begin;
+
+    uint8_t* ptr = reinterpret_cast<uint8_t*>(_ptr)
+        + x.begin * _strides[0] + y.begin * _strides[1] + z.begin * _strides[2];
+    
+        // any offset in z axis does not break contiguity 
+    _contiguous = true;
+    if (nx != (int)other._size.x || ny != (int)other._size.y) {
+        _contiguous = false;
+    }
+
+    _size = dim3{(uint32_t)nx, (uint32_t)ny, (uint32_t)nz};
+    _ptr = ptr;
+}
 Volume::~Volume()
 {
 }
 Volume Volume::clone() const
 {
     Volume copy(_size, _voxel_type, nullptr, _data->flags);
-    copy._origin = _origin;
-    copy._spacing = _spacing;
-
-    size_t num_bytes = _size.x * _size.y * 
-        _size.z * type_size(_voxel_type);
-    
-    memcpy(copy._ptr, _ptr, num_bytes);
-
+    copy.copy_from(*this);
     return copy;
 }
 void Volume::copy_from(const Volume& other)
@@ -109,10 +141,26 @@ void Volume::copy_from(const Volume& other)
     ASSERT(_size == other._size);
     ASSERT(_voxel_type == other._voxel_type);
 
-    size_t num_bytes = _size.x * _size.y * 
-        _size.z * type_size(_voxel_type);
+    if (is_contiguous() && other.is_contiguous()) {
+        size_t num_bytes = _size.x * _size.y * 
+            _size.z * type_size(_voxel_type);
+        memcpy(_ptr, other._ptr, num_bytes);
+    }
+    else {
+        size_t row_bytes = type_size(voxel_type()) * _size.x;
 
-    memcpy(_ptr, other._ptr, num_bytes);
+        for (int z = 0; z < (int)_size.z; ++z) {
+            uint8_t* dst_row = reinterpret_cast<uint8_t*>(_ptr) + z * _strides[2];
+            uint8_t* src_row = reinterpret_cast<uint8_t*>(other._ptr) + z * other._strides[2];
+
+            for (int y = 0; y < (int)_size.y; ++y) {
+                memcpy(dst_row, src_row, row_bytes);
+
+                dst_row += _strides[1];
+                src_row += other._strides[1];
+            }
+        }
+    }
     
     _origin = other._origin;
     _spacing = other._spacing;
@@ -121,6 +169,8 @@ Volume Volume::as_type(Type type) const
 {
     ASSERT(valid());
     ASSERT(type != Type_Unknown);
+    // Non-contiguous not supported for now, this function is gonna be refactored anyway
+    ASSERT(is_contiguous());
     if (_voxel_type == type)
         return *this;
 
@@ -188,32 +238,50 @@ const float3& Volume::spacing() const
 {
     return _spacing;
 }
+const size_t* Volume::strides() const
+{
+    return _strides;
+}
 void Volume::copy_meta_from(const Volume& other)
 {
     _origin = other._origin;
     _spacing = other._spacing;
 }
+bool Volume::is_contiguous() const
+{
+    return _contiguous;
+}
+Volume Volume::operator()(const Range& x, const Range& y, const Range& z)
+{
+    return Volume(*this, x, y, z);
+}
 
 Volume::Volume(const Volume& other) :
     _data(other._data),
     _ptr(other._ptr),
-    _stride(other._stride),
     _size(other._size),
     _voxel_type(other._voxel_type),
     _origin(other._origin),
-    _spacing(other._spacing)
+    _spacing(other._spacing),
+    _contiguous(other._contiguous)
 {
+    _strides[0] = other._strides[0];
+    _strides[1] = other._strides[1];
+    _strides[2] = other._strides[2];
 }
 Volume& Volume::operator=(const Volume& other)
 {
     if (this != &other) {
         _data = other._data;
         _ptr = other._ptr;
-        _stride = other._stride;
+        _strides[0] = other._strides[0];
+        _strides[1] = other._strides[1];
+        _strides[2] = other._strides[2];
         _size = other._size;
         _voxel_type = other._voxel_type;
         _origin = other._origin;
         _spacing = other._spacing;
+        _contiguous = other._contiguous;
     }
     return *this;
 }
@@ -231,14 +299,20 @@ void Volume::allocate(const dim3& size, Type voxel_type, uint32_t flags)
 
     _data = std::make_shared<VolumeData>(num_bytes, flags);
     _ptr = _data->data;
-    _stride = type_size(_voxel_type) * _size.x;
+    _strides[0] = type_size(_voxel_type);
+    _strides[1] = _strides[0] * _size.x;
+    _strides[2] = _strides[1] * _size.y;
+
+    _contiguous = true;
 }
 void Volume::release()
 {
     _data.reset();
     _ptr = NULL;
     _size = { 0, 0, 0 };
-    _stride = 0;
+    _strides[0] = 0;
+    _strides[1] = 0;
+    _strides[2] = 0;
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
 }
