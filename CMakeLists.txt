@@ -80,7 +80,11 @@ endif()
 
 if (STK_USE_CUDA)
     add_definitions(-DSTK_USE_CUDA)
-    find_package(CUDA REQUIRED)
+    enable_language(CUDA)
+
+    if (STK_ENABLE_FAST_MATH)
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
+    endif()
 endif()
 
 if (STK_LOGGING_PREFIX_FILE)
