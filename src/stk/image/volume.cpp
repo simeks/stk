@@ -316,5 +316,22 @@ void Volume::release()
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
 }
+std::vector<std::string> Volume::get_metadata_keys(void) const
+{
+    std::vector<std::string> keys;
+    keys.reserve(_metadata.size());
+    for (auto const& [k, _] : _metadata) {
+        keys.push_back(k);
+    }
+    return keys;
+}
+std::any Volume::get_metadata(const std::string& key)
+{
+    return _metadata[key];
+}
+bool Volume::set_metadata(const std::string& key, const std::any& value)
+{
+    return _metadata.emplace(key, value).second;
+}
 } // namespace stk
 

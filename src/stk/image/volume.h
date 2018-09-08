@@ -6,7 +6,10 @@
 #include "types.h"
 
 #include <algorithm>
+#include <any>
+#include <map>
 #include <memory>
+#include <vector>
 
 namespace stk
 {
@@ -158,6 +161,11 @@ namespace stk
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume& operator=(const Volume& other);
 
+        // Handle metadata
+        std::vector<std::string> get_metadata_keys(void) const;
+        std::any get_metadata(const std::string& key);
+        bool set_metadata(const std::string& key, const std::any& value);
+
     protected:
         std::shared_ptr<VolumeData> _data;
         void* _ptr; // Pointer to a location in _data
@@ -175,6 +183,8 @@ namespace stk
         float3 _spacing; // Size of a voxel
 
         bool _contiguous;
+
+        std::map<std::string, std::any> _metadata;
     };
 
     template<typename T>

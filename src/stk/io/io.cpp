@@ -6,6 +6,8 @@
 #include "stk/common/log.h"
 #include "stk/image/volume.h"
 
+#include "stk/itk_bridge/itk_io.h"
+
 #include <algorithm>
 #include <fstream>
 #include <vector>
@@ -21,7 +23,7 @@ namespace stk
         size_t (*signature_length)();
 
         // Determines based on the file signature if this reader can read it
-        // Preferably each module should avoid opening the file by itself and just 
+        // Preferably each module should avoid opening the file by itself and just
         //  use the provided signature to minimize the amount of reads.
         bool (*can_read)(const std::string& filename, const char* signature, size_t len);
     };
@@ -29,7 +31,7 @@ namespace stk
     {
         // Writes the volume
         void (*write)(const std::string& filename, const Volume& vol);
-        
+
         // Checks if the given filename (and extension) is supported by this format
         bool (*can_write)(const std::string& filename);
     };
@@ -65,9 +67,9 @@ namespace stk
 
             readers.push_back(nii_reader);
             writers.push_back(nii_writer);
-            
+
             nifti::initialize();
-            
+
             // Nrrd
             VolumeReader nrrd_reader = {
                 nrrd::read,
@@ -89,7 +91,7 @@ namespace stk
     {
         IORegistry _io_registry;
     }
-    
+
     // Attempts to find a reader for the given file.
     // If no reader is found, VolumeReader{0} is returned
     VolumeReader find_reader(const std::string& filename)
@@ -106,8 +108,8 @@ namespace stk
         std::ifstream f;
         f.open(filename, std::ios::in|std::ios::binary);
         if (!f.is_open())
-            return {0};
-        
+            return VolumeReader();
+
         std::vector<char> signature;
         signature.resize(signature_len);
 
@@ -119,9 +121,9 @@ namespace stk
                 return r;
         }
 
-        LOG(Error) << "No reader found for file " << filename << ", unsupported format?";
+        LOG(Error) << "No reader found for file " << &filename << ", unsupported format?";
 
-        return {0};
+        return VolumeReader();
     }
 
     VolumeWriter find_writer(const std::string& filename)
@@ -130,23 +132,31 @@ namespace stk
             if (w.can_write(filename))
                 return w;
         }
-        return {0};
+        return VolumeWriter();
     }
 
     Volume read_volume(const std::string& filename)
     {
+#ifdef STK_ITK_BRIDGE
+        return stk::read_itk_image(filename);
+#else // ifdef STK_ITK_BRIDGE
         VolumeReader r = find_reader(filename);
         if (!r.read) {
             LOG(Error) << "Failed to read file " << filename;
             return Volume();
         }
         return r.read(filename);
+#endif // ifdef STK_ITK_BRIDGE
     }
     void write_volume(const std::string& filename, const Volume& vol)
     {
+#ifdef STK_ITK_BRIDGE
+        stk::write_itk_image(vol, filename);
+#else // ifdef STK_ITK_BRIDGE
         VolumeWriter w = find_writer(filename);
-        FATAL_IF(!w.write) << "No writer found for file " << filename;
+        FATAL_IF(!w.write) << "No writer found for file " << &filename;
 
         w.write(filename, vol);
+#endif // ifdef STK_ITK_BRIDGE
     }
 }
