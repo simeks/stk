@@ -44,26 +44,24 @@ if (STK_USE_CUDA)
     )
 endif()
 
-if (STK_USE_CUDA)
-    cuda_add_library(stk STATIC ${STK_SRCS})
-else()
-    add_library(stk STATIC ${STK_SRCS})
-endif()
+add_library(stk STATIC ${STK_SRCS})
 
-target_include_directories(stk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CUDA_INCLUDE_DIRS})
-target_link_libraries(stk ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
+target_include_directories(stk PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+    )
 
 if(NIFTI_FOUND)
     target_include_directories(stk PUBLIC ${NIFTI_INCLUDE_DIR})
-    target_link_libraries(stk ${NIFTI_LIBRARIES})
+    target_link_libraries(stk PUBLIC ${NIFTI_LIBRARIES})
 else()
-    target_link_libraries(stk niftiio)
+    target_link_libraries(stk PUBLIC niftiio)
 endif()
 
 if(NrrdIO_FOUND)
     target_include_directories(stk PUBLIC ${NrrdIO_INCLUDE_DIR})
-    target_link_libraries(stk ${NrrdIO_LIBRARIES})
+    target_link_libraries(stk PUBLIC ${NrrdIO_LIBRARIES})
 else()
-    target_link_libraries(stk NrrdIO)
+    target_link_libraries(stk PUBLIC NrrdIO)
 endif()
 
