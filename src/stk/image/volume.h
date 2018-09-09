@@ -134,11 +134,11 @@ namespace stk
 
         void set_origin(const float3& origin);
         void set_spacing(const float3& spacing);
-        void set_direction(const matrix<float, 3, 3>& direction);
+        void set_direction(const Matrix3x3f& direction);
 
         const float3& origin() const;
         const float3& spacing() const;
-        const matrix<float, 3, 3>& direction() const;
+        const Matrix3x3f& direction() const;
 
         // Strides for x, y, z
         const size_t* strides() const;
@@ -168,6 +168,8 @@ namespace stk
         void set_metadata(const std::string& key, const std::string& value);
 
     protected:
+        using MetaDataDictionary = std::map<std::string, std::string>;
+
         std::shared_ptr<VolumeData> _data;
         void* _ptr; // Pointer to a location in _data
 
@@ -182,11 +184,11 @@ namespace stk
 
         float3 _origin; // Origin in world coordinates
         float3 _spacing; // Size of a voxel
-        matrix<float, 3, 3> _direction; // Cosine directions of the axes
+        Matrix3x3f _direction; // Cosine directions of the axes
 
         bool _contiguous;
 
-        std::map<std::string, std::string> _metadata;
+        std::shared_ptr<MetaDataDictionary> _metadata;
     };
 
     template<typename T>

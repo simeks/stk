@@ -72,7 +72,8 @@ Volume::Volume() :
     _ptr(NULL),
     _strides{0,0,0},
     _voxel_type(Type_Unknown),
-    _contiguous(true)
+    _contiguous(true),
+    _metadata(std::make_shared<MetaDataDictionary>())
 {
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
@@ -81,7 +82,8 @@ Volume::Volume() :
 Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t flags) :
     _size(size),
     _voxel_type(voxel_type),
-    _contiguous(true)
+    _contiguous(true),
+    _metadata(std::make_shared<MetaDataDictionary>())
 {
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
@@ -237,7 +239,7 @@ void Volume::set_spacing(const float3& spacing)
 {
     _spacing = spacing;
 }
-void Volume::set_direction(const matrix<float, 3, 3>& direction)
+void Volume::set_direction(const Matrix3x3f& direction)
 {
     _direction = direction;
 }
@@ -249,7 +251,7 @@ const float3& Volume::spacing() const
 {
     return _spacing;
 }
-const matrix<float, 3, 3>& Volume::direction() const
+const Matrix3x3f& Volume::direction() const
 {
     return _direction;
 }
@@ -338,13 +340,13 @@ void Volume::release()
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
     _direction.diagonal({ 1, 1, 1 });
-    _metadata.clear();
+    _metadata.reset();
 }
 std::vector<std::string> Volume::get_metadata_keys(void) const
 {
     std::vector<std::string> keys;
-    keys.reserve(_metadata.size());
-    for (auto const& [k, _] : _metadata) {
+    keys.reserve(_metadata->size());
+    for (auto const& [k, _] : *_metadata) {
         keys.push_back(k);
     }
     return keys;
@@ -352,7 +354,7 @@ std::vector<std::string> Volume::get_metadata_keys(void) const
 std::string Volume::get_metadata(const std::string& key) const
 {
     try {
-        return _metadata.at(key);
+        return _metadata->at(key);
     }
     catch (const std::out_of_range&) {
         FATAL() << "Metadata '" << &key << "' not found";
@@ -360,7 +362,12 @@ std::string Volume::get_metadata(const std::string& key) const
 }
 void Volume::set_metadata(const std::string& key, const std::string& value)
 {
-    _metadata.emplace(key, value);
+    if (_metadata.use_count() > 1) {
+        auto new_metadata = std::make_shared<MetaDataDictionary>();
+        new_metadata->insert(_metadata->begin(), _metadata->end());
+        _metadata = new_metadata;
+    }
+    (*_metadata)[key] = value;
 }
 } // namespace stk
 

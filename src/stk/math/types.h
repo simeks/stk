@@ -2,8 +2,9 @@
 
 #include <stk/common/platform.h>
 
+#include <algorithm>
+#include <initializer_list>
 #include <sstream>
-#include <vector>
 
 #ifdef STK_USE_CUDA
 // float2, float3, etc...
@@ -131,34 +132,33 @@ struct STK_ALIGN(16) double4
 
 
 template<typename T, unsigned int rows_, unsigned int cols_>
-class matrix
+struct matrix
 {
-public:
+    T _data[rows_][cols_];
+
     static constexpr unsigned int rows = rows_;
     static constexpr unsigned int cols = cols_;
 
-    matrix(void) : _data(cols * rows) {}
-
-    T& operator()(unsigned int r, unsigned int c) {
-        return _data.data()[c * rows + r];
+    T* operator[](const unsigned int i) {
+        return _data[i];
     }
 
-    const T& operator()(unsigned int r, unsigned int c) const {
-        return _data.data()[c * rows + r];
+    const T* operator[](const unsigned int i) const {
+        return _data[i];
     }
 
-    void diagonal(const std::vector<T> d) {
-        ASSERT(d.size() == std::min(rows, cols));
-        for (unsigned int i = 0; i < rows; ++i) {
-            for (unsigned int j = 0; j < cols; ++j) {
-                _data.data()[j * rows + i] = (i == j ? d[i] : T(0));
-            }
+    void diagonal(const std::initializer_list<T> d) {
+        ASSERT(d.size() == std::min(rows_, cols));
+        std::fill(&_data[0][0], &_data[0][0] + rows_ * cols_, T(0));
+        int i = 0;
+        for (const auto& x : d) {
+            _data[i][i] = x;
+            i++;
         }
     }
-
-private:
-    std::vector<T> _data;
 };
+
+using Matrix3x3f = matrix<float, 3, 3>;
 
 
 // char
