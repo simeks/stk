@@ -3,12 +3,13 @@
 #include <stk/common/platform.h>
 
 #include <sstream>
+#include <vector>
 
 #ifdef STK_USE_CUDA
 // float2, float3, etc...
 #include <vector_types.h>
 
-#else
+#else // STK_USE_CUDA
 
 #include <stdint.h>
 
@@ -126,7 +127,39 @@ struct STK_ALIGN(16) double4
 };
 
 
-#endif
+#endif // STK_USE_CUDA
+
+
+template<typename T, unsigned int rows_, unsigned int cols_>
+class matrix
+{
+public:
+    static constexpr unsigned int rows = rows_;
+    static constexpr unsigned int cols = cols_;
+
+    matrix(void) : _data(cols * rows) {}
+
+    T& operator()(unsigned int r, unsigned int c) {
+        return _data.data()[c * rows + r];
+    }
+
+    const T& operator()(unsigned int r, unsigned int c) const {
+        return _data.data()[c * rows + r];
+    }
+
+    void diagonal(const std::vector<T> d) {
+        ASSERT(d.size() == std::min(rows, cols));
+        for (unsigned int i = 0; i < rows; ++i) {
+            for (unsigned int j = 0; j < cols; ++j) {
+                _data.data()[j * rows + i] = (i == j ? d[i] : T(0));
+            }
+        }
+    }
+
+private:
+    std::vector<T> _data;
+};
+
 
 // char
 

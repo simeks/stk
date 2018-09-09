@@ -68,15 +68,15 @@ VolumeData::~VolumeData()
 #endif
 }
 
-Volume::Volume() : 
+Volume::Volume() :
     _ptr(NULL),
     _strides{0,0,0},
-    _voxel_type(Type_Unknown), 
+    _voxel_type(Type_Unknown),
     _contiguous(true)
 {
-    
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
+    _direction.diagonal({1, 1, 1});
 }
 Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t flags) :
     _size(size),
@@ -85,6 +85,7 @@ Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t fla
 {
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
+    _direction.diagonal({1, 1, 1});
 
     allocate(size, voxel_type, flags);
     if (data) {
@@ -99,7 +100,9 @@ Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range&
     _ptr(other._ptr),
     _voxel_type(other._voxel_type),
     _origin(other._origin),
-    _spacing(other._spacing)
+    _spacing(other._spacing),
+    _direction(other._direction),
+    _metadata(other._metadata)
 {
     ASSERT(other.valid());
     ASSERT(x.begin <= x.end && y.begin <= y.end && z.begin <= z.end);
@@ -117,8 +120,8 @@ Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range&
 
     uint8_t* ptr = reinterpret_cast<uint8_t*>(_ptr)
         + x.begin * _strides[0] + y.begin * _strides[1] + z.begin * _strides[2];
-    
-        // any offset in z axis does not break contiguity 
+
+    // any offset in z axis does not break contiguity
     _contiguous = true;
     if (nx != (int)other._size.x || ny != (int)other._size.y) {
         _contiguous = false;
@@ -142,7 +145,7 @@ void Volume::copy_from(const Volume& other)
     ASSERT(_voxel_type == other._voxel_type);
 
     if (is_contiguous() && other.is_contiguous()) {
-        size_t num_bytes = _size.x * _size.y * 
+        size_t num_bytes = _size.x * _size.y *
             _size.z * type_size(_voxel_type);
         memcpy(_ptr, other._ptr, num_bytes);
     }
@@ -161,9 +164,11 @@ void Volume::copy_from(const Volume& other)
             }
         }
     }
-    
+
     _origin = other._origin;
     _spacing = other._spacing;
+    _direction = other._direction;
+    _metadata = other._metadata;
 }
 Volume Volume::as_type(Type type) const
 {
@@ -178,7 +183,7 @@ Volume Volume::as_type(Type type) const
         "Cannot convert between voxel types with different number of components.";
 
     Volume dest(_size, type, nullptr, _data->flags);
-    
+
     Type src_type = base_type(_voxel_type);
     Type dest_type = base_type(type);
 
@@ -193,6 +198,8 @@ Volume Volume::as_type(Type type) const
 
     dest._origin = _origin;
     dest._spacing = _spacing;
+    dest._direction = _direction;
+    dest._metadata = _metadata;
 
     return dest;
 }
@@ -230,6 +237,10 @@ void Volume::set_spacing(const float3& spacing)
 {
     _spacing = spacing;
 }
+void Volume::set_direction(const matrix<float, 3, 3>& direction)
+{
+    _direction = direction;
+}
 const float3& Volume::origin() const
 {
     return _origin;
@@ -237,6 +248,10 @@ const float3& Volume::origin() const
 const float3& Volume::spacing() const
 {
     return _spacing;
+}
+const matrix<float, 3, 3>& Volume::direction() const
+{
+    return _direction;
 }
 const size_t* Volume::strides() const
 {
@@ -246,6 +261,8 @@ void Volume::copy_meta_from(const Volume& other)
 {
     _origin = other._origin;
     _spacing = other._spacing;
+    _direction = other._direction;
+    _metadata = other._metadata;
 }
 bool Volume::is_contiguous() const
 {
@@ -263,7 +280,9 @@ Volume::Volume(const Volume& other) :
     _voxel_type(other._voxel_type),
     _origin(other._origin),
     _spacing(other._spacing),
-    _contiguous(other._contiguous)
+    _direction(other._direction),
+    _contiguous(other._contiguous),
+    _metadata(other._metadata)
 {
     _strides[0] = other._strides[0];
     _strides[1] = other._strides[1];
@@ -281,7 +300,9 @@ Volume& Volume::operator=(const Volume& other)
         _voxel_type = other._voxel_type;
         _origin = other._origin;
         _spacing = other._spacing;
+        _direction = other._direction;
         _contiguous = other._contiguous;
+        _metadata = other._metadata;
     }
     return *this;
 }
@@ -293,6 +314,7 @@ void Volume::allocate(const dim3& size, Type voxel_type, uint32_t flags)
     _voxel_type = voxel_type;
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
+    _direction.diagonal({ 1, 1, 1 });
 
     size_t num_bytes = _size.x * _size.y *
         _size.z * type_size(_voxel_type);
@@ -315,6 +337,8 @@ void Volume::release()
     _strides[2] = 0;
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
+    _direction.diagonal({ 1, 1, 1 });
+    _metadata.clear();
 }
 std::vector<std::string> Volume::get_metadata_keys(void) const
 {
@@ -325,7 +349,7 @@ std::vector<std::string> Volume::get_metadata_keys(void) const
     }
     return keys;
 }
-std::any Volume::get_metadata(const std::string& key) const
+std::string Volume::get_metadata(const std::string& key) const
 {
     try {
         return _metadata.at(key);
@@ -334,7 +358,7 @@ std::any Volume::get_metadata(const std::string& key) const
         FATAL() << "Metadata '" << &key << "' not found";
     }
 }
-void Volume::set_metadata(const std::string& key, const std::any& value)
+void Volume::set_metadata(const std::string& key, const std::string& value)
 {
     _metadata.emplace(key, value);
 }

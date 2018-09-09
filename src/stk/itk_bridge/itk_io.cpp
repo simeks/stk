@@ -10,21 +10,23 @@
  * \brief Read a specific image type with ITK.
  */
 template<class ImageType>
-stk::Volume read(const std::string& file_name)
+stk::Volume read(const itk::ImageIOBase::Pointer image_io)
 {
     auto reader = itk::ImageFileReader<ImageType>::New();
-    reader->SetFileName(file_name);
+    reader->SetImageIO(image_io);
+    reader->SetFileName(image_io->GetFileName());
 
     try {
         reader->Update();
     }
     catch (const itk::ExceptionObject& e) {
-        FATAL() << "Error while reading image '" << &file_name << "': "
+        FATAL() << "Error while reading image '" << image_io->GetFileName() << "': "
                 << e.what();
     }
 
     auto image = ImageType::New();
     image->Graft(reader->GetOutput());
+    image->SetMetaDataDictionary(reader->GetMetaDataDictionary());
 
     return stk::itk2stk<ImageType>(image);
 }
@@ -34,78 +36,76 @@ stk::Volume read(const std::string& file_name)
  * \brief Read a vectorial image of unspecified type with ITK.
  */
 template<unsigned int Dimension, unsigned int Components>
-stk::Volume read_vector_image(
-        const std::string& file_name,
-        const itk::ImageIOBase::IOComponentType component_type
-        )
+stk::Volume read_vector_image(const itk::ImageIOBase::Pointer image_io)
 {
-    switch(component_type)
+    switch(image_io->GetComponentType())
     {
     case itk::ImageIOBase::UCHAR: {
         using PixelType = itk::Vector<unsigned char, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::CHAR: {
         using PixelType = itk::Vector<char, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::USHORT: {
         using PixelType = itk::Vector<unsigned short, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::SHORT: {
         using PixelType = itk::Vector<short, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::UINT: {
         using PixelType = itk::Vector<unsigned int, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::INT: {
         using PixelType = itk::Vector<int, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::ULONG: {
         using PixelType = itk::Vector<unsigned long, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::LONG: {
         using PixelType = itk::Vector<long, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::ULONGLONG: {
         using PixelType = itk::Vector<unsigned long long, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::LONGLONG: {
         using PixelType = itk::Vector<long long, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::FLOAT: {
         using PixelType = itk::Vector<float, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::DOUBLE: {
         using PixelType = itk::Vector<double, Components>;
         using ImageType = itk::Image<PixelType, Dimension>;
-        return read<ImageType>(file_name);
+        return read<ImageType>(image_io);
     }
     case itk::ImageIOBase::UNKNOWNCOMPONENTTYPE:
     default:
-        FATAL() << "Cannot read image '" << &file_name << "': "
+        FATAL() << "Cannot read image '" << image_io->GetFileName() << "': "
                 << "unknown component type";
     }
+    FATAL() << "This line should be unreachable";
 }
 
 
@@ -113,23 +113,19 @@ stk::Volume read_vector_image(
  * \brief Read a vectorial image of unspecified type with ITK.
  */
 template<unsigned int Dimension>
-stk::Volume read_vector_image(
-        const std::string& file_name,
-        const itk::ImageIOBase::IOComponentType component_type,
-        const unsigned int components
-        )
+stk::Volume read_vector_image(const itk::ImageIOBase::Pointer image_io)
 {
-    switch (components)
+    switch (image_io->GetNumberOfComponents())
     {
     case 1:
-        return read_vector_image<Dimension, 1>(file_name, component_type);
+        return read_vector_image<Dimension, 1>(image_io);
     case 3:
-        return read_vector_image<Dimension, 3>(file_name, component_type);
+        return read_vector_image<Dimension, 3>(image_io);
     default:
-        FATAL() << "Cannot read image '" << &file_name << "': "
-                << "unsupported number of components " << components;
+        FATAL() << "Cannot read image '" << image_io->GetFileName() << "': "
+                << "unsupported number of components "
+                << image_io->GetNumberOfComponents();
     }
-
     FATAL() << "This line should be unreachable";
 }
 
@@ -152,22 +148,17 @@ stk::Volume stk::read_itk_image(const std::string& file_name)
     image_io->SetFileName(file_name);
     image_io->ReadImageInformation();
 
-    const itk::ImageIOBase::IOPixelType pixel_type = image_io->GetPixelType();
-    const itk::ImageIOBase::IOComponentType component_type = image_io->GetComponentType();
-    const unsigned int image_dimension = image_io->GetNumberOfDimensions();
-    const unsigned int components = image_io->GetNumberOfComponents();
-
-    switch(pixel_type)
+    switch(image_io->GetPixelType())
     {
     case itk::ImageIOBase::SCALAR:
     case itk::ImageIOBase::VECTOR: {
-        switch (image_dimension)
+        switch (image_io->GetNumberOfDimensions())
         {
         case 3:
-            return read_vector_image<3>(file_name, component_type, components);
+            return read_vector_image<3>(image_io);
         default:
             FATAL() << "Cannot read image '" << &file_name << "': "
-                    << "image dimension '" << image_dimension << "' "
+                    << "image dimension '" << image_io->GetNumberOfDimensions() << "' "
                     << "not supported";
         }
     }
@@ -183,7 +174,7 @@ stk::Volume stk::read_itk_image(const std::string& file_name)
     case itk::ImageIOBase::RGBA:
     case itk::ImageIOBase::SYMMETRICSECONDRANKTENSOR:
         FATAL() << "Cannot read image '" << &file_name << "': "
-                << "unsupported pixel type '" << pixel_type << "'";
+                << "unsupported pixel type '" << image_io->GetPixelType() << "'";
 
     case itk::ImageIOBase::UNKNOWNPIXELTYPE:
         FATAL() << "Cannot read image '" << &file_name << "': "
