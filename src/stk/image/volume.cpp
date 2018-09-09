@@ -325,13 +325,18 @@ std::vector<std::string> Volume::get_metadata_keys(void) const
     }
     return keys;
 }
-std::any Volume::get_metadata(const std::string& key)
+std::any Volume::get_metadata(const std::string& key) const
 {
-    return _metadata[key];
+    try {
+        return _metadata.at(key);
+    }
+    catch (const std::out_of_range&) {
+        FATAL() << "Metadata '" << &key << "' not found";
+    }
 }
-bool Volume::set_metadata(const std::string& key, const std::any& value)
+void Volume::set_metadata(const std::string& key, const std::any& value)
 {
-    return _metadata.emplace(key, value).second;
+    _metadata.emplace(key, value);
 }
 } // namespace stk
 

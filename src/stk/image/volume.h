@@ -163,8 +163,8 @@ namespace stk
 
         // Handle metadata
         std::vector<std::string> get_metadata_keys(void) const;
-        std::any get_metadata(const std::string& key);
-        bool set_metadata(const std::string& key, const std::any& value);
+        std::any get_metadata(const std::string& key) const;
+        void set_metadata(const std::string& key, const std::any& value);
 
     protected:
         std::shared_ptr<VolumeData> _data;
