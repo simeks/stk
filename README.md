@@ -20,6 +20,6 @@ CMake options:
 
 When building with `STK_USE_CUDA`, in case the version of `gcc` selected by
 CMake was not compatible with the one required by CUDA, it is possible to
-specify a different executable with `-DCUDA_NVCC_FLAGS="-ccbin gcc-XX"`, where
+specify a different executable with `-DCMAKE_CUDA_FLAGS="-ccbin gcc-XX"`, where
 `gcc-XX` is a version of `gcc` compatible with your CUDA version.
 
