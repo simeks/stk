@@ -7,6 +7,7 @@ option(STK_WARNINGS_ARE_ERRORS "Warnings are treated as errors" OFF)
 option(STK_BUILD_WITH_DEBUG_INFO "Includes debug info in release builds" OFF)
 option(STK_ENABLE_FAST_MATH "Enables fast math" OFF)
 option(STK_LOGGING_PREFIX_FILE "Add file name as prefix to each log message" OFF)
+option(STK_ITK_BRIDGE "Bridge library to interoperate with ITK" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting default build type: 'Release'")
@@ -18,7 +19,7 @@ project(stk)
 set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -35,7 +36,7 @@ if (MSVC)
 
     string(REGEX REPLACE "/W[1-3]" "/W4" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     string(REGEX REPLACE "/W[1-3]" "/W4" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-    
+
     if (STK_WARNINGS_ARE_ERRORS)
         set(EXTRA_FLAGS "${extra_flags} /WX")
     endif()

@@ -44,6 +44,15 @@ if (STK_USE_CUDA)
     )
 endif()
 
+if(STK_ITK_BRIDGE)
+    set(STK_SRCS
+        ${STK_SRCS}
+        "stk/itk_bridge/itk_convert.h"
+        "stk/itk_bridge/itk_io.cpp"
+        "stk/itk_bridge/itk_io.h"
+        )
+endif()
+
 add_library(stk STATIC ${STK_SRCS})
 
 target_include_directories(stk PUBLIC 
@@ -63,5 +72,14 @@ if(NrrdIO_FOUND)
     target_link_libraries(stk PUBLIC ${NrrdIO_LIBRARIES})
 else()
     target_link_libraries(stk PUBLIC NrrdIO)
+endif()
+
+if(STK_ITK_BRIDGE)
+    add_definitions(-DSTK_ITK_BRIDGE)
+    find_package(ITK REQUIRED)
+    include(${ITK_USE_FILE})
+
+    target_include_directories(stk PRIVATE ${ITK_INCLUDE_DIRS})
+    target_link_libraries(stk PRIVATE ${ITK_LIBRARIES})
 endif()
 

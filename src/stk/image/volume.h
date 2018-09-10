@@ -6,7 +6,9 @@
 #include "types.h"
 
 #include <algorithm>
+#include <map>
 #include <memory>
+#include <vector>
 
 namespace stk
 {
@@ -132,9 +134,11 @@ namespace stk
 
         void set_origin(const float3& origin);
         void set_spacing(const float3& spacing);
+        void set_direction(const Matrix3x3f& direction);
 
         const float3& origin() const;
         const float3& spacing() const;
+        const Matrix3x3f& direction() const;
 
         // Strides for x, y, z
         const size_t* strides() const;
@@ -158,10 +162,22 @@ namespace stk
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume& operator=(const Volume& other);
 
+        // Handle metadata (not threadsafe)
+        // Metadata are key-value mappings betweeen string values,
+        //  stored in a dictionary. A copy-on-write mechanism for
+        //  metadata is used when copying volumes, and an own deep copy
+        //  of metadata is created only when the copied volume changes
+        //  the dictionary.
+        std::vector<std::string> get_metadata_keys(void) const;
+        std::string get_metadata(const std::string& key) const;
+        void set_metadata(const std::string& key, const std::string& value);
+
     protected:
+        using MetaDataDictionary = std::map<std::string, std::string>;
+
         std::shared_ptr<VolumeData> _data;
         void* _ptr; // Pointer to a location in _data
-        
+
         // Strides in allocated volume memory (in bytes)
         // _step[0] : Size of element (x)
         // _step[1] : Size of one row (y)
@@ -173,8 +189,11 @@ namespace stk
 
         float3 _origin; // Origin in world coordinates
         float3 _spacing; // Size of a voxel
+        Matrix3x3f _direction; // Cosine directions of the axes
 
         bool _contiguous;
+
+        std::shared_ptr<MetaDataDictionary> _metadata;
     };
 
     template<typename T>
