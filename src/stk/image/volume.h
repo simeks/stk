@@ -162,7 +162,12 @@ namespace stk
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume& operator=(const Volume& other);
 
-        // Handle metadata
+        // Handle metadata (not threadsafe)
+        // Metadata are key-value mappings betweeen string values,
+        //  stored in a dictionary. A copy-on-write mechanism for
+        //  metadata is used when copying volumes, and an own deep copy
+        //  of metadata is created only when the copied volume changes
+        //  the dictionary.
         std::vector<std::string> get_metadata_keys(void) const;
         std::string get_metadata(const std::string& key) const;
         void set_metadata(const std::string& key, const std::string& value);
