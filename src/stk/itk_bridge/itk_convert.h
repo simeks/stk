@@ -55,7 +55,7 @@ stk::Volume itk2stk(const typename ImageType::Pointer & image)
     Matrix3x3f stk_direction;
     for (unsigned int i = 0; i < direction.RowDimensions; ++i) {
         for (unsigned int j = 0; j < direction.ColumnDimensions; ++j) {
-            stk_direction[i][j] = direction(i, j);
+            stk_direction(i, j) = direction(i, j);
         }
     }
     volume.set_direction(stk_direction);
@@ -108,7 +108,7 @@ void stk2itk(const stk::Volume& volume, typename ImageType::Pointer& image)
     auto const stk_direction = volume.direction();
     for (unsigned int i = 0; i < stk_direction.rows; ++i) {
         for (unsigned int j = 0; j < stk_direction.cols; ++j) {
-            direction(i, j) = stk_direction[i][j];
+            direction(i, j) = stk_direction(i, j);
         }
     }
 

@@ -147,8 +147,24 @@ struct matrix
         return _data[i];
     }
 
+    T& operator()(const unsigned int r, const unsigned int c) {
+        return _data[r][c];
+    }
+
+    const T& operator()(const unsigned int r, const unsigned int c) const {
+        return _data[r][c];
+    }
+
+    T* data(void) {
+        &_data[0][0];
+    }
+
+    const T* data(void) const {
+        &_data[0][0];
+    }
+
     void diagonal(const std::initializer_list<T> d) {
-        ASSERT(d.size() == std::min(rows_, cols));
+        ASSERT(d.size() == std::min(rows_, cols_));
         std::fill(&_data[0][0], &_data[0][0] + rows_ * cols_, T(0));
         int i = 0;
         for (const auto& x : d) {
