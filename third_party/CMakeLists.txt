@@ -33,12 +33,21 @@ if(NOT NIFTI_FOUND)
             "/wd4100 /wd4244 /wd4245 /wd4267 /wd4304 /wd4456"
             )
     endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        set_target_properties(niftiio PROPERTIES COMPILE_FLAGS
+            "-Wno-misleading-indentation -Wno-unused-but-set-variable"
+            )
+    endif()
 endif()
 
-add_subdirectory(NrrdIO-1.11.0)
-target_include_directories(NrrdIO INTERFACE "NrrdIO-1.11.0")
-if (WIN32)
-    set_target_properties(NrrdIO PROPERTIES COMPILE_FLAGS
-        "/wd4127 /wd4701 /wd4706 /wd4996"
-        )
+if(NOT NrrdIO_FOUND)
+    add_subdirectory(NrrdIO-1.11.0)
+    target_include_directories(NrrdIO INTERFACE "NrrdIO-1.11.0")
+    if (WIN32)
+        set_target_properties(NrrdIO PROPERTIES COMPILE_FLAGS
+            "/wd4127 /wd4701 /wd4706 /wd4996"
+            )
+    endif()
 endif()
+

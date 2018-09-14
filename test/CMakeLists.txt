@@ -17,15 +17,13 @@ if (STK_USE_CUDA)
         ${STK_TEST_SRCS}
         "test_cuda.cpp"
         "test_cuda_kernel.cu"
+        "test_cuda_linear_at.cu"
+        "test_gpu_filters.cpp"
         "test_gpu_volume.cpp"
     )
 endif ()
 
-if (STK_USE_CUDA)
-    cuda_add_executable(stk_test ${STK_TEST_SRCS})
-else ()
-    add_executable(stk_test ${STK_TEST_SRCS})
-endif ()
+add_executable(stk_test ${STK_TEST_SRCS})
 
 add_test(stk_test stk_test)
 

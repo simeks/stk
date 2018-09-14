@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 
 #include <stk/cuda/cuda.h>
-#include <stk/cuda/ptr.h>
+#include <stk/cuda/volume.h>
 #include <stk/image/gpu_volume.h>
 #include <stk/image/volume.h>
 
@@ -48,8 +48,6 @@ __global__ void copy_texture_kernel(cudaTextureObject_t in, cudaSurfaceObject_t 
 
 TEST_CASE("cuda_copy_kernel", "[cuda]")
 {
-    cuda::init();
-
     #define TEST_TYPE(T) \
         SECTION(#T) { \
             T* test_data = new T[W*H*D]; \
@@ -106,8 +104,6 @@ TEST_CASE("cuda_copy_kernel", "[cuda]")
 
 TEST_CASE("cuda_copy_texture_kernel", "[cuda]")
 {
-    cuda::init();
-    
     #define TEST_TYPE(T) \
         SECTION(#T) { \
             T* test_data = new T[W*H*D]; \

@@ -6,24 +6,49 @@
 #include "types.h"
 
 #include <algorithm>
+#include <map>
 #include <memory>
+#include <vector>
 
 namespace stk
 {
     enum BorderMode
     {
-        Border_Constant, // Zero padding outside volume
-        Border_Replicate
+        Border_Constant,  // Zero padding outside volume
+        Border_Replicate, // Clamp to edge
+        Border_Mirror,    // Mirror 
+        Border_Cyclic,    // Wrap indices around
+    };
+
+    // Flags for allocation of the backing memory for the volumes. Currently only 
+    //  with CUDA. These flags allows for more efficient transfer of data between
+    //  CPU and GPU. However, use sparingly, as excessive use may degrade system
+    //  performance.
+    enum Usage
+    {
+    #ifdef STK_USE_CUDA
+        Usage_Pinned = 1,       // Pinned, or page-locked memory, for async operations with CUDA.
+        Usage_Mapped = 2,       // Mapped to CUDA address space
+        Usage_WriteCombined = 4 // Slow on read on CPUs but possibly a quicker transfer across PCIe
+    #endif // STK_USE_CUDA
+    };
+
+    // [begin, end)
+    struct Range
+    {
+        int begin, end;
     };
 
     struct VolumeData
     {
         VolumeData();
-        VolumeData(size_t size);
+        VolumeData(size_t size, uint32_t flags);
         ~VolumeData();
 
         uint8_t* data;
         size_t size;
+
+        uint32_t flags;
     };
 
     // Volume is essentially a wrapper around a reference counted VolumeData. It represents
@@ -51,13 +76,22 @@ namespace stk
     {
     public:
         Volume();
+
         // If a data pointer is specified, the volume copies that data into its newly
         //  allocated memory.
-        Volume(const dim3& size, Type voxel_type, const void* data = NULL);
+        // flags : See Usage
+        Volume(const dim3& size, Type voxel_type, const void* data = nullptr, uint32_t flags = 0);
+        
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        Volume(const Volume& other, const Range& x, const Range& y, const Range& z);
+
         ~Volume();
 
         // Note: Resets spacing and origin
-        void allocate(const dim3& size, Type voxel_type);
+        void allocate(const dim3& size, Type voxel_type, uint32_t flags = 0);
 
         // Release any allocated data the volume is holding
         // This makes the volume object invalid
@@ -86,9 +120,13 @@ namespace stk
         bool valid() const;
 
         // Raw pointer to the volume data
+        // Access through raw pointer should be avoided as the data can be non-contiguous.
+        //  Use `is_contiguous` to verify.
         void* ptr();
 
         // Raw pointer to the volume data
+        // Access through raw pointer should be avoided as the data can be non-contiguous.
+        //  Use `is_contiguous` to verify.
         void const* ptr() const;
 
         Type voxel_type() const;
@@ -96,24 +134,66 @@ namespace stk
 
         void set_origin(const float3& origin);
         void set_spacing(const float3& spacing);
+        void set_direction(const Matrix3x3f& direction);
 
         const float3& origin() const;
         const float3& spacing() const;
+        const Matrix3x3f& direction() const;
+
+        // Strides for x, y, z
+        const size_t* strides() const;
+
+        // Copies meta data (origin, spacing, ...) from the provided volume.
+        void copy_meta_from(const Volume& other);
+
+        // Returns true if the volume resides contigiuously in memory.
+        // Volumes are typically contiguous, however, if the volume references
+        //  a sub region of a larger volume, the memory is not contiguous.
+        bool is_contiguous() const;
+
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        Volume operator()(const Range& x, const Range& y, const Range& z);
 
         // @remark This does not copy the data, use clone if you want a separate copy.
         Volume(const Volume& other);
+        // @remark This does not copy the data, use clone if you want a separate copy.
         Volume& operator=(const Volume& other);
 
+        // Handle metadata (not threadsafe)
+        // Metadata are key-value mappings betweeen string values,
+        //  stored in a dictionary. A copy-on-write mechanism for
+        //  metadata is used when copying volumes, and an own deep copy
+        //  of metadata is created only when the copied volume changes
+        //  the dictionary.
+        std::vector<std::string> get_metadata_keys(void) const;
+        std::string get_metadata(const std::string& key) const;
+        void set_metadata(const std::string& key, const std::string& value);
+
     protected:
+        using MetaDataDictionary = std::map<std::string, std::string>;
+
         std::shared_ptr<VolumeData> _data;
         void* _ptr; // Pointer to a location in _data
-        size_t _stride; // Size of a single row in bytes
+
+        // Strides in allocated volume memory (in bytes)
+        // _step[0] : Size of element (x)
+        // _step[1] : Size of one row (y)
+        // _step[2] : Size of one slice (z)
+        size_t _strides[3];
 
         dim3 _size;
         Type _voxel_type;
 
         float3 _origin; // Origin in world coordinates
         float3 _spacing; // Size of a voxel
+        Matrix3x3f _direction; // Cosine directions of the axes
+
+        bool _contiguous;
+
+        std::shared_ptr<MetaDataDictionary> _metadata;
     };
 
     template<typename T>
@@ -128,10 +208,17 @@ namespace stk
         VolumeHelper(const Volume& other);
         // Creates a new volume of the specified size
         VolumeHelper(const dim3& size);
+
         // Creates a new volume of the specified size and initializes it with the given value
         explicit VolumeHelper(const dim3& size, const T& value);
         // Creates a new volume and copies the given data
         explicit VolumeHelper(const dim3& size, T* value);
+
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        VolumeHelper(const VolumeHelper& other, const Range& x, const Range& y, const Range& z);
         ~VolumeHelper();
 
         // Note: Resets spacing and origin
@@ -155,6 +242,12 @@ namespace stk
         
         const T& operator()(const int3& p) const;
         T& operator()(const int3& p);
+
+        // Creates a new reference to a region within an existing volume
+        // There's a chance that the resulting volume does not contain contiguous memory when
+        //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
+        // @remark This does not copy the data, use clone if you want a separate copy.
+        VolumeHelper operator()(const Range& x, const Range& y, const Range& z);
 
         // Offset in bytes to the specified element
         size_t offset(int x, int y, int z) const;

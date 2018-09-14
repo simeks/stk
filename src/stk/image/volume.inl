@@ -1,3 +1,23 @@
+namespace {
+
+/*!
+ * \brief Mirror an index ranging from 0 to n-1.
+ */
+static inline int mirror(int x, const int n)
+{
+    while (x < 0 || x >= n) {
+        if (x < 0) {
+            x = -x;
+        }
+        if (x >= n) {
+            x = 2 * (n - 1) - x;
+        }
+    }
+    return x;
+}
+
+} // namespace
+
 namespace stk
 {
 template<typename T>
@@ -26,6 +46,14 @@ VolumeHelper<T>::VolumeHelper(const dim3& size, T* value) :
 {
 }
 template<typename T>
+VolumeHelper<T>::VolumeHelper(
+    const VolumeHelper<T>& other, 
+    const Range& x,
+    const Range& y,
+    const Range& z) : Volume(other, x, y, z)
+{
+}
+template<typename T>
 VolumeHelper<T>::~VolumeHelper()
 {
 }
@@ -39,7 +67,8 @@ void VolumeHelper<T>::fill(const T& value)
 {
     for (uint32_t z = 0; z < _size.z; ++z) {
         for (uint32_t y = 0; y < _size.y; ++y) {
-            T* begin = (T*)(((uint8_t*)_ptr) + (z * _stride * _size.y + y * _stride));
+            // x axis should always be contiguous
+            T* begin = (T*)(((uint8_t*)_ptr) + (z * _strides[2] + y * _strides[1]));
             T* end = begin + _size.x;
             std::fill(begin, end, value);
         }
@@ -69,6 +98,18 @@ T VolumeHelper<T>::at(int x, int y, int z, BorderMode border_mode) const
         y = std::min(y, int(_size.y - 1));
         z = std::max(z, 0);
         z = std::min(z, int(_size.z - 1));
+    }
+    else if (border_mode == Border_Mirror)
+    {
+        x = ::mirror(x, _size.x);
+        y = ::mirror(y, _size.y);
+        z = ::mirror(z, _size.z);
+    }
+    else if (border_mode == Border_Cyclic)
+    {
+        x = x % _size.x;
+        y = y % _size.y;
+        z = z % _size.z;
     }
 
     return *((T const*)(((uint8_t*)_ptr) + offset(x, y, z)));
@@ -337,12 +378,17 @@ T& VolumeHelper<T>::operator()(const int3& p)
     return operator()(p.x, p.y, p.z);
 }
 template<typename T>
+VolumeHelper<T> VolumeHelper<T>::operator()(const Range& x, const Range& y, const Range& z)
+{
+    return Volume::operator()(x,y,z);
+}
+template<typename T>
 inline size_t VolumeHelper<T>::offset(int x, int y, int z) const
 {
     DASSERT(x < int(_size.x));
     DASSERT(y < int(_size.y));
     DASSERT(z < int(_size.z));
-    return z * _stride * _size.y + y * _stride + x * sizeof(T);
+    return z * _strides[2] + y * _strides[1] + x * _strides[0];
 }
 
 template<typename T>

@@ -7,6 +7,7 @@ option(STK_WARNINGS_ARE_ERRORS "Warnings are treated as errors" OFF)
 option(STK_BUILD_WITH_DEBUG_INFO "Includes debug info in release builds" OFF)
 option(STK_ENABLE_FAST_MATH "Enables fast math" OFF)
 option(STK_LOGGING_PREFIX_FILE "Add file name as prefix to each log message" OFF)
+option(STK_ITK_BRIDGE "Bridge library to interoperate with ITK" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting default build type: 'Release'")
@@ -17,7 +18,8 @@ project(stk)
 
 set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -34,7 +36,7 @@ if (MSVC)
 
     string(REGEX REPLACE "/W[1-3]" "/W4" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
     string(REGEX REPLACE "/W[1-3]" "/W4" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-    
+
     if (STK_WARNINGS_ARE_ERRORS)
         set(EXTRA_FLAGS "${extra_flags} /WX")
     endif()
@@ -48,7 +50,7 @@ if (MSVC)
         set(EXTRA_FLAGS "${extra_flags} /fp:fast")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(EXTRA_FLAGS "-Wall -fPIC")
+    set(EXTRA_FLAGS "-Wall")
 
     if (STK_WARNINGS_ARE_ERRORS)
         set(EXTRA_FLAGS "${extra_flags} -Werror")
@@ -62,7 +64,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         set(EXTRA_FLAGS "${extra_flags} -ffast-math")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID matches "Clang")
-    set(EXTRA_FLAGS "-Wall -fPIC")
+    set(EXTRA_FLAGS "-Wall")
 
     if (STK_WARNINGS_ARE_ERRORS)
         set(EXTRA_FLAGS "${extra_flags} -Werror")
@@ -79,12 +81,18 @@ endif()
 
 if (STK_USE_CUDA)
     add_definitions(-DSTK_USE_CUDA)
-    find_package(CUDA REQUIRED)
+    enable_language(CUDA)
+
+    if (STK_ENABLE_FAST_MATH)
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
+    endif()
 endif()
 
 if (STK_LOGGING_PREFIX_FILE)
     add_definitions(-DSTK_LOGGING_PREFIX_FILE)
 endif()
+
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${EXTRA_FLAGS_RELEASE}")
@@ -102,6 +110,7 @@ set(QNANHIBIT 1)
 if(NOT WIN32)
     find_package(ZLIB QUIET)
     find_package(NIFTI QUIET)
+    find_package(NrrdIO QUIET)
 endif()
 
 add_subdirectory(${THIRD_PARTY_DIR})
@@ -111,6 +120,7 @@ if (STK_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 if (STK_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(test)
 endif()
 

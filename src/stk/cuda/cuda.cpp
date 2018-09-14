@@ -6,11 +6,13 @@
 
 #ifdef STK_USE_CUDA
 
+#include <cstring>
 #include <cuda_runtime.h>
 
 namespace stk {
 namespace cuda {
-    TextureObject::TextureObject(const GpuVolume& vol, const cudaTextureDesc& tex_desc)
+    TextureObject::TextureObject(const GpuVolume& vol, const cudaTextureDesc& tex_desc) : 
+        _vol(vol)
     {
         ASSERT(vol.valid());
         ASSERT(vol.usage() == gpu::Usage_Texture);
@@ -21,7 +23,7 @@ namespace cuda {
         res_desc.res.array.array = vol.array_ptr();
 
         // TODO: Explore cost of creating/destroying texture/surface objects
-        CUDA_CHECK_ERRORS(cudaCreateTextureObject(&_obj, &res_desc, &tex_desc, nullptr)); \
+        CUDA_CHECK_ERRORS(cudaCreateTextureObject(&_obj, &res_desc, &tex_desc, nullptr));
     }
     TextureObject::~TextureObject()
     {
@@ -33,7 +35,7 @@ namespace cuda {
         return _obj;
     }
 
-    SurfaceObject::SurfaceObject(const GpuVolume& vol)
+    SurfaceObject::SurfaceObject(const GpuVolume& vol) : _vol(vol)
     {
         ASSERT(vol.valid());
         ASSERT(vol.usage() == gpu::Usage_Texture);

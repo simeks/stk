@@ -173,6 +173,25 @@ TEST_CASE("volume_meta_data", "[volume]")
     REQUIRE(vol.spacing().z == Approx(7.0f));
 }
 
+TEST_CASE("volume_copy_meta", "[volume]")
+{
+    Volume a({4,4,4}, Type_Float);
+
+    a.set_origin({2.0f, 3.0f, 4.0f});
+    a.set_spacing({5.0f, 6.0f, 7.0f});
+
+    Volume b({2,2,2}, Type_Float);
+    b.copy_meta_from(a);
+
+    REQUIRE(b.origin().x == Approx(2.0f));
+    REQUIRE(b.origin().y == Approx(3.0f));
+    REQUIRE(b.origin().z == Approx(4.0f));
+
+    REQUIRE(b.spacing().x == Approx(5.0f));
+    REQUIRE(b.spacing().y == Approx(6.0f));
+    REQUIRE(b.spacing().z == Approx(7.0f));
+}
+
 TEST_CASE("volume_clone", "[volume]")
 {
     float test_data[W*H*D];
@@ -665,5 +684,166 @@ TEST_CASE("find_min_max", "[volume]")
 
         REQUIRE(min == Approx(1));
         REQUIRE(max == Approx(8));
+    }
+}
+TEST_CASE("volume_region", "[volume]")
+{
+    int val[] = {
+         1,  2,  3,  4,
+         5,  6,  7,  8,
+         9, 10, 11, 12,
+        13, 14, 15, 16,
+
+        17, 18, 19, 20,
+        21, 22, 23, 24,
+        25, 26, 27, 28,
+        29, 30, 31, 32,
+
+        33, 34, 35, 36,
+        37, 38, 39, 40,
+        41, 42, 43, 44,
+        45, 46, 47, 48,
+
+        49, 50, 51, 52,
+        53, 54, 55, 56,
+        57, 58, 59, 60,
+        61, 62, 63, 64
+    };
+    
+    SECTION("constructor") {
+        VolumeInt vol({4, 4, 4}, val);
+        
+        VolumeInt sub(vol, {1,4}, {1,4}, {1, 4});
+        REQUIRE(sub.size().x == 3);
+        REQUIRE(sub.size().y == 3);
+        REQUIRE(sub.size().z == 3);
+        REQUIRE(sub.is_contiguous() == false);
+        
+        REQUIRE(sub(0,0,0) == 22);
+        REQUIRE(sub(1,0,0) == 23);
+        REQUIRE(sub(0,1,0) == 26);
+        REQUIRE(sub(1,1,0) == 27);
+        REQUIRE(sub(0,0,1) == 38);
+        REQUIRE(sub(1,0,1) == 39);
+        REQUIRE(sub(0,1,1) == 42);
+        REQUIRE(sub(1,1,1) == 43);
+
+        VolumeInt sub2(sub, {1,2}, {1,2}, {0,2});
+        REQUIRE(sub2.size().x == 1);
+        REQUIRE(sub2.size().y == 1);
+        REQUIRE(sub2.size().z == 2);
+        REQUIRE(sub2.is_contiguous() == false);
+
+        REQUIRE(sub2(0,0,0) == 27);
+        REQUIRE(sub2(0,0,1) == 43);
+
+        VolumeInt sub3(vol, {0,3}, {0,3}, {0,3});
+        REQUIRE(sub3.size().x == 3);
+        REQUIRE(sub3.size().y == 3);
+        REQUIRE(sub3.size().z == 3);
+        REQUIRE(sub3.is_contiguous() == false);
+
+        REQUIRE(sub3(0,0,0) == 1);
+        REQUIRE(sub3(1,0,0) == 2);
+        REQUIRE(sub3(2,0,0) == 3);
+        
+        REQUIRE(sub3(0,2,0) == 9);
+        REQUIRE(sub3(1,2,0) == 10);
+        REQUIRE(sub3(2,2,0) == 11);
+
+        REQUIRE(sub3(0,0,2) == 33);
+        REQUIRE(sub3(1,0,2) == 34);
+        REQUIRE(sub3(2,0,2) == 35);
+        
+        REQUIRE(sub3(0,2,2) == 41);
+        REQUIRE(sub3(1,2,2) == 42);
+        REQUIRE(sub3(2,2,2) == 43);
+    }
+    SECTION("copy_from") {
+        // SubVol -> SubVol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            VolumeInt dst = vol({2,4}, {2,4}, {2,4});
+            VolumeInt src = vol({0,2}, {0,2}, {0,2});
+            dst.copy_from(src);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // SubVol -> Vol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+            VolumeInt dst = VolumeInt({2,2,2});
+            VolumeInt src = vol({0,2}, {0,2}, {0,2});
+
+            dst.copy_from(src);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+
+        // Vol -> SubVol
+        {
+            VolumeInt vol({4, 4, 4}, val);
+
+            int sub_val[] = {
+                1, 2,
+                3, 4,
+
+                5, 6,
+                7, 8
+            };
+
+            VolumeInt dst = vol({1,3}, {1,3}, {1,3});
+            VolumeInt src = VolumeInt({2,2,2}, sub_val);
+
+            dst.copy_from(src);
+
+            for (int z = 0; z < (int)dst.size().z; ++z) {
+            for (int y = 0; y < (int)dst.size().y; ++y) {
+            for (int x = 0; x < (int)dst.size().x; ++x) {
+                REQUIRE(dst(x,y,z) == src(x,y,z));
+            }
+            }
+            }
+        }
+    }
+    SECTION("referencing") {
+        // Just to check that they actually reference the same memory
+
+        VolumeInt vol({4, 4, 4}, val);
+        VolumeInt subvol(vol, {0,2}, {0, 2}, {0, 2});
+
+        for (int z = 0; z < 2; ++z) {
+        for (int y = 0; y < 2; ++y) {
+        for (int x = 0; x < 2; ++x) {
+            subvol(x,y,z) = -1;
+        }
+        }
+        }
+
+        for (int z = 0; z < 4; ++z) {
+        for (int y = 0; y < 4; ++y) {
+        for (int x = 0; x < 4; ++x) {
+            if (x < 2 && y < 2 && z < 2) {
+                REQUIRE(vol(x,y,z) == -1);
+            }
+            else {
+                REQUIRE(vol(x,y,z) != -1);
+            }
+        }
+        }
+        }
     }
 }
