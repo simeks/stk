@@ -116,8 +116,8 @@ namespace stk
         {
             // Clamp
             x = max(0.0f, min(x, (float)dims.x-1));
-            y = max(0.0f, min(y, (float)dims.x-1));
-            z = max(0.0f, min(z, (float)dims.x-1));
+            y = max(0.0f, min(y, (float)dims.y-1));
+            z = max(0.0f, min(z, (float)dims.z-1));
 
             int x1 = int(floorf(x));
             int y1 = int(floorf(y));
