@@ -130,8 +130,9 @@ namespace
         dim3 size = dst.size();
 
         params.kind = cudaMemcpyDeviceToHost;
+        // xsize in bytes
         params.dstPtr = make_cudaPitchedPtr(const_cast<void*>(dst.ptr()),
-            dst.strides()[1], dst.strides()[1]/dst.strides()[0], dst.strides()[2]/dst.strides()[1]);
+            dst.strides()[1], dst.strides()[1], dst.strides()[2]/dst.strides()[1]);
 
         // Extent width is defined in terms of elements if any cudaArray is present,
         //  otherwise in number of bytes (for pitched pointer)
@@ -160,8 +161,9 @@ namespace
         dim3 size = src.size();
 
         params.kind = cudaMemcpyHostToDevice;
+        // xsize in bytes
         params.srcPtr = make_cudaPitchedPtr(const_cast<void*>(src.ptr()),
-            src.strides()[1], src.strides()[1]/src.strides()[0], src.strides()[2]/src.strides()[1]);
+            src.strides()[1], src.strides()[1], src.strides()[2]/src.strides()[1]);
 
         // Extent width is defined in terms of elements if any cudaArray is present,
         //  otherwise in number of bytes (for pitched pointer)
