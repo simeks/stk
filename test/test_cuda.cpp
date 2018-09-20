@@ -53,9 +53,9 @@ TEST_CASE("cuda_stream", "[cuda]")
 
     bool callback_triggered = false;
     REQUIRE_NOTHROW(stream.add_callback(
-        [](cudaStream_t, cudaError_t, void* data){ 
-            *reinterpret_cast<bool*>(data) = true; 
-        }, &callback_triggered));
+        [&](cudaStream_t, int){ 
+            callback_triggered = true; 
+        }));
     REQUIRE_NOTHROW(stream.synchronize());
     REQUIRE(stream.query() == true);
     REQUIRE(callback_triggered == true);
