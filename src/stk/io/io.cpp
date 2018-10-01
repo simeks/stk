@@ -138,7 +138,13 @@ namespace stk
     Volume read_volume(const std::string& filename)
     {
 #ifdef STK_ITK_BRIDGE
-        return stk::read_itk_image(filename);
+        try {
+            return stk::read_itk_image(filename);
+        }
+        catch (...) {
+            LOG(Error) << "Failed to read file " << filename;
+            return Volume();
+        }
 #else // ifdef STK_ITK_BRIDGE
         VolumeReader r = find_reader(filename);
         if (!r.read) {

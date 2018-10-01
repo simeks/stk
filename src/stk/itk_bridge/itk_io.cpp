@@ -119,8 +119,12 @@ stk::Volume read_vector_image(const itk::ImageIOBase::Pointer image_io)
     {
     case 1:
         return read_vector_image<Dimension, 1>(image_io);
+    case 2:
+        return read_vector_image<Dimension, 2>(image_io);
     case 3:
         return read_vector_image<Dimension, 3>(image_io);
+    case 4:
+        return read_vector_image<Dimension, 4>(image_io);
     default:
         FATAL() << "Cannot read image '" << image_io->GetFileName() << "': "
                 << "unsupported number of components "
@@ -141,7 +145,7 @@ stk::Volume stk::read_itk_image(const std::string& file_name)
             );
 
     if (!image_io) {
-        FATAL() << "Cannot read image '" << &file_name <<"': "
+        FATAL() << "Cannot read image '" << file_name <<"': "
                 << "the format is unrecognised by ITK";
     }
 
@@ -157,7 +161,7 @@ stk::Volume stk::read_itk_image(const std::string& file_name)
         case 3:
             return read_vector_image<3>(image_io);
         default:
-            FATAL() << "Cannot read image '" << &file_name << "': "
+            FATAL() << "Cannot read image '" << file_name << "': "
                     << "image dimension '" << image_io->GetNumberOfDimensions() << "' "
                     << "not supported";
         }
@@ -173,11 +177,11 @@ stk::Volume stk::read_itk_image(const std::string& file_name)
     case itk::ImageIOBase::RGB:
     case itk::ImageIOBase::RGBA:
     case itk::ImageIOBase::SYMMETRICSECONDRANKTENSOR:
-        FATAL() << "Cannot read image '" << &file_name << "': "
+        FATAL() << "Cannot read image '" << file_name << "': "
                 << "unsupported pixel type '" << image_io->GetPixelType() << "'";
 
     case itk::ImageIOBase::UNKNOWNPIXELTYPE:
-        FATAL() << "Cannot read image '" << &file_name << "': "
+        FATAL() << "Cannot read image '" << file_name << "': "
                 << "unknown pixel type";
     }
 
@@ -202,7 +206,7 @@ void write(const stk::Volume& volume, const std::string& file_name)
         writer->Update();
     }
     catch (const itk::ExceptionObject& e) {
-        FATAL() << "Error while writing image '" << &file_name << "': "
+        FATAL() << "Error while writing image '" << file_name << "': "
                 << e.what();
     }
 }
