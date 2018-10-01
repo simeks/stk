@@ -2,6 +2,7 @@
 
 #include "volume.h"
 #include "stk/common/assert.h"
+#include "stk/math/float3.h"
 
 #ifdef STK_USE_CUDA
     #include <stk/cuda/cuda.h>
@@ -78,6 +79,7 @@ Volume::Volume() :
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
     _direction.diagonal({1, 1, 1});
+    _inverse_direction.diagonal({1, 1, 1});
 }
 Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t flags) :
     _size(size),
@@ -88,6 +90,7 @@ Volume::Volume(const dim3& size, Type voxel_type, const void* data, uint32_t fla
     _origin = {0, 0, 0};
     _spacing = {1, 1, 1};
     _direction.diagonal({1, 1, 1});
+    _inverse_direction.diagonal({1, 1, 1});
 
     allocate(size, voxel_type, flags);
     if (data) {
@@ -104,6 +107,7 @@ Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range&
     _origin(other._origin),
     _spacing(other._spacing),
     _direction(other._direction),
+    _inverse_direction(other._inverse_direction),
     _metadata(other._metadata)
 {
     ASSERT(other.valid());
@@ -170,6 +174,7 @@ void Volume::copy_from(const Volume& other)
     _origin = other._origin;
     _spacing = other._spacing;
     _direction = other._direction;
+    _inverse_direction = other._inverse_direction;
     _metadata = other._metadata;
 }
 Volume Volume::as_type(Type type) const
@@ -195,12 +200,13 @@ Volume Volume::as_type(Type type) const
     else if (src_type == Type_Double && dest_type == Type_Float)
         convert_voxels<double, float>(_ptr, dest._ptr, num);
     else
-        NOT_IMPLEMENTED() << "Conversion from " << as_string(_voxel_type) 
+        NOT_IMPLEMENTED() << "Conversion from " << as_string(_voxel_type)
                           << " to " << as_string(type) << " not supported";
 
     dest._origin = _origin;
     dest._spacing = _spacing;
     dest._direction = _direction;
+    dest._inverse_direction = _inverse_direction;
     dest._metadata = _metadata;
 
     return dest;
@@ -242,6 +248,12 @@ void Volume::set_spacing(const float3& spacing)
 void Volume::set_direction(const Matrix3x3f& direction)
 {
     _direction = direction;
+    _inverse_direction = _direction.inverse();
+}
+void Volume::set_direction(const std::initializer_list<float> direction)
+{
+    _direction.set(direction);
+    _inverse_direction = _direction.inverse();
 }
 const float3& Volume::origin() const
 {
@@ -255,6 +267,35 @@ const Matrix3x3f& Volume::direction() const
 {
     return _direction;
 }
+const float3 Volume::index2point(const float3& index) const
+{
+    float3 point = _spacing * index;
+    return _origin + float3({
+        dot(_direction[0], point),
+        dot(_direction[1], point),
+        dot(_direction[2], point),
+    });
+}
+const float3 Volume::index2point(const int3& index) const
+{
+    float3 index_float = {(float) index.x, (float) index.y, (float) index.z};
+    return index2point(index_float);
+}
+const float3 Volume::point2index(const float3& point) const
+{
+    float3 index = point - _origin;
+    index = float3({
+        dot(_inverse_direction[0], index),
+        dot(_inverse_direction[1], index),
+        dot(_inverse_direction[2], index)
+    });
+    return index / _spacing;
+}
+const float3 Volume::point2index(const int3& point) const
+{
+    float3 point_float = {(float) point.x, (float) point.y, (float) point.z};
+    return point2index(point_float);
+}
 const size_t* Volume::strides() const
 {
     return _strides;
@@ -264,6 +305,7 @@ void Volume::copy_meta_from(const Volume& other)
     _origin = other._origin;
     _spacing = other._spacing;
     _direction = other._direction;
+    _inverse_direction = other._inverse_direction;
     _metadata = other._metadata;
 }
 bool Volume::is_contiguous() const
@@ -283,6 +325,7 @@ Volume::Volume(const Volume& other) :
     _origin(other._origin),
     _spacing(other._spacing),
     _direction(other._direction),
+    _inverse_direction(other._inverse_direction),
     _contiguous(other._contiguous),
     _metadata(other._metadata)
 {
@@ -303,6 +346,7 @@ Volume& Volume::operator=(const Volume& other)
         _origin = other._origin;
         _spacing = other._spacing;
         _direction = other._direction;
+        _inverse_direction = other._inverse_direction;
         _contiguous = other._contiguous;
         _metadata = other._metadata;
     }
@@ -317,6 +361,7 @@ void Volume::allocate(const dim3& size, Type voxel_type, uint32_t flags)
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
     _direction.diagonal({ 1, 1, 1 });
+    _inverse_direction.diagonal({ 1, 1, 1 });
 
     size_t num_bytes = _size.x * _size.y *
         _size.z * type_size(_voxel_type);
@@ -340,6 +385,7 @@ void Volume::release()
     _origin = { 0, 0, 0 };
     _spacing = { 1, 1, 1 };
     _direction.diagonal({ 1, 1, 1 });
+    _inverse_direction.diagonal({ 1, 1, 1 });
     _metadata.reset();
 }
 std::vector<std::string> Volume::get_metadata_keys(void) const

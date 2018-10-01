@@ -19,12 +19,12 @@ TEST_CASE("volume", "[volume]")
     for (uint32_t z = 0; z < D; ++z) {
         for (uint32_t y = 0; y < H; ++y) {
             for (uint32_t x = 0; x < W; ++x) {
-                test_data[H*W*z + W*y + x] 
+                test_data[H*W*z + W*y + x]
                     = uint8_t(H*W*z + W*y + x);
             }
         }
     }
-    
+
     SECTION("constructor")
     {
         Volume vol({W,H,D}, Type_UChar, test_data);
@@ -50,7 +50,7 @@ TEST_CASE("volume", "[volume]")
         REQUIRE(vol.ptr());
 
         memcpy(vol.ptr(), test_data, W*H*D);
-            
+
         for (uint32_t z = 0; z < D; ++z) {
             for (uint32_t y = 0; y < H; ++y) {
                 for (uint32_t x = 0; x < W; ++x) {
@@ -192,6 +192,48 @@ TEST_CASE("volume_copy_meta", "[volume]")
     REQUIRE(b.spacing().z == Approx(7.0f));
 }
 
+TEST_CASE("volume_coordinate_conversion", "[volume]")
+{
+    stk::Volume vol = stk::Volume({1, 1, 1}, stk::Type_Float);
+
+    // Random numbers
+    vol.set_origin({0.11450715, 0.69838153, 0.46470744});
+    vol.set_spacing({0.51708509, 0.93414316, 0.38919406});
+    vol.set_direction({
+        0.49132562, 0.8060089 , 0.12580945,
+        0.25510848, 0.96823085, 0.42032331,
+        0.20022329, 0.44585017, 0.70957238,
+    });
+
+    float3 point = vol.index2point(float3({10.4, 12.7, 17.1}));
+
+    // oracle from SimpleITK
+    CHECK(point.x == Approx(13.15617270574316));
+    CHECK(point.y == Approx(16.35433906555294));
+    CHECK(point.z == Approx(11.55320054939331));
+
+    point = vol.index2point(int3({10, 12, 17}));
+
+    // oracle from SimpleITK
+    CHECK(point.x == Approx(12.522604025121286));
+    CHECK(point.y == Approx(15.65208885738362));
+    CHECK(point.z == Approx(11.192629901994575));
+
+    float3 index = vol.point2index(float3({130.3, -19.2, 55.7}));
+
+    // oracle from SimpleITK
+    CHECK(index.x == Approx(1073.011446554096));
+    CHECK(index.y == Approx(-195.14144294668));
+    CHECK(index.z == Approx(92.03969103390264));
+
+    index = vol.point2index(int3({130, -19, 55}));
+
+    // oracle from SimpleITK
+    CHECK(index.x == Approx(1068.0339658527405));
+    CHECK(index.y == Approx(-193.67283470127222));
+    CHECK(index.z == Approx(89.15613539524472));
+}
+
 TEST_CASE("volume_clone", "[volume]")
 {
     float test_data[W*H*D];
@@ -215,7 +257,7 @@ TEST_CASE("volume_clone", "[volume]")
     REQUIRE(clone.spacing().x == Approx(vol.spacing().x));
     REQUIRE(clone.spacing().y == Approx(vol.spacing().y));
     REQUIRE(clone.spacing().z == Approx(vol.spacing().z));
-            
+
     REQUIRE(clone.ptr() != vol.ptr()); // Should not point to the same memory
 
     for (uint32_t i = 0; i < W*H*D; ++i) {
@@ -266,7 +308,7 @@ TEST_CASE("volume_as_type", "[volume]")
         Volume vol({W,H,D}, Type_Float, test_data);
         vol.set_origin({2.0f, 3.0f, 4.0f});
         vol.set_spacing({5.0f, 6.0f, 7.0f});
-        
+
         Volume vol2 = vol.as_type(Type_Double);
         REQUIRE(vol2.valid());
         REQUIRE(vol2.voxel_type() == Type_Double);
@@ -279,7 +321,7 @@ TEST_CASE("volume_as_type", "[volume]")
         REQUIRE(vol2.spacing().x == Approx(vol.spacing().x));
         REQUIRE(vol2.spacing().y == Approx(vol.spacing().y));
         REQUIRE(vol2.spacing().z == Approx(vol.spacing().z));
-        
+
         for (uint32_t i = 0; i < W*H*D; ++i) {
             REQUIRE(static_cast<double*>(vol2.ptr())[i] == Approx(test_data[i]));
         }
@@ -291,7 +333,7 @@ TEST_CASE("volume_as_type", "[volume]")
             test_data[i] = double(i);
 
         Volume vol({W,H,D}, Type_Double, test_data);
-        
+
         Volume vol2 = vol.as_type(Type_Float);
         REQUIRE(vol2.valid());
         REQUIRE(vol2.voxel_type() == Type_Float);
@@ -308,7 +350,7 @@ TEST_CASE("volume_as_type", "[volume]")
             test_data[i] = double4{double(i), double(i+1), double(i+2), double(i+3)};
 
         Volume vol({W,H,D}, Type_Double4, test_data);
-        
+
         Volume vol2 = vol.as_type(Type_Float4);
         REQUIRE(vol2.valid());
         REQUIRE(vol2.voxel_type() == Type_Float4);
@@ -330,7 +372,7 @@ TEST_CASE("volume_as_type", "[volume]")
             test_data[i] = float(i);
 
         Volume vol({W,H,D}, Type_Float, test_data);
-        
+
         // Should return itself
         Volume vol2 = vol.as_type(Type_Float);
         REQUIRE(vol2.valid());
@@ -344,7 +386,7 @@ TEST_CASE("volume_as_type", "[volume]")
             test_data[i] = float(i);
 
         Volume vol({W,H,D}, Type_Float, test_data);
-        
+
         // Cannot convert from float to float2
         REQUIRE_THROWS_AS(vol.as_type(Type_Float2), FatalException);
     }
@@ -355,7 +397,7 @@ TEST_CASE("volume_as_type", "[volume]")
             test_data[i] = float(i);
 
         Volume vol({W,H,D}, Type_Float, test_data);
-        
+
         // Not implemented
         REQUIRE_THROWS_AS(vol.as_type(Type_UChar), FatalException);
     }
@@ -374,7 +416,7 @@ TEST_CASE("volume_helper", "[volume]")
         VolumeHelper<float> vol({W,H,D});
         REQUIRE(vol.valid());
         REQUIRE(vol.voxel_type() == Type_Float);
-        
+
         for (uint32_t i = 0; i < W*H*D; ++i) {
             static_cast<float*>(vol.ptr())[i] = float(i);
         }
@@ -390,7 +432,7 @@ TEST_CASE("volume_helper", "[volume]")
         }
     }
 
-    
+
     SECTION("copy_constructor")
     {
         float test_data[W*H*D];
@@ -398,7 +440,7 @@ TEST_CASE("volume_helper", "[volume]")
             test_data[i] = float(i);
 
         Volume src({W,H,D}, Type_Float, test_data);
-        
+
         // Without conversion
         VolumeHelper<float> copy1(src);
         REQUIRE(copy1.valid());
@@ -430,7 +472,7 @@ TEST_CASE("volume_helper", "[volume]")
             test_data[i] = double4{double(i), double(i+1), double(i+2), double(i+3)};
 
         Volume src({W,H,D}, Type_Double4, test_data);
-        
+
         // Without conversion
         VolumeHelper<double4> copy1(src);
         REQUIRE(copy1.valid());
@@ -527,33 +569,33 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(vol.at(0,H,0, Border_Replicate) == Approx(7.0f));
         REQUIRE(vol.at(0,0,D, Border_Replicate) == Approx(7.0f));
     }
-    SECTION("linear_at")
+    SECTION("linear_at_index")
     {
         VolumeHelper<float> vol({W,H,D}, 8.0f);
 
         // Identical behaviour to at() for integers
 
-        REQUIRE(vol.linear_at(0,0,0, Border_Constant) == Approx(8.0f));
-        REQUIRE(vol.linear_at(1,1,1, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(0,0,0, Border_Constant) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(1,1,1, Border_Replicate) == Approx(8.0f));
 
         // Border_Constant should at zeros at the border
-        REQUIRE(vol.linear_at(-1,0,0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at(0,-1,0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at(0,0,-1, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at_index(-1,0,0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at_index(0,-1,0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at_index(0,0,-1, Border_Constant) == Approx(0.0f));
 
-        REQUIRE(vol.linear_at(float{W},0,0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at(0,float{H},0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at(0,0,float{D}, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at_index(float{W},0,0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at_index(0,float{H},0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at_index(0,0,float{D}, Border_Constant) == Approx(0.0f));
 
         // Border_Replicate replicates the value closest to the border of the volume
 
-        REQUIRE(vol.linear_at(-1,0,0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at(0,-1,0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at(0,0,-1, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(-1,0,0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(0,-1,0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(0,0,-1, Border_Replicate) == Approx(8.0f));
 
-        REQUIRE(vol.linear_at(float{W},0,0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at(0,float{H},0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at(0,0,float{D}, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(float{W},0,0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(0,float{H},0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at_index(0,0,float{D}, Border_Replicate) == Approx(8.0f));
 
         // Simple tests for the linear interpolation
         // Given data [2, 4], value at i=0.5 should be 3
@@ -564,9 +606,9 @@ TEST_CASE("volume_helper", "[volume]")
                     VolumeHelper<T> v_x({2,1,1}, v_data); \
                     VolumeHelper<T> v_y({1,2,1}, v_data); \
                     VolumeHelper<T> v_z({1,1,2}, v_data); \
-                    REQUIRE(v_x.linear_at({0.5, 0, 0}, Border_Constant) == Approx(3)); \
-                    REQUIRE(v_y.linear_at({0, 0.5, 0}, Border_Constant) == Approx(3)); \
-                    REQUIRE(v_z.linear_at({0, 0, 0.5}, Border_Constant) == Approx(3)); \
+                    REQUIRE(v_x.linear_at_index({0.5, 0, 0}, Border_Constant) == Approx(3)); \
+                    REQUIRE(v_y.linear_at_index({0, 0.5, 0}, Border_Constant) == Approx(3)); \
+                    REQUIRE(v_z.linear_at_index({0, 0, 0.5}, Border_Constant) == Approx(3)); \
                 }
 
             LINEAR_AT_TEST(float);
@@ -579,10 +621,10 @@ TEST_CASE("find_min_max", "[volume]")
 {
     SECTION("float") {
         float val[] = {
-            2, 1, 
-            3, 7, 
-            3, 7, 
-            
+            2, 1,
+            3, 7,
+            3, 7,
+
             8, 7,
             3, 2,
             1, 2,
@@ -597,7 +639,7 @@ TEST_CASE("find_min_max", "[volume]")
         };
 
         VolumeHelper<float> vol({2,3,4}, val);
-        
+
         float min, max;
         find_min_max(vol, min, max);
 
@@ -606,10 +648,10 @@ TEST_CASE("find_min_max", "[volume]")
     }
     SECTION("double") {
         double val[] = {
-            2, 1, 
-            3, 7, 
-            3, 7, 
-            
+            2, 1,
+            3, 7,
+            3, 7,
+
             8, 7,
             3, 2,
             1, 2,
@@ -624,7 +666,7 @@ TEST_CASE("find_min_max", "[volume]")
         };
 
         VolumeHelper<double> vol({2,3,4}, val);
-        
+
         double min, max;
         find_min_max(vol, min, max);
 
@@ -633,10 +675,10 @@ TEST_CASE("find_min_max", "[volume]")
     }
     SECTION("short") {
         short val[] = {
-            2, 1, 
-            3, 7, 
-            3, 7, 
-            
+            2, 1,
+            3, 7,
+            3, 7,
+
             8, 7,
             3, 2,
             1, 2,
@@ -651,7 +693,7 @@ TEST_CASE("find_min_max", "[volume]")
         };
 
         VolumeHelper<short> vol({2,3,4}, val);
-        
+
         short min, max;
         find_min_max(vol, min, max);
 
@@ -660,10 +702,10 @@ TEST_CASE("find_min_max", "[volume]")
     }
     SECTION("ushort") {
         uint16_t val[] = {
-            2, 1, 
-            3, 7, 
-            3, 7, 
-            
+            2, 1,
+            3, 7,
+            3, 7,
+
             8, 7,
             3, 2,
             1, 2,
@@ -678,7 +720,7 @@ TEST_CASE("find_min_max", "[volume]")
         };
 
         VolumeHelper<uint16_t> vol({2,3,4}, val);
-        
+
         uint16_t min, max;
         find_min_max(vol, min, max);
 
@@ -709,16 +751,16 @@ TEST_CASE("volume_region", "[volume]")
         57, 58, 59, 60,
         61, 62, 63, 64
     };
-    
+
     SECTION("constructor") {
         VolumeInt vol({4, 4, 4}, val);
-        
+
         VolumeInt sub(vol, {1,4}, {1,4}, {1, 4});
         REQUIRE(sub.size().x == 3);
         REQUIRE(sub.size().y == 3);
         REQUIRE(sub.size().z == 3);
         REQUIRE(sub.is_contiguous() == false);
-        
+
         REQUIRE(sub(0,0,0) == 22);
         REQUIRE(sub(1,0,0) == 23);
         REQUIRE(sub(0,1,0) == 26);
@@ -746,7 +788,7 @@ TEST_CASE("volume_region", "[volume]")
         REQUIRE(sub3(0,0,0) == 1);
         REQUIRE(sub3(1,0,0) == 2);
         REQUIRE(sub3(2,0,0) == 3);
-        
+
         REQUIRE(sub3(0,2,0) == 9);
         REQUIRE(sub3(1,2,0) == 10);
         REQUIRE(sub3(2,2,0) == 11);
@@ -754,7 +796,7 @@ TEST_CASE("volume_region", "[volume]")
         REQUIRE(sub3(0,0,2) == 33);
         REQUIRE(sub3(1,0,2) == 34);
         REQUIRE(sub3(2,0,2) == 35);
-        
+
         REQUIRE(sub3(0,2,2) == 41);
         REQUIRE(sub3(1,2,2) == 42);
         REQUIRE(sub3(2,2,2) == 43);
