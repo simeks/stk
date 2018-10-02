@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stk/common/assert.h>
+#include <stk/math/matrix3x3f.h>
 
 #include "dim3.h"
 #include "types.h"

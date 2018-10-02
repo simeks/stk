@@ -269,12 +269,7 @@ const Matrix3x3f& Volume::direction() const
 }
 const float3 Volume::index2point(const float3& index) const
 {
-    float3 point = _spacing * index;
-    return _origin + float3({
-        dot(_direction[0], point),
-        dot(_direction[1], point),
-        dot(_direction[2], point),
-    });
+    return _origin + _direction * (_spacing * index);
 }
 const float3 Volume::index2point(const int3& index) const
 {
@@ -283,13 +278,7 @@ const float3 Volume::index2point(const int3& index) const
 }
 const float3 Volume::point2index(const float3& point) const
 {
-    float3 index = point - _origin;
-    index = float3({
-        dot(_inverse_direction[0], index),
-        dot(_inverse_direction[1], index),
-        dot(_inverse_direction[2], index)
-    });
-    return index / _spacing;
+    return (_inverse_direction * (point - _origin)) / _spacing;
 }
 const float3 Volume::point2index(const int3& point) const
 {
