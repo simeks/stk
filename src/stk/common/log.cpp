@@ -178,7 +178,7 @@ namespace
 
     void log_write(stk::LogLevel level, const char* msg)
     {
-        if (!_logger_data->silent) {
+        if (nullptr == _logger_data || !_logger_data->silent) {
             std::cerr << msg;
         }
 
