@@ -1,5 +1,6 @@
 #include "log.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <ctime>
@@ -19,7 +20,7 @@ namespace
     class Sink
     {
     public:
-        enum Type { Type_FileSink, Type_CallbackSink };
+        enum Type { Type_FileSink, Type_CallbackSink, Type_StreamSink };
 
         Sink(stk::LogLevel level) : _level(level) {}
         virtual ~Sink() {};
@@ -82,7 +83,7 @@ namespace
         {
             return Type_FileSink;
         }
-        
+
     private:
         std::mutex _lock;
         std::ofstream _fs;
@@ -125,16 +126,61 @@ namespace
         void* _user_data;
     };
 
+    class StreamSink : public Sink
+    {
+    public:
+        StreamSink(std::ostream *os, stk::LogLevel level)
+            : Sink(level)
+            , _os(os)
+        {
+        }
+        virtual ~StreamSink()
+        {
+            flush();
+        }
+        void write(stk::LogLevel level, const char* msg)
+        {
+            std::lock_guard<std::mutex> guard(_lock);
+
+            if(level >= _level) {
+                _os->write(msg, strlen(msg));
+            }
+        }
+        void flush()
+        {
+            std::lock_guard<std::mutex> guard(_lock);
+            _os->flush();
+        }
+
+        std::ostream* stream(void)
+        {
+            return _os;
+        }
+
+        Type type() const
+        {
+            return Type_StreamSink;
+        }
+
+    private:
+        std::mutex _lock;
+        std::ostream *_os;
+        std::string _file;
+    };
+
     struct LoggerData
     {
         std::vector<Sink*> sinks;
+        bool silent = false;
     };
 
     LoggerData* _logger_data = nullptr;
 
     void log_write(stk::LogLevel level, const char* msg)
     {
-        std::cerr << msg;
+        if (!_logger_data->silent) {
+            std::cerr << msg;
+        }
 
         if (_logger_data) {
             for (auto& s : _logger_data->sinks) {
@@ -191,7 +237,7 @@ namespace stk
             "INF",
             "WAR",
             "ERR",
-            "FAT", 
+            "FAT",
         };
         _s << level_to_str[level] << " ";
     #endif
@@ -221,16 +267,17 @@ namespace stk
         _s << "| ";
     }
 
-    void log_init()
+    void log_init(const bool silent)
     {
         _logger_data = new LoggerData();
+        _logger_data->silent = silent;
     }
     void log_shutdown()
     {
         for (auto& s : _logger_data->sinks) {
             delete s;
         }
-        
+
         delete _logger_data;
         _logger_data = nullptr;
     }
@@ -289,5 +336,30 @@ namespace stk
                 return;
             }
         }
+    }
+    void log_add_stream(std::ostream * const os, LogLevel level)
+    {
+        if (!_logger_data) {
+            return; // TODO: Assert!
+        }
+
+        StreamSink* sink = new StreamSink(os, level);
+
+        _logger_data->sinks.push_back(sink);
+    }
+    void log_remove_stream(std::ostream * const os)
+    {
+        if (!_logger_data) {
+            return; // TODO: Assert!
+        }
+
+        _logger_data->sinks.erase(
+                std::remove_if(
+                    _logger_data->sinks.begin(),
+                    _logger_data->sinks.end(),
+                    [&](Sink* s) { return s->type() == Sink::Type_StreamSink &&
+                                          static_cast<StreamSink*>(s)->stream() == os; }
+                    )
+                );
     }
 }

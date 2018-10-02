@@ -18,7 +18,7 @@
 //  be written to said file. E.g. log_add_file('log.txt', stk::Info) will output _all_ log
 //  messages to log.txt. To only output error messages, change stk::Info to stk::Error.
 //
-//  In addition to file outputs you can also add C-style callback functions using 
+//  In addition to file outputs you can also add C-style callback functions using
 //  log_add_callback. Whenever a log message is received the message (including prefix)
 //  will be passed to the callback.
 //
@@ -34,13 +34,13 @@
 //
 //  log_shutdown() cleans up data allocated by the system and closes all open log files.
 //
-// There are 4 severity levels: 
+// There are 4 severity levels:
 //  * Info
 //  * Warning
 //  * Error
 //  * Fatal
 //
-//  The goal of this subsystem is only to do logging, None of the levels, including Fatal, 
+//  The goal of this subsystem is only to do logging, None of the levels, including Fatal,
 //  affects the runtime in any way. Therefore the use of the Fatal level should be limited
 //  to use within the error handling system (see error.h) to avoid confusion.
 
@@ -95,8 +95,8 @@ namespace stk
     typedef void (LogCallback)(void*, LogLevel, const char*);
 
     // Initializes logging, should be called at application startup
-    void log_init();
-    
+    void log_init(const bool silent=false);
+
     // Shuts the logging system down.
     void log_shutdown();
 
@@ -111,6 +111,12 @@ namespace stk
 
     // Removes the specified callback, as given to log_add_callback
     void log_remove_callback(LogCallback* fn, void* user_data);
+
+    // Outputs all messages above the specified level to the given stream
+    void log_add_stream(std::ostream * const os, LogLevel level);
+
+    // Stops the output to the given stream, assuming the stream was added with log_add_stream
+    void log_remove_stream(std::ostream * const os);
 }
 
 template<typename T>
