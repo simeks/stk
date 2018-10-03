@@ -516,3 +516,12 @@ inline std::ostream& operator<<(std::ostream& s, const double4& v)
     s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
     return s;
 }
+
+inline std::ostream& operator<<(std::ostream& s, const Matrix3x3f& m)
+{
+    s << '(' << m(0, 0) << ' ' << m(0, 1) << ' ' << m(0, 2) << " ; "
+             << m(1, 0) << ' ' << m(1, 1) << ' ' << m(1, 2) << " ; "
+             << m(2, 0) << ' ' << m(2, 1) << ' ' << m(2, 2) << ')';
+    return s;
+}
+
