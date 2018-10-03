@@ -92,7 +92,7 @@ namespace
         };
     }
 
-    std::shared_ptr<GpuVolumeData> 
+    std::shared_ptr<GpuVolumeData>
     allocate_gpu_volume(const dim3& size, Type voxel_type, gpu::Usage usage)
     {
         auto vol = std::make_shared<GpuVolumeData>();
@@ -202,7 +202,7 @@ namespace
         else {
             params.srcArray = src.array_ptr();
         }
-        
+
         if (dst.usage() == gpu::Usage_PitchedPointer) {
             params.dstPtr = dst.pitched_ptr();
         }
@@ -225,7 +225,7 @@ namespace gpu
         if (format_desc.y > 0) ++num_comp;
         if (format_desc.z > 0) ++num_comp;
         if (format_desc.w > 0) ++num_comp;
-        
+
         Type base_type = Type_Unknown;
         if (format_desc.f == cudaChannelFormatKindFloat) {
             if (format_desc.x != 32) {
@@ -258,7 +258,7 @@ namespace gpu
         }
 
         Type type = build_type(base_type, num_comp);
-        FATAL_IF(type == Type_Unknown) 
+        FATAL_IF(type == Type_Unknown)
             << "Unsupported format";
 
         return type;
@@ -298,12 +298,16 @@ GpuVolume::GpuVolume() :
     _spacing{1,1,1},
     _ptr{0}
 {
+    _direction.diagonal({1, 1, 1});
+    _inverse_direction.diagonal({1, 1, 1});
 }
 GpuVolume::GpuVolume(const GpuVolume& other) :
     _data(other._data),
     _size(other._size),
     _origin(other._origin),
     _spacing(other._spacing),
+    _direction(other._direction),
+    _inverse_direction(other._inverse_direction),
     _ptr(other._ptr)
 {
 }
@@ -314,6 +318,8 @@ GpuVolume& GpuVolume::operator=(const GpuVolume& other)
         _size = other._size;
         _origin = other._origin;
         _spacing = other._spacing;
+        _direction = other._direction;
+        _inverse_direction = other._inverse_direction;
         _ptr = other._ptr;
     }
     return *this;
@@ -323,12 +329,16 @@ GpuVolume::GpuVolume(const dim3& size, Type voxel_type, gpu::Usage usage) :
     _spacing({1,1,1}),
     _ptr({0})
 {
+    _direction.diagonal({1, 1, 1});
+    _inverse_direction.diagonal({1, 1, 1});
     allocate(size, voxel_type, usage);
 }
 GpuVolume::GpuVolume(const GpuVolume& other, const Range& x, const Range& y, const Range& z) :
     _data(other._data),
     _origin(other._origin),
     _spacing(other._spacing),
+    _direction(other._direction),
+    _inverse_direction(other._inverse_direction),
     _ptr(other._ptr)
 {
     // Subvolumes are only supported for pitched pointer types
@@ -344,9 +354,9 @@ GpuVolume::GpuVolume(const GpuVolume& other, const Range& x, const Range& y, con
     int nz = z.end - z.begin;
 
     uint8_t* ptr = reinterpret_cast<uint8_t*>(_ptr.ptr);
-    
+
     if (z.begin != 0 && z.end != (int)_size.z) {
-        // any offset in z axis does not break contiguity 
+        // any offset in z axis does not break contiguity
         ptr += z.begin * _ptr.pitch * _ptr.ysize;
     }
 
@@ -414,7 +424,7 @@ void GpuVolume::copy_from(const GpuVolume& other, const cuda::Stream& stream)
 }
 bool GpuVolume::valid() const
 {
-    return _data && 
+    return _data &&
         (_data->pitched_ptr.ptr != nullptr || _data->array_ptr != nullptr);
 }
 dim3 GpuVolume::size() const
@@ -429,6 +439,16 @@ void GpuVolume::set_spacing(const float3& spacing)
 {
     _spacing = spacing;
 }
+void GpuVolume::set_direction(const Matrix3x3f& direction)
+{
+    _direction = direction;
+    _inverse_direction = _direction.inverse();
+}
+void GpuVolume::set_direction(const std::initializer_list<float> direction)
+{
+    _direction.set(direction);
+    _inverse_direction = _direction.inverse();
+}
 
 const float3& GpuVolume::origin() const
 {
@@ -438,10 +458,20 @@ const float3& GpuVolume::spacing() const
 {
     return _spacing;
 }
+const Matrix3x3f& GpuVolume::direction() const
+{
+    return _direction;
+}
+const Matrix3x3f& GpuVolume::inverse_direction() const
+{
+    return _inverse_direction;
+}
 void GpuVolume::copy_meta_from(const GpuVolume& other)
 {
     _origin = other._origin;
     _spacing = other._spacing;
+    _direction = other._direction;
+    _inverse_direction = other._inverse_direction;
 }
 
 Type GpuVolume::voxel_type() const
@@ -456,6 +486,7 @@ GpuVolume::GpuVolume(const Volume& vol, gpu::Usage usage)
 
     set_origin(vol.origin());
     set_spacing(vol.spacing());
+    set_direction(vol.direction());
 }
 GpuVolume::GpuVolume(const Volume& vol, const cuda::Stream& stream, gpu::Usage usage)
 {
@@ -464,11 +495,12 @@ GpuVolume::GpuVolume(const Volume& vol, const cuda::Stream& stream, gpu::Usage u
 
     set_origin(vol.origin());
     set_spacing(vol.spacing());
+    set_direction(vol.direction());
 }
 Volume GpuVolume::download() const
 {
     // Requires gpu memory to be allocated
-    if (!valid()) 
+    if (!valid())
         return Volume();
 
     Volume vol(_size, voxel_type());
@@ -478,7 +510,7 @@ Volume GpuVolume::download() const
 Volume GpuVolume::download(const cuda::Stream& stream) const
 {
     // Requires gpu memory to be allocated
-    if (!valid()) 
+    if (!valid())
         return Volume();
 
     Volume vol(_size, voxel_type());
@@ -495,6 +527,7 @@ void GpuVolume::download(Volume& vol) const
 
     vol.set_origin(_origin);
     vol.set_spacing(_spacing);
+    vol.set_direction(_direction);
 }
 void GpuVolume::download(Volume& vol, const cuda::Stream& stream) const
 {
@@ -506,6 +539,7 @@ void GpuVolume::download(Volume& vol, const cuda::Stream& stream) const
 
     vol.set_origin(_origin);
     vol.set_spacing(_spacing);
+    vol.set_direction(_direction);
 }
 void GpuVolume::upload(const Volume& vol)
 {
@@ -517,6 +551,7 @@ void GpuVolume::upload(const Volume& vol)
 
     set_origin(vol.origin());
     set_spacing(vol.spacing());
+    set_direction(vol.direction());
 }
 void GpuVolume::upload(const Volume& vol, const cuda::Stream& stream)
 {
@@ -532,6 +567,7 @@ void GpuVolume::upload(const Volume& vol, const cuda::Stream& stream)
 
     set_origin(vol.origin());
     set_spacing(vol.spacing());
+    set_direction(vol.direction());
 }
 gpu::Usage GpuVolume::usage() const
 {
@@ -571,7 +607,7 @@ void GpuVolume::allocate(const dim3& size, Type voxel_type, gpu::Usage usage)
 {
     _size = size;
     _data = allocate_gpu_volume(size, voxel_type, usage);
-    if (usage == gpu::Usage_PitchedPointer) 
+    if (usage == gpu::Usage_PitchedPointer)
         _ptr = _data->pitched_ptr;
 }
 } // namespace stk
