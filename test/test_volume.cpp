@@ -569,33 +569,33 @@ TEST_CASE("volume_helper", "[volume]")
         REQUIRE(vol.at(0,H,0, Border_Replicate) == Approx(7.0f));
         REQUIRE(vol.at(0,0,D, Border_Replicate) == Approx(7.0f));
     }
-    SECTION("linear_at_index")
+    SECTION("linear_at")
     {
         VolumeHelper<float> vol({W,H,D}, 8.0f);
 
         // Identical behaviour to at() for integers
 
-        REQUIRE(vol.linear_at_index(0,0,0, Border_Constant) == Approx(8.0f));
-        REQUIRE(vol.linear_at_index(1,1,1, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at(0,0,0, Border_Constant) == Approx(8.0f));
+        REQUIRE(vol.linear_at(1,1,1, Border_Replicate) == Approx(8.0f));
 
         // Border_Constant should at zeros at the border
-        REQUIRE(vol.linear_at_index(-1,0,0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at_index(0,-1,0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at_index(0,0,-1, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at(-1,0,0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at(0,-1,0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at(0,0,-1, Border_Constant) == Approx(0.0f));
 
-        REQUIRE(vol.linear_at_index(float{W},0,0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at_index(0,float{H},0, Border_Constant) == Approx(0.0f));
-        REQUIRE(vol.linear_at_index(0,0,float{D}, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at(float{W},0,0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at(0,float{H},0, Border_Constant) == Approx(0.0f));
+        REQUIRE(vol.linear_at(0,0,float{D}, Border_Constant) == Approx(0.0f));
 
         // Border_Replicate replicates the value closest to the border of the volume
 
-        REQUIRE(vol.linear_at_index(-1,0,0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at_index(0,-1,0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at_index(0,0,-1, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at(-1,0,0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at(0,-1,0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at(0,0,-1, Border_Replicate) == Approx(8.0f));
 
-        REQUIRE(vol.linear_at_index(float{W},0,0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at_index(0,float{H},0, Border_Replicate) == Approx(8.0f));
-        REQUIRE(vol.linear_at_index(0,0,float{D}, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at(float{W},0,0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at(0,float{H},0, Border_Replicate) == Approx(8.0f));
+        REQUIRE(vol.linear_at(0,0,float{D}, Border_Replicate) == Approx(8.0f));
 
         // Simple tests for the linear interpolation
         // Given data [2, 4], value at i=0.5 should be 3
@@ -606,9 +606,9 @@ TEST_CASE("volume_helper", "[volume]")
                     VolumeHelper<T> v_x({2,1,1}, v_data); \
                     VolumeHelper<T> v_y({1,2,1}, v_data); \
                     VolumeHelper<T> v_z({1,1,2}, v_data); \
-                    REQUIRE(v_x.linear_at_index({0.5, 0, 0}, Border_Constant) == Approx(3)); \
-                    REQUIRE(v_y.linear_at_index({0, 0.5, 0}, Border_Constant) == Approx(3)); \
-                    REQUIRE(v_z.linear_at_index({0, 0, 0.5}, Border_Constant) == Approx(3)); \
+                    REQUIRE(v_x.linear_at({0.5, 0, 0}, Border_Constant) == Approx(3)); \
+                    REQUIRE(v_y.linear_at({0, 0.5, 0}, Border_Constant) == Approx(3)); \
+                    REQUIRE(v_z.linear_at({0, 0, 0.5}, Border_Constant) == Approx(3)); \
                 }
 
             LINEAR_AT_TEST(float);

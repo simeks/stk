@@ -125,7 +125,7 @@ T VolumeHelper<T>::at(int3 p, BorderMode border_mode) const
     return at(p.x, p.y, p.z, border_mode);
 }
 template<typename T>
-inline T VolumeHelper<T>::linear_at_index(float x, float y, float z, BorderMode border_mode) const
+inline T VolumeHelper<T>::linear_at(float x, float y, float z, BorderMode border_mode) const
 {
     // PERF: 15% faster than ceilf/floorf
     #define FAST_CEIL(x_) ((int)x_ + (x_ > (int)x_))
@@ -200,9 +200,9 @@ inline T VolumeHelper<T>::linear_at_index(float x, float y, float z, BorderMode 
 
 #ifdef STK_ENABLE_SSE_LINEAR_AT
 template<>
-inline float VolumeHelper<float>::linear_at_index(float x, float y, float z, BorderMode border_mode) const
+inline float VolumeHelper<float>::linear_at(float x, float y, float z, BorderMode border_mode) const
 {
-    // An attempt to speed-up linear_at_index which takes up a majority of the time when using NCC.
+    // An attempt to speed-up linear_at which takes up a majority of the time when using NCC.
     // However, does not seem to make any difference for MSVC2017 as the compiler performs these optimizations
 
     // PERF: 15% faster than ceilf/floorf
@@ -332,21 +332,21 @@ inline float VolumeHelper<float>::linear_at_index(float x, float y, float z, Bor
 #endif // STK_ENABLE_SSE_LINEAR_AT
 
 template<typename T>
-T VolumeHelper<T>::linear_at_index(float3 p, BorderMode border_mode) const
+T VolumeHelper<T>::linear_at(float3 p, BorderMode border_mode) const
 {
-    return linear_at_index(p.x, p.y, p.z, border_mode);
+    return linear_at(p.x, p.y, p.z, border_mode);
 }
 template<typename T>
 inline T VolumeHelper<T>::linear_at_point(float x, float y, float z, BorderMode border_mode) const
 {
     const float3 p = point2index(float3({x, y, z}));
-    return linear_at_index(p.x, p.y, p.z, border_mode);
+    return linear_at(p.x, p.y, p.z, border_mode);
 }
 template<typename T>
 T VolumeHelper<T>::linear_at_point(float3 p, BorderMode border_mode) const
 {
     p = point2index(p);
-    return linear_at_index(p.x, p.y, p.z, border_mode);
+    return linear_at(p.x, p.y, p.z, border_mode);
 }
 template<typename T>
 VolumeHelper<T>& VolumeHelper<T>::operator=(const VolumeHelper& other)

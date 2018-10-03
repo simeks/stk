@@ -240,8 +240,8 @@ namespace stk
         T at(int3 p, BorderMode border_mode) const;
 
         // Indices in the voxel grid
-        T linear_at_index(float x, float y, float z, BorderMode border_mode) const;
-        T linear_at_index(float3 p, BorderMode border_mode) const;
+        T linear_at(float x, float y, float z, BorderMode border_mode) const;
+        T linear_at(float3 p, BorderMode border_mode) const;
 
         // Point coordinates in image space
         T linear_at_point(float x, float y, float z, BorderMode border_mode) const;
