@@ -133,6 +133,20 @@ namespace stk
         Type voxel_type() const;
         const dim3& size() const;
 
+        // Set and get information about the image space.
+        //  * `origin` is a point in image space, denoting the physical
+        //    location of the voxel with indices (0, 0, 0).
+        //  * `spacing` is the physical distance between samples in the
+        //    orthogonal voxel grid.
+        //  * `direction` is a non-singular matrix representing an
+        //    affine transform that maps from the orthogonal system of the
+        //    voxel grid to the physical space.
+        //
+        //  NOTE: the direction matrix is not necessarily orghogonal and
+        //        its columns may not be unit vectors, implying that the
+        //        actual physical distance between samples can have two
+        //        components, one due to `spacing` and another due to
+        //        the shear component of the direction matrix.
         void set_origin(const float3& origin);
         void set_spacing(const float3& spacing);
         void set_direction(const Matrix3x3f& direction);
@@ -142,6 +156,7 @@ namespace stk
         const float3& spacing() const;
         const Matrix3x3f& direction() const;
 
+        // Convert between voxel indices and spatial coordinates
         const float3 index2point(const float3& index) const;
         const float3 index2point(const int3& index) const;
         const float3 point2index(const float3& point) const;
