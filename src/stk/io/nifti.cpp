@@ -6,6 +6,56 @@
 
 // TODO: Byte swapping?
 
+/** Transpose vector data to have the vector index in the slowest axis */
+template<typename T>
+void to_slowest(
+        const T * const __restrict in,
+        T * const __restrict out,
+        const dim3 size,
+        const int nt
+        )
+{
+    const int nx = (int) size.x;
+    const int ny = (int) size.y;
+    const int nz = (int) size.z;
+
+    #pragma omp parallel for
+    for (int z = 0; z < nz; ++z) {
+        for (int y = 0; y < ny; ++y) {
+            for (int x = 0; x < nx; ++x) {
+                for (int t = 0; t < nt; ++t) {
+                    out[t*nz*ny*nx + z*ny*nx + y*nx + x] = in[z*ny*nx*nt + y*nx*nt + x*nt + t];
+                }
+            }
+        }
+    }
+}
+
+/** Transpose vector data to have the vector index in the fastest axis */
+template<typename T>
+void to_fastest(
+        const T * const __restrict in,
+        T * const __restrict out,
+        const dim3 size,
+        const int nt
+        )
+{
+    const int nx = (int) size.x;
+    const int ny = (int) size.y;
+    const int nz = (int) size.z;
+
+    #pragma omp parallel for
+    for (int t = 0; t < nt; ++t) {
+        for (int z = 0; z < nz; ++z) {
+            for (int y = 0; y < ny; ++y) {
+                for (int x = 0; x < nx; ++x) {
+                    out[z*ny*nx*nt + y*nx*nt + x*nt + t] = in[t*nz*ny*nx + z*ny*nx + y*nx + x];
+                }
+            }
+        }
+    }
+}
+
 namespace stk {
 namespace nifti {
     void initialize()
@@ -55,7 +105,7 @@ namespace nifti {
         }
 
         dim3 size = {(uint32_t)nhdr.dim[1], (uint32_t)nhdr.dim[2], (uint32_t)nhdr.dim[3]};
-        int ncomp = nhdr.intent_code == NIFTI_INTENT_VECTOR ? nhdr.dim[5] : 1;
+        const int ncomp = nhdr.intent_code == NIFTI_INTENT_VECTOR ? nhdr.dim[5] : 1;
 
         Type voxel_type = Type_Unknown;
         switch(nhdr.datatype)
@@ -161,8 +211,19 @@ namespace nifti {
 
         znzseek(fp, vox_offset, SEEK_SET);
 
-        size_t num_bytes = (nhdr.bitpix/8)*nhdr.dim[1]*nhdr.dim[2]*nhdr.dim[3];
-        r = znzread(vol.ptr(), 1, num_bytes, fp);
+        const size_t num_bytes = (nhdr.bitpix/8)*nhdr.dim[1]*nhdr.dim[2]*nhdr.dim[3]*ncomp;
+        std::vector<char> data;
+
+        // Read data
+        if (ncomp > 1) {
+            data.resize(num_bytes);
+            r = znzread(data.data(), 1, num_bytes, fp);
+        }
+        else {
+            r = znzread(vol.ptr(), 1, num_bytes, fp);
+        }
+
+        // Check read
         if (r < num_bytes) {
             LOG(Error) << "Failed to read image data from file " << filename;
             znzclose(fp);
@@ -170,6 +231,37 @@ namespace nifti {
         }
 
         znzclose(fp);
+
+        // Transpose vector data if needed
+        if (ncomp > 1) {
+            switch(nhdr.datatype)
+            {
+            case NIFTI_TYPE_INT8:
+                to_fastest<int8_t>((int8_t*) data.data(), (int8_t*)vol.ptr(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_UINT8:
+                to_fastest<uint8_t>((uint8_t*) data.data(), (uint8_t*)vol.ptr(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_INT16:
+                to_fastest<int16_t>((int16_t*) data.data(), (int16_t*)vol.ptr(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_UINT16:
+                to_fastest<uint16_t>((uint16_t*) data.data(), (uint16_t*)vol.ptr(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_INT32:
+                to_fastest<int32_t>((int32_t*) data.data(), (int32_t*)vol.ptr(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_UINT32:
+                to_fastest<uint32_t>((uint32_t*) data.data(), (uint32_t*)vol.ptr(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_FLOAT32:
+                to_fastest<float>((float*) data.data(), (float*)vol.ptr(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_FLOAT64:
+                to_fastest<double>((double*) data.data(), (double*)vol.ptr(), vol.size(), ncomp);
+                break;
+            }
+        }
 
         int scalar_size = (int)type_size(base_type(voxel_type));
         if (need_swap) {
@@ -261,10 +353,6 @@ namespace nifti {
             FATAL() << "Unsupported format";
         };
 
-        if (ncomp > 1) {
-            nhdr.bitpix *= (short)ncomp;
-        }
-
         nhdr.slice_start = 0; // TODO: [nifti] Handle image meta data
 
         nhdr.vox_offset = sizeof(nhdr); // TODO: [nifti] Handle image meta data
@@ -341,9 +429,43 @@ namespace nifti {
             FATAL() << "Failed to write to file " << filename;
         }
 
+        std::vector<char> data;
+        const size_t num_bytes = (nhdr.bitpix/8)*nhdr.dim[1]*nhdr.dim[2]*nhdr.dim[3]*ncomp;
+
+        // Transpose data if necessary
+        if (ncomp > 1) {
+            data.resize(num_bytes);
+            switch(nhdr.datatype)
+            {
+            case NIFTI_TYPE_INT8:
+                to_slowest<int8_t>((int8_t*) vol.ptr(), (int8_t*)data.data(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_UINT8:
+                to_slowest<uint8_t>((uint8_t*) vol.ptr(), (uint8_t*)data.data(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_INT16:
+                to_slowest<int16_t>((int16_t*) vol.ptr(), (int16_t*)data.data(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_UINT16:
+                to_slowest<uint16_t>((uint16_t*) vol.ptr(), (uint16_t*)data.data(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_INT32:
+                to_slowest<int32_t>((int32_t*) vol.ptr(), (int32_t*)data.data(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_UINT32:
+                to_slowest<uint32_t>((uint32_t*) vol.ptr(), (uint32_t*)data.data(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_FLOAT32:
+                to_slowest<float>((float*) vol.ptr(), (float*)data.data(), vol.size(), ncomp);
+                break;
+            case NIFTI_TYPE_FLOAT64:
+                to_slowest<double>((double*) vol.ptr(), (double*)data.data(), vol.size(), ncomp);
+                break;
+            }
+        }
+
         // Write image data
-        size_t num_bytes = (nhdr.bitpix/8)*nhdr.dim[1]*nhdr.dim[2]*nhdr.dim[3];
-        w = znzwrite(vol.ptr(), 1, num_bytes, fp);
+        w = znzwrite(ncomp > 1 ? data.data() : vol.ptr(), 1, num_bytes, fp);
         if(w < num_bytes) {
             znzclose(fp);
             FATAL() << "Failed to write to file " << filename;
