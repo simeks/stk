@@ -147,8 +147,13 @@ struct Matrix3x3f
         return _rows[i];
     }
 
+    const float3 column(const unsigned i) const {
+        ASSERT(i < cols);
+        return float3({(*this)(0, i), (*this)(1, i), (*this)(2, i)});
+    }
+
     const float& operator()(const unsigned int r, const unsigned int c) const {
-        ASSERT(c < 3 && r < 3);
+        ASSERT(c < cols && r < rows);
         return *(reinterpret_cast<const float*>(_rows + r) + c);
     }
 

@@ -23,7 +23,7 @@ namespace nifti {
             return Volume();
         }
 
-        nifti_1_header nhdr = {0};
+        nifti_1_header nhdr = {};
         size_t r = znzread(&nhdr, 1, sizeof(nhdr), fp);
         if (r < sizeof(nhdr)) {
             LOG(Error) << "Failed to read header from file " << filename;
@@ -33,7 +33,7 @@ namespace nifti {
 
         int nifti_v = NIFTI_VERSION(nhdr);
         if (nifti_v != 1 || !NIFTI_ONEFILE(nhdr)) {
-            LOG(Error) << "Failed to read " << filename 
+            LOG(Error) << "Failed to read " << filename
                        << ": Only supports NIFTI-1 and single file images";
             znzclose(fp);
             return Volume();
@@ -44,10 +44,10 @@ namespace nifti {
             swap_nifti_header(&nhdr, nifti_v);
         }
 
-        if (!(nhdr.dim[0] == 3 
+        if (!(nhdr.dim[0] == 3
         || (nhdr.intent_code == NIFTI_INTENT_VECTOR && nhdr.dim[0] == 5)
         || (nhdr.dim[0] == 4 && nhdr.dim[4] == 1))) { // Special-case
-            LOG(Error) << "Failed to read " << filename 
+            LOG(Error) << "Failed to read " << filename
                        << ": Only three dimensional volumes are supported";
 
             znzclose(fp);
@@ -111,7 +111,7 @@ namespace nifti {
         };
 
         if (voxel_type == Type_Unknown) {
-            LOG(Error) << "Failed to read " << filename 
+            LOG(Error) << "Failed to read " << filename
                        << ": Unsupported data type (" << nhdr.datatype << ")";
             znzclose(fp);
             return Volume();
@@ -129,27 +129,31 @@ namespace nifti {
 
         // Only supported modes for now
         if (nhdr.qform_code != NIFTI_XFORM_SCANNER_ANAT) {
-            LOG(Error) << "Failed to read " << filename 
+            LOG(Error) << "Failed to read " << filename
                        << ": Unsupported qform code, only supports NIFTI_XFORM_SCANNER_ANAT";
             znzclose(fp);
             return Volume();
         }
         if (nhdr.sform_code != NIFTI_XFORM_UNKNOWN) {
-            LOG(Error) << "Failed to read " << filename 
+            LOG(Error) << "Failed to read " << filename
                        << ": Unsupported sform code, only supports NIFTI_XFORM_UNKNOWN";
             znzclose(fp);
             return Volume();
         }
-        
+
         // Set according to method 2 (nifti1.h)
-         
+
         vol.set_origin({
-            -mat.m[0][3], 
-            -mat.m[1][3], 
-            mat.m[2][3]    
+            -mat.m[0][3],
+            -mat.m[1][3],
+             mat.m[2][3]
         });
 
-        // TODO: Ignoring orientation for now
+        vol.set_direction({{
+            {-mat.m[0][0], -mat.m[0][1], -mat.m[0][2]},
+            {-mat.m[1][0], -mat.m[1][1], -mat.m[1][2]},
+            { mat.m[2][0],  mat.m[2][1],  mat.m[2][2]},
+        }});
 
         // Offset to image data
         int vox_offset = (int)nhdr.vox_offset;
@@ -183,7 +187,7 @@ namespace nifti {
     bool can_read(const std::string& filename, const char*, size_t)
     {
         // TODO: Signature detection on nifti
-        
+
         int r = is_nifti_file(filename.c_str());
         if (r > 0)
             return true;
@@ -195,10 +199,10 @@ namespace nifti {
     {
         ASSERT(vol.valid());
         ASSERT(vol.voxel_type() != Type_Unknown);
-        
+
         // NIFTI-1
 
-        nifti_1_header nhdr = {0};
+        nifti_1_header nhdr = {};
         nhdr.sizeof_hdr = sizeof(nhdr);
         nhdr.dim_info = 0;
 
@@ -263,18 +267,6 @@ namespace nifti {
 
         nhdr.slice_start = 0; // TODO: [nifti] Handle image meta data
 
-        float qfac = -1.0f;
-        nhdr.pixdim[0] = qfac; // TODO: [nifti] Handle image meta data
-
-        float3 spacing = vol.spacing();
-        nhdr.pixdim[1] = spacing.x;
-        nhdr.pixdim[2] = spacing.y;
-        nhdr.pixdim[3] = spacing.z;
-        nhdr.pixdim[4] = 1.0f;
-        nhdr.pixdim[5] = 1.0f;
-        nhdr.pixdim[6] = 1.0f;
-        nhdr.pixdim[7] = 1.0f;
-
         nhdr.vox_offset = sizeof(nhdr); // TODO: [nifti] Handle image meta data
 
         nhdr.scl_slope = 1.0f; // TODO: [nifti] Handle slope/inter
@@ -295,39 +287,51 @@ namespace nifti {
         // Only supported modes for now
         nhdr.qform_code = NIFTI_XFORM_SCANNER_ANAT;
         nhdr.sform_code = NIFTI_XFORM_UNKNOWN;
-        
-        // Set according to method 2 (nifti1.h)
-         
-        float3 origin = vol.origin();
 
-        mat44 mat = nifti_make_orthog_mat44(-1, 0, 0,
-                                            0, 1, 0,
-                                            0, 0, 1);
+        // Set according to method 2 (nifti1.h)
+
+        const Matrix3x3f& d = vol.direction();
+        mat44 mat = nifti_make_orthog_mat44(
+                -d(0, 0), -d(0, 1), -d(0, 2),
+                -d(1, 0), -d(1, 1), -d(1, 2),
+                 d(2, 0),  d(2, 1),  d(2, 2)
+                );
+
+        float3 origin = vol.origin();
 
         mat.m[0][3] = -origin.x;
         mat.m[1][3] = -origin.y;
         mat.m[2][3] = origin.z;
 
-        nifti_mat44_to_quatern(mat, 
+        nifti_mat44_to_quatern(mat,
             &nhdr.quatern_b,
             &nhdr.quatern_c,
             &nhdr.quatern_d,
             &nhdr.qoffset_x,
             &nhdr.qoffset_y,
             &nhdr.qoffset_z,
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr
+            &nhdr.pixdim[1],
+            &nhdr.pixdim[2],
+            &nhdr.pixdim[3],
+            &nhdr.pixdim[0]
         );
+
+        const float3& spacing = vol.spacing();
+        nhdr.pixdim[1] *= spacing.x;
+        nhdr.pixdim[2] *= spacing.y;
+        nhdr.pixdim[3] *= spacing.z;
+        nhdr.pixdim[4] = 1.0f;
+        nhdr.pixdim[5] = 1.0f;
+        nhdr.pixdim[6] = 1.0f;
+        nhdr.pixdim[7] = 1.0f;
 
         // srow_x, srow_y, srow_z (set to all zeros)
         // intent_name
-        
+
         strncpy(nhdr.magic, "n+1", 4); // Nifti1, data in same file as header
 
         znzFile fp = znzopen(filename.c_str(), "wb", nifti_is_gzfile(filename.c_str()));
-        FATAL_IF(znz_isnull(fp)) 
+        FATAL_IF(znz_isnull(fp))
             << "Failed to open file " << filename << " for writing";
 
         // Write header
@@ -352,6 +356,6 @@ namespace nifti {
     {
         return nifti_is_complete_filename(filename.c_str()) > 0;
     }
-    
+
 } // namespace nifti
 } // namespace stk
