@@ -3,6 +3,8 @@
 #include <stk/math/float3.h>
 #include <stk/math/float4.h>
 #include <stk/math/int3.h>
+#include <stk/math/math.h>
+#include <stk/math/matrix3x3f.h>
 
 TEST_CASE("math", "[math]")
 {
@@ -26,7 +28,7 @@ TEST_CASE("math", "[math]")
     REQUIRE(uchar2{1,2} == uchar2{1,2});
     REQUIRE(uchar2{1,2} != uchar2{3,2});
     REQUIRE(uchar2{1,2} != uchar2{1,3});
- 
+
     REQUIRE(uchar3{1,2,3} == uchar3{1,2,3});
     REQUIRE(uchar3{1,2,3} != uchar3{4,2,3});
     REQUIRE(uchar3{1,2,3} != uchar3{1,4,3});
@@ -37,7 +39,7 @@ TEST_CASE("math", "[math]")
     REQUIRE(uchar4{1,2,3,4} != uchar4{1,5,3,4});
     REQUIRE(uchar4{1,2,3,4} != uchar4{1,2,5,4});
     REQUIRE(uchar4{1,2,3,4} != uchar4{1,2,3,5});
-    
+
     // short
     REQUIRE(short2{1,2} == short2{1,2});
     REQUIRE(short2{1,2} != short2{3,2});
@@ -79,7 +81,7 @@ TEST_CASE("math", "[math]")
     REQUIRE(int3{1,2,3} != int3{4,2,3});
     REQUIRE(int3{1,2,3} != int3{1,4,3});
     REQUIRE(int3{1,2,3} != int3{1,2,4});
-    
+
     REQUIRE(int4{1,2,3,4} == int4{1,2,3,4});
     REQUIRE(int4{1,2,3,4} != int4{5,2,3,4});
     REQUIRE(int4{1,2,3,4} != int4{1,5,3,4});
@@ -95,7 +97,7 @@ TEST_CASE("math", "[math]")
     REQUIRE(uint3{1,2,3} != uint3{4,2,3});
     REQUIRE(uint3{1,2,3} != uint3{1,4,3});
     REQUIRE(uint3{1,2,3} != uint3{1,2,4});
-    
+
     REQUIRE(uint4{1,2,3,4} == uint4{1,2,3,4});
     REQUIRE(uint4{1,2,3,4} != uint4{5,2,3,4});
     REQUIRE(uint4{1,2,3,4} != uint4{1,5,3,4});
@@ -140,12 +142,12 @@ TEST_CASE("math_float3_op", "[math]")
     REQUIRE(r5.x == Approx(7.7f * 1.1f));
     REQUIRE(r5.y == Approx(7.7f * 2.2f));
     REQUIRE(r5.z == Approx(7.7f * 3.3f));
-    
+
     float3 r6 = v2 / 8.8f;
     REQUIRE(r6.x == Approx(4.4f / 8.8f));
     REQUIRE(r6.y == Approx(5.5f / 8.8f));
     REQUIRE(r6.z == Approx(6.6f / 8.8f));
-    
+
 }
 TEST_CASE("math_float4_op", "[math]")
 {
@@ -183,13 +185,13 @@ TEST_CASE("math_float4_op", "[math]")
     REQUIRE(r5.y == Approx(9.9f * 2.2f));
     REQUIRE(r5.z == Approx(9.9f * 3.3f));
     REQUIRE(r5.w == Approx(9.9f * 4.4f));
-    
+
     float4 r6 = v2 / 10.10f;
     REQUIRE(r6.x == Approx(5.5f / 10.10f));
     REQUIRE(r6.y == Approx(6.6f / 10.10f));
     REQUIRE(r6.z == Approx(7.7f / 10.10f));
     REQUIRE(r6.w == Approx(8.8f / 10.10f));
-    
+
 }
 TEST_CASE("math_int3_op", "[math]")
 {
@@ -228,7 +230,7 @@ TEST_CASE("math_int3_op", "[math]")
     REQUIRE(r6.y == 5/2);
     REQUIRE(r6.z == 6/2);
 }
-TEST_CASE("math_to_string", "[volume]")
+TEST_CASE("math_to_string", "[math]")
 {
     SECTION("char2")
     {
@@ -324,9 +326,104 @@ TEST_CASE("math_to_string", "[volume]")
         s << double4{1.5f, 2.5f, 3.5f, 4.5f};
         REQUIRE(s.str() == "(1.5 2.5 3.5 4.5)");
     }
-
 }
 
 
+TEST_CASE("math_to_vector", "[math]")
+{
+    #define COMMA ,
+    #define TEST_TYPE(type, btype, n, vals) \
+            SECTION(#type) \
+            { \
+                std::vector<btype> v = stk::to_vector(type(vals)); \
+                CHECK(v == std::vector<btype>(vals)); \
+            }
 
+    TEST_TYPE(char2, char, 2, {1 COMMA 2});
+    TEST_TYPE(char3, char, 3, {1 COMMA 2 COMMA 3});
+    TEST_TYPE(char4, char, 4, {1 COMMA 2 COMMA 3 COMMA 4});
 
+    TEST_TYPE(uchar2, unsigned char, 2, {1 COMMA 2});
+    TEST_TYPE(uchar3, unsigned char, 3, {1 COMMA 2 COMMA 3});
+    TEST_TYPE(uchar4, unsigned char, 4, {1 COMMA 2 COMMA 3 COMMA 4});
+
+    TEST_TYPE(int2, int, 2, {1 COMMA 2});
+    TEST_TYPE(int3, int, 3, {1 COMMA 2 COMMA 3});
+    TEST_TYPE(int4, int, 4, {1 COMMA 2 COMMA 3 COMMA 4});
+
+    TEST_TYPE(uint2, unsigned int, 2, {1 COMMA 2});
+    TEST_TYPE(uint3, unsigned int, 3, {1 COMMA 2 COMMA 3});
+    TEST_TYPE(uint4, unsigned int, 4, {1 COMMA 2 COMMA 3 COMMA 4});
+
+    TEST_TYPE(float2, float, 2, {1 COMMA 2});
+    TEST_TYPE(float3, float, 3, {1 COMMA 2 COMMA 3});
+    TEST_TYPE(float4, float, 4, {1 COMMA 2 COMMA 3 COMMA 4});
+
+    TEST_TYPE(double2, double, 2, {1 COMMA 2});
+    TEST_TYPE(double3, double, 3, {1 COMMA 2 COMMA 3});
+    TEST_TYPE(double4, double, 4, {1 COMMA 2 COMMA 3 COMMA 4});
+
+    #undef TEST_TYPE
+    #undef COMMA
+
+    SECTION("Matrix3x3f")
+    {
+        Matrix3x3f m = {{
+            {1, 2, 3},
+            {4, 5, 6},
+            {7, 8, 9},
+        }};
+
+        std::vector<float> v = stk::to_vector(m);
+
+        CHECK(v == std::vector<float>({1, 2, 3, 4, 5, 6, 7, 8, 9}));
+    }
+}
+
+TEST_CASE("math_nonzero", "[math]")
+{
+    CHECK(!stk::nonzero(char2{0, 0}));
+    CHECK( stk::nonzero(char2{0, 1}));
+    CHECK(!stk::nonzero(char3{0, 0, 0}));
+    CHECK( stk::nonzero(char3{0, 1, 0}));
+    CHECK(!stk::nonzero(char4{0, 0, 0, 0}));
+    CHECK( stk::nonzero(char4{0, 0, 1, 0}));
+
+    CHECK(!stk::nonzero(uchar2{0, 0}));
+    CHECK( stk::nonzero(uchar2{0, 1}));
+    CHECK(!stk::nonzero(uchar3{0, 0, 0}));
+    CHECK( stk::nonzero(uchar3{0, 1, 0}));
+    CHECK(!stk::nonzero(uchar4{0, 0, 0, 0}));
+    CHECK( stk::nonzero(uchar4{0, 0, 1, 0}));
+
+    CHECK(!stk::nonzero(int2{0, 0}));
+    CHECK( stk::nonzero(int2{0, 1}));
+    CHECK(!stk::nonzero(int3{0, 0, 0}));
+    CHECK( stk::nonzero(int3{0, 1, 0}));
+    CHECK(!stk::nonzero(int4{0, 0, 0, 0}));
+    CHECK( stk::nonzero(int4{0, 0, 1, 0}));
+
+    CHECK(!stk::nonzero(uint2{0, 0}));
+    CHECK( stk::nonzero(uint2{0, 1}));
+    CHECK(!stk::nonzero(uint3{0, 0, 0}));
+    CHECK( stk::nonzero(uint3{0, 1, 0}));
+    CHECK(!stk::nonzero(uint4{0, 0, 0, 0}));
+    CHECK( stk::nonzero(uint4{0, 0, 1, 0}));
+
+    const float e = stk::eps() / 2;
+    const float f = stk::eps() * 2;
+
+    CHECK(!stk::nonzero(float2{e, e}));
+    CHECK( stk::nonzero(float2{f, e}));
+    CHECK(!stk::nonzero(float3{e, e, e}));
+    CHECK( stk::nonzero(float3{e, f, f}));
+    CHECK(!stk::nonzero(float4{e, e, e, e}));
+    CHECK( stk::nonzero(float4{e, e, f, e}));
+
+    CHECK(!stk::nonzero(double2{e, e}));
+    CHECK( stk::nonzero(double2{f, e}));
+    CHECK(!stk::nonzero(double3{e, e, e}));
+    CHECK( stk::nonzero(double3{e, f, f}));
+    CHECK(!stk::nonzero(double4{e, e, e, e}));
+    CHECK( stk::nonzero(double4{e, e, f, e}));
+}

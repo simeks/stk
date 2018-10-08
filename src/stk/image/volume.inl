@@ -1,3 +1,5 @@
+#pragma once
+
 namespace {
 
 /*!
@@ -47,7 +49,7 @@ VolumeHelper<T>::VolumeHelper(const dim3& size, T* value) :
 }
 template<typename T>
 VolumeHelper<T>::VolumeHelper(
-    const VolumeHelper<T>& other, 
+    const VolumeHelper<T>& other,
     const Range& x,
     const Range& y,
     const Range& z) : Volume(other, x, y, z)
@@ -332,6 +334,18 @@ inline float VolumeHelper<float>::linear_at(float x, float y, float z, BorderMod
 template<typename T>
 T VolumeHelper<T>::linear_at(float3 p, BorderMode border_mode) const
 {
+    return linear_at(p.x, p.y, p.z, border_mode);
+}
+template<typename T>
+inline T VolumeHelper<T>::linear_at_point(float x, float y, float z, BorderMode border_mode) const
+{
+    const float3 p = point2index(float3({x, y, z}));
+    return linear_at(p.x, p.y, p.z, border_mode);
+}
+template<typename T>
+T VolumeHelper<T>::linear_at_point(float3 p, BorderMode border_mode) const
+{
+    p = point2index(p);
     return linear_at(p.x, p.y, p.z, border_mode);
 }
 template<typename T>

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stk/common/assert.h>
 #include <stk/common/platform.h>
 
 #include <algorithm>
@@ -131,50 +132,87 @@ struct STK_ALIGN(16) double4
 #endif // STK_USE_CUDA
 
 
-template<typename T, unsigned int rows_, unsigned int cols_>
-struct matrix
+struct Matrix3x3f
 {
-    T _data[rows_][cols_];
+    static constexpr unsigned int rows = 3;
+    static constexpr unsigned int cols = 3;
 
-    static constexpr unsigned int rows = rows_;
-    static constexpr unsigned int cols = cols_;
+    float3 _rows[rows];
 
-    T* operator[](const unsigned int i) {
-        return _data[i];
+    float3& operator[](const unsigned int i) {
+        return _rows[i];
     }
 
-    const T* operator[](const unsigned int i) const {
-        return _data[i];
+    const float3& operator[](const unsigned int i) const {
+        return _rows[i];
     }
 
-    T& operator()(const unsigned int r, const unsigned int c) {
-        return _data[r][c];
+    const float3 column(const unsigned i) const {
+        ASSERT(i < cols);
+        return float3({(*this)(0, i), (*this)(1, i), (*this)(2, i)});
     }
 
-    const T& operator()(const unsigned int r, const unsigned int c) const {
-        return _data[r][c];
+    const float& operator()(const unsigned int r, const unsigned int c) const {
+        ASSERT(c < cols && r < rows);
+        return *(reinterpret_cast<const float*>(_rows + r) + c);
     }
 
-    T* data(void) {
-        &_data[0][0];
+    float& operator()(const unsigned int r, const unsigned int c) {
+        return const_cast<float&>(static_cast<const Matrix3x3f*>(this)->operator()(r, c));
     }
 
-    const T* data(void) const {
-        &_data[0][0];
+    float* data(void) {
+        return reinterpret_cast<float*>(&_rows[0]);
     }
 
-    void diagonal(const std::initializer_list<T> d) {
-        ASSERT(d.size() == std::min(rows_, cols_));
-        std::fill(&_data[0][0], &_data[0][0] + rows_ * cols_, T(0));
+    const float* data(void) const {
+        return reinterpret_cast<const float*>(&_rows[0]);
+    }
+
+    void set(const float *data) {
+        std::copy(data, data + rows*cols, (float*) _rows);
+    }
+
+    void set(const std::initializer_list<float> data) {
+        std::copy(data.begin(), data.end(), (float*) _rows);
+    }
+
+    void diagonal(const std::initializer_list<float> d) {
+        ASSERT(d.size() == std::min(rows, cols));
+        std::fill(data(), data() + rows * cols, float(0));
         int i = 0;
         for (const auto& x : d) {
-            _data[i][i] = x;
+            (*this)(i, i) = x;
             i++;
         }
     }
-};
 
-using Matrix3x3f = matrix<float, 3, 3>;
+    float determinant(void) const {
+        return (*this)(0, 0) * ((*this)(1, 1) * (*this)(2, 2) - (*this)(1, 2) * (*this)(2, 1)) -
+               (*this)(0, 1) * ((*this)(1, 0) * (*this)(2, 2) - (*this)(1, 2) * (*this)(2, 0)) +
+               (*this)(0, 2) * ((*this)(1, 0) * (*this)(2, 1) - (*this)(1, 1) * (*this)(2, 0));
+    }
+
+    Matrix3x3f inverse(void) const {
+        const float det = determinant();
+        if (std::abs(det) < std::numeric_limits<float>::epsilon()) {
+            FATAL() << "The matrix is not invertible";
+        }
+        // NOTE: we cannot assume that the direction matrix is orthogonal
+        const float inv_det = 1.0 / det;
+        Matrix3x3f res;
+        res(0, 0) = inv_det * ((*this)(1, 1) * (*this)(2, 2) - (*this)(1, 2) * (*this)(2, 1));
+        res(0, 1) = inv_det * ((*this)(0, 2) * (*this)(2, 1) - (*this)(0, 1) * (*this)(2, 2));
+        res(0, 2) = inv_det * ((*this)(0, 1) * (*this)(1, 2) - (*this)(0, 2) * (*this)(1, 1));
+        res(1, 0) = inv_det * ((*this)(1, 2) * (*this)(2, 0) - (*this)(1, 0) * (*this)(2, 2));
+        res(1, 1) = inv_det * ((*this)(0, 0) * (*this)(2, 2) - (*this)(0, 2) * (*this)(2, 0));
+        res(1, 2) = inv_det * ((*this)(0, 2) * (*this)(1, 0) - (*this)(0, 0) * (*this)(1, 2));
+        res(2, 0) = inv_det * ((*this)(1, 0) * (*this)(2, 1) - (*this)(1, 1) * (*this)(2, 0));
+        res(2, 1) = inv_det * ((*this)(0, 1) * (*this)(2, 0) - (*this)(0, 0) * (*this)(2, 1));
+        res(2, 2) = inv_det * ((*this)(0, 0) * (*this)(1, 1) - (*this)(0, 1) * (*this)(1, 0));
+        return res;
+    }
+};
 
 
 // char
@@ -483,3 +521,12 @@ inline std::ostream& operator<<(std::ostream& s, const double4& v)
     s << '(' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ')';
     return s;
 }
+
+inline std::ostream& operator<<(std::ostream& s, const Matrix3x3f& m)
+{
+    s << '(' << m(0, 0) << ' ' << m(0, 1) << ' ' << m(0, 2) << " ; "
+             << m(1, 0) << ' ' << m(1, 1) << ' ' << m(1, 2) << " ; "
+             << m(2, 0) << ' ' << m(2, 1) << ' ' << m(2, 2) << ')';
+    return s;
+}
+

@@ -67,7 +67,11 @@ inline CUDA_HOST_DEVICE float2& operator+=(float2& l, const float2& r)
 {
     l.x += r.x;
     l.y += r.y;
-    return l; 
+    return l;
+}
+inline CUDA_HOST_DEVICE float dot(float2 l, float2 r)
+{
+    return l.x * r.x + l.y * r.y;
 }
 
 

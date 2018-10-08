@@ -1,9 +1,9 @@
 namespace stk
 {
     template<typename T>
-    VolumeHelper<T> normalize(const VolumeHelper<T>& src, 
-                              T min, 
-                              T max, 
+    VolumeHelper<T> normalize(const VolumeHelper<T>& src,
+                              T min,
+                              T max,
                               VolumeHelper<T>* out)
     {
         T src_min, src_max;
@@ -18,12 +18,11 @@ namespace stk
         }
         ASSERT(out->size() == dims);
 
-        out->set_origin(src.origin());
-        out->set_spacing(src.spacing());
+        out->copy_meta_from(src);
 
         double range = double(max - min);
         double src_range = double(src_max - src_min);
-        
+
         #pragma omp parallel for
         for (int z = 0; z < int(dims.z); ++z) {
             for (int y = 0; y < int(dims.y); ++y) {

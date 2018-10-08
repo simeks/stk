@@ -39,10 +39,10 @@ namespace nrrd {
 
         uint32_t range_axis_idx[NRRD_DIM_MAX];
         uint32_t range_axis_n = nrrdRangeAxesGet(nimg, range_axis_idx);
-        
+
         // TODO: Vector data should be the fastest axis, otherwise we need to permute
         if (range_axis_n != 0 && range_axis_idx[0] != 0) {
-            LOG(Error) << "Failed to load '" << filename 
+            LOG(Error) << "Failed to load '" << filename
                        << "': Vector data not fastest axis in memory, data requires permutation.";
             nrrdNuke(nimg);
             return Volume();
@@ -50,7 +50,7 @@ namespace nrrd {
 
         if ((range_axis_n == 0 && nimg->dim != 3) ||
             (range_axis_n > 0 && nimg->dim != 4)) {
-            LOG(Error) << "Failed to load '" << filename 
+            LOG(Error) << "Failed to load '" << filename
                        << "': Only 3D data supported.";
             nrrdNuke(nimg);
             return Volume();
@@ -74,14 +74,14 @@ namespace nrrd {
             };
         }
         else {
-            LOG(Error) << "Failed to load '" << filename 
+            LOG(Error) << "Failed to load '" << filename
                        << "': Unsupported number of axes.";
             nrrdNuke(nimg);
             return Volume();
         }
-        
+
         Type voxel_type = Type_Unknown;
-        
+
         switch (nimg->type) {
         case nrrdTypeChar:
                  if (ncomp == 1) voxel_type = Type_Char;
@@ -134,15 +134,15 @@ namespace nrrd {
         }
 
         if (voxel_type == Type_Unknown) {
-            LOG(Error) << "Failed to load '" << filename 
-                       << "': Unsupported format (nrrd->type=" 
+            LOG(Error) << "Failed to load '" << filename
+                       << "': Unsupported format (nrrd->type="
                        << nimg->type << ", ncomp=" << ncomp << ").";
             nrrdNuke(nimg);
             return Volume();
         }
 
         // Origin
-        float3 origin = {0};
+        float3 origin = {0, 0, 0};
 
         if (nimg->spaceDim) {
             double space_origin[NRRD_SPACE_DIM_MAX];
@@ -161,8 +161,8 @@ namespace nrrd {
                 break;
             }
             origin = {
-                (float)space_origin[0], 
-                (float)space_origin[1], 
+                (float)space_origin[0],
+                (float)space_origin[1],
                 (float)space_origin[2]
             };
         }
@@ -170,8 +170,9 @@ namespace nrrd {
             LOG(Warning) << "nrrd: Could not extract origin from " << filename;
         }
 
-        // Spacing
+        // Spacing and direction
         float spacing[3] = {1, 1, 1};
+        Matrix3x3f direction = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}};
 
         uint32_t domain_axis_idx[NRRD_DIM_MAX];
         uint32_t domain_axis_n = nrrdDomainAxesGet(nimg, domain_axis_idx);
@@ -180,18 +181,51 @@ namespace nrrd {
         for (int i = 0; i < 3; ++i) {
             double spacing_i;
             double spacing_dir[NRRD_SPACE_DIM_MAX];
-            int status = nrrdSpacingCalculate(nimg, domain_axis_idx[i], &spacing_i, 
-                spacing_dir);
+            int status = nrrdSpacingCalculate(nimg, domain_axis_idx[i], &spacing_i, spacing_dir);
 
             switch (status) {
-            case nrrdSpacingStatusUnknown:
+            case nrrdSpacingStatusNone: // There is no spacing or direction information
+            case nrrdSpacingStatusUnknown: // The spacing is invalid
                 LOG(Warning) << "nrrd: Could not extract spacing[" << i << "] from " << filename;
                 break;
+
             case nrrdSpacingStatusScalarNoSpace:
-            case nrrdSpacingStatusScalarWithSpace:
-            case nrrdSpacingStatusDirection:
+                // The spacing is set, the direction is not defined
                 if (AIR_EXISTS(spacing_i)) {
                     spacing[i] = (float)spacing_i;
+                }
+                break;
+
+            case nrrdSpacingStatusScalarWithSpace:
+                // The spacing is set, the direction is defined but it is missing for this axis
+                LOG(Warning) << "nrrd: Could not extract direction[" << i << "] from " << filename;
+                if (AIR_EXISTS(spacing_i)) {
+                    spacing[i] = (float)spacing_i;
+                }
+                break;
+
+            case nrrdSpacingStatusDirection:
+                // Both spacing and direction are present
+                // The call returned the spacing and a unit direction vector
+                if (AIR_EXISTS(spacing_i)) {
+                    spacing[i] = (float)spacing_i;
+                }
+                if (AIR_EXISTS(spacing_dir[0]) &&
+                    AIR_EXISTS(spacing_dir[1]) &&
+                    AIR_EXISTS(spacing_dir[2]))
+                {
+                    switch (nimg->space) {
+                    case nrrdSpaceRightAnteriorSuperior:
+                        spacing_dir[0] = -spacing_dir[0];
+                        spacing_dir[1] = -spacing_dir[1];
+                        break;
+                    case nrrdSpaceLeftAnteriorSuperior:
+                        spacing_dir[0] = -spacing_dir[0];
+                        break;
+                    }
+                    direction(0, i) = spacing_dir[0];
+                    direction(1, i) = spacing_dir[1];
+                    direction(2, i) = spacing_dir[2];
                 }
                 break;
             }
@@ -200,8 +234,57 @@ namespace nrrd {
         Volume vol(size, voxel_type);
         vol.set_origin(origin);
         vol.set_spacing({spacing[0], spacing[1], spacing[2]});
+        vol.set_direction(direction);
 
         memcpy(vol.ptr(), nimg->data, nrrdElementSize(nimg) * nrrdElementNumber(nimg));
+
+        // Measurement frame
+        if(ncomp == 3 && AIR_EXISTS(nimg->measurementFrame[0][0])) {
+            auto const f = nimg->measurementFrame;
+
+            // NOTE: nrrd stores the frame as column-major
+            Matrix3x3f frame = {{
+                {float(f[0][0]), float(f[1][0]), float(f[2][0])},
+                {float(f[0][1]), float(f[1][1]), float(f[2][1])},
+                {float(f[0][2]), float(f[1][2]), float(f[2][2])},
+            }};
+
+            // Convert from measurement frame to world coordinates
+            // FIXME: truncation errors for non-float types
+            #define FRAME_CONVERSION(type, btype) \
+                { \
+                    const int count = int(vol.size().x * vol.size().y * vol.size().z); \
+                    type *p = reinterpret_cast<type*>(vol.ptr()); \
+                    for (int i = 0; i < count; ++i) { \
+                        float3 v = frame * float3({ float(p->x), float(p->y), float(p->z) }); \
+                        *p = type({ btype(v.x), btype(v.y), btype(v.z) }); \
+                        ++p; \
+                    } \
+                }
+
+            switch (voxel_type) {
+            case stk::Type_Char3:   FRAME_CONVERSION(char3,   char);   break;
+            case stk::Type_UChar3:  FRAME_CONVERSION(char3,   char);   break;
+            case stk::Type_Short3:  FRAME_CONVERSION(short3,  short);  break;
+            case stk::Type_UShort3: FRAME_CONVERSION(short3,  short);  break;
+            case stk::Type_Int3:    FRAME_CONVERSION(int3,    int);    break;
+            case stk::Type_UInt3:   FRAME_CONVERSION(int3,    int);    break;
+            case stk::Type_Float3:  FRAME_CONVERSION(float3,  float);  break;
+            case stk::Type_Double3: FRAME_CONVERSION(double3, double); break;
+            default:
+                LOG(Warning) << "nrrd: Non-unitary frame for unsupported data type in " << filename;
+                break;
+            }
+        }
+
+        // Key-Value pairs (metadata)
+        for (unsigned int k = 0; k < nrrdKeyValueSize(nimg); ++k) {
+            char *key, *value;
+            nrrdKeyValueIndex(nimg, &key, &value, k);
+            vol.set_metadata(std::string(key), std::string(value));
+            free(key);
+            free(value);
+        }
 
         // nrrd allocated memory for the volume data itself, therefore we need to use nuke
         nrrdNuke(nimg);
@@ -301,16 +384,24 @@ namespace nrrd {
         kind[base+2] = nrrdKindDomain;
         nrrdAxisInfoSet_nva(nimg, nrrdAxisInfoKind, kind);
 
-        space_dir[base][0] = vol.spacing().x;
-        space_dir[base][1] = space_dir[base][2] = 0;
-        
-        space_dir[base+1][1] = vol.spacing().y;
-        space_dir[base+1][0] = space_dir[base+1][2] = 0;
+        space_dir[base  ][0] = vol.direction()(0, 0) * vol.spacing().x;
+        space_dir[base  ][1] = vol.direction()(1, 0) * vol.spacing().x;
+        space_dir[base  ][2] = vol.direction()(2, 0) * vol.spacing().x;
 
-        space_dir[base+2][2] = vol.spacing().z;
-        space_dir[base+2][0] = space_dir[base+2][1] = 0;
+        space_dir[base+1][0] = vol.direction()(0, 1) * vol.spacing().y;
+        space_dir[base+1][1] = vol.direction()(1, 1) * vol.spacing().y;
+        space_dir[base+1][2] = vol.direction()(2, 1) * vol.spacing().y;
+
+        space_dir[base+2][0] = vol.direction()(0, 2) * vol.spacing().z;
+        space_dir[base+2][1] = vol.direction()(1, 2) * vol.spacing().z;
+        space_dir[base+2][2] = vol.direction()(2, 2) * vol.spacing().z;
 
         nrrdAxisInfoSet_nva(nimg, nrrdAxisInfoSpaceDirection, space_dir);
+
+        // Key-Value pairs (metadata)
+        for (auto const& k : vol.get_metadata_keys()) {
+            nrrdKeyValueAdd(nimg, k.c_str(), vol.get_metadata(k).c_str());
+        }
 
         NrrdIoState *nio = nrrdIoStateNew();
 
@@ -343,8 +434,8 @@ namespace nrrd {
             return false;
 
         std::string ext = filename.substr(p+1); // Skip '.'
-        
-        for (size_t i = 0; i < ext.length(); ++i) 
+
+        for (size_t i = 0; i < ext.length(); ++i)
             ext[i] = (char)::tolower(ext[i]);
 
         return ext == "nrrd";

@@ -10,9 +10,9 @@ namespace stk
     //  has the same dimensions as 'src'. If not, a new volume is allocated.
     template<typename T>
     VolumeHelper<T> normalize(
-        const VolumeHelper<T>& src, 
-        T min, 
-        T max, 
+        const VolumeHelper<T>& src,
+        T min,
+        T max,
         VolumeHelper<T>* out=nullptr
     );
 }

@@ -44,7 +44,7 @@ namespace stk
     {
     public:
         GpuVolume();
-        
+
         // @remark This does not copy the data, use clone if you want a separate copy.
         GpuVolume(const GpuVolume& other);
         // @remark This does not copy the data, use clone if you want a separate copy.
@@ -55,16 +55,16 @@ namespace stk
         //      void kernel(ptr) { x = ptr[0]; }
         //  or a texture, where you'll have to bind it before using it, i.e.
         //      void kernel(ptr) { x = tex3D(vol, px, py, pz); }
-        GpuVolume(const dim3& size, Type voxel_type, 
+        GpuVolume(const dim3& size, Type voxel_type,
             gpu::Usage usage = gpu::Usage_PitchedPointer);
-        
+
         // Creates a new reference to a region within an existing volume
         // There's a chance that the resulting volume does not contain contiguous memory when
         //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
         // @remark This does not copy the data, use clone if you want a separate copy.
         GpuVolume(const GpuVolume& other, const Range& x, const Range& y, const Range& z);
         ~GpuVolume();
-        
+
         // Allocates volume memory for a volume with specified parameters
         // Will release any previously allocated memory.
         void allocate(const dim3& size, Type voxel_type,
@@ -75,17 +75,17 @@ namespace stk
 
         // Clones this volume, creating a new volume with same content, type, and usage
         GpuVolume clone() const;
-        
+
         // Clones this volume, creating a new volume with same content, type, and usage
         //  (non-blocking). The returned object will hold the allocated memory, but the
         //  data within it is not ready until the stream has completed the copying.
         GpuVolume clone(const cuda::Stream& stream) const;
-        
+
         // Clones this volume, creating a new volume with same content and type
         // usage : Specifies usage for the new volume
         GpuVolume clone_as(gpu::Usage usage) const;
 
-        // Clones this volume, creating a new volume with same content and type 
+        // Clones this volume, creating a new volume with same content and type
         //  (non-blocking). The returned object will hold the allocated memory, but the
         //  data within it is not ready until the stream has completed the copying.
         // usage : Specifies usage for the new volume
@@ -109,9 +109,13 @@ namespace stk
 
         void set_origin(const float3& origin);
         void set_spacing(const float3& spacing);
+        void set_direction(const Matrix3x3f& direction);
+        void set_direction(const std::initializer_list<float> direction);
 
         const float3& origin() const;
         const float3& spacing() const;
+        const Matrix3x3f& direction() const;
+        const Matrix3x3f& inverse_direction() const;
 
         // Copies meta data (origin, spacing, ...) from the provided volume.
         void copy_meta_from(const GpuVolume& other);
@@ -129,8 +133,8 @@ namespace stk
         // (non-blocking). The constructor will allocate the backing memory and
         //  invoke the data transfer but the data will not be ready for use until
         //  the provided stream has completed.
-        GpuVolume(const Volume& vol, 
-                  const cuda::Stream& stream, 
+        GpuVolume(const Volume& vol,
+                  const cuda::Stream& stream,
                   gpu::Usage usage = gpu::Usage_PitchedPointer);
 
         // Downloads this volume to a new volume
@@ -140,7 +144,7 @@ namespace stk
         // Downloads this volume to a new volume (non-blocking).
         // Returned volume will contain allocated memory, but the data is not ready
         //  until the transfer within the stream has completed.
-        // GpuVolume::download(Volume&) is prefered for async transfers, it also 
+        // GpuVolume::download(Volume&) is prefered for async transfers, it also
         //  provides the possibility for page-locked memory within volumes.
         // @return Handle to newly created volume
         Volume download(const cuda::Stream& stream) const;
@@ -192,6 +196,8 @@ namespace stk
         dim3 _size;
         float3 _origin;
         float3 _spacing;
+        Matrix3x3f _direction;
+        Matrix3x3f _inverse_direction;
 
         cudaPitchedPtr _ptr; // For pitched pointer usage only
     };
