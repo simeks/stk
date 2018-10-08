@@ -127,41 +127,35 @@ T VolumeHelper<T>::at(int3 p, BorderMode border_mode) const
 template<typename T>
 inline T VolumeHelper<T>::linear_at(float x, float y, float z, BorderMode border_mode) const
 {
-    // PERF: 15% faster than ceilf/floorf
-    #define FAST_CEIL(x_) ((int)x_ + (x_ > (int)x_))
+    // Floor
+    int x1 = int(x);
+    int y1 = int(y);
+    int z1 = int(z);
 
-    // We expect all indices to be positive therefore a regular cast should suffice
-    #define FAST_FLOOR(x_) int(x_)
+    // Ceil
+    int x2 = std::min<int>(x1+1, int(_size.x-1));
+    int y2 = std::min<int>(y1+1, int(_size.y-1));
+    int z2 = std::min<int>(z1+1, int(_size.z-1));
 
-    if (border_mode == Border_Constant)
-    {
-        if (x < 0 || FAST_CEIL(x) >= int(_size.x) ||
-            y < 0 || FAST_CEIL(y) >= int(_size.y) ||
-            z < 0 || FAST_CEIL(z) >= int(_size.z))
-        {
+    if (border_mode == Border_Constant) {
+        if (x < 0 || x1 >= int(_size.x) ||
+            y < 0 || y1 >= int(_size.y) ||
+            z < 0 || z1 >= int(_size.z)) {
             return T{0};
         }
     }
-    else if (border_mode == Border_Replicate)
-    {
-        x = std::max(x, 0.0f);
-        x = std::min(x, float(_size.x - 1));
-        y = std::max(y, 0.0f);
-        y = std::min(y, float(_size.y - 1));
-        z = std::max(z, 0.0f);
-        z = std::min(z, float(_size.z - 1));
+    else if (border_mode == Border_Replicate) {
+        x = std::max(x1, 0);
+        x = std::min(x1, int(_size.x - 1));
+        y = std::max(y1, 0);
+        y = std::min(y1, int(_size.y - 1));
+        z = std::max(z1, 0);
+        z = std::min(z1, int(_size.z - 1));
     }
 
-    float xt = x - FAST_FLOOR(x);
-    float yt = y - FAST_FLOOR(y);
-    float zt = z - FAST_FLOOR(z);
-
-    int x1 = int(FAST_FLOOR(x));
-    int x2 = int(FAST_CEIL(x));
-    int y1 = int(FAST_FLOOR(y));
-    int y2 = int(FAST_CEIL(y));
-    int z1 = int(FAST_FLOOR(z));
-    int z2 = int(FAST_CEIL(z));
+    float xt = x - x1;
+    float yt = y - y1;
+    float zt = z - z1;
 
     return T(
         (1 - zt) *
@@ -193,9 +187,6 @@ inline T VolumeHelper<T>::linear_at(float x, float y, float z, BorderMode border
                 )
             )
         );
-
-    #undef FAST_CEIL
-    #undef FAST_FLOOR
 }
 
 template<typename T>
