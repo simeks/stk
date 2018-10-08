@@ -223,9 +223,9 @@ namespace nrrd {
                         spacing_dir[0] = -spacing_dir[0];
                         break;
                     }
-                    direction(0, i) = spacing_dir[0];
-                    direction(1, i) = spacing_dir[1];
-                    direction(2, i) = spacing_dir[2];
+                    direction(0, i) = (float)spacing_dir[0];
+                    direction(1, i) = (float)spacing_dir[1];
+                    direction(2, i) = (float)spacing_dir[2];
                 }
                 break;
             }

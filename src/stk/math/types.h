@@ -199,7 +199,7 @@ struct Matrix3x3f
             FATAL() << "The matrix is not invertible";
         }
         // NOTE: we cannot assume that the direction matrix is orthogonal
-        const float inv_det = 1.0 / det;
+        const float inv_det = 1.0f / det;
         Matrix3x3f res;
         res(0, 0) = inv_det * ((*this)(1, 1) * (*this)(2, 2) - (*this)(1, 2) * (*this)(2, 1));
         res(0, 1) = inv_det * ((*this)(0, 2) * (*this)(2, 1) - (*this)(0, 1) * (*this)(2, 2));
