@@ -197,41 +197,41 @@ TEST_CASE("volume_coordinate_conversion", "[volume]")
     stk::Volume vol = stk::Volume({1, 1, 1}, stk::Type_Float);
 
     // Random numbers
-    vol.set_origin({0.11450715, 0.69838153, 0.46470744});
-    vol.set_spacing({0.51708509, 0.93414316, 0.38919406});
+    vol.set_origin({0.11450715f, 0.69838153f, 0.46470744f});
+    vol.set_spacing({0.51708509f, 0.93414316f, 0.38919406f});
     vol.set_direction({
-        0.49132562, 0.8060089 , 0.12580945,
-        0.25510848, 0.96823085, 0.42032331,
-        0.20022329, 0.44585017, 0.70957238,
+        0.49132562f, 0.8060089f , 0.12580945f,
+        0.25510848f, 0.96823085f, 0.42032331f,
+        0.20022329f, 0.44585017f, 0.70957238f,
     });
 
-    float3 point = vol.index2point(float3({10.4, 12.7, 17.1}));
+    float3 point = vol.index2point(float3({10.4f, 12.7f, 17.1f}));
 
     // oracle from SimpleITK
-    CHECK(point.x == Approx(13.15617270574316));
-    CHECK(point.y == Approx(16.35433906555294));
-    CHECK(point.z == Approx(11.55320054939331));
+    CHECK(point.x == Approx(13.15617270574316f));
+    CHECK(point.y == Approx(16.35433906555294f));
+    CHECK(point.z == Approx(11.55320054939331f));
 
     point = vol.index2point(int3({10, 12, 17}));
 
     // oracle from SimpleITK
-    CHECK(point.x == Approx(12.522604025121286));
-    CHECK(point.y == Approx(15.65208885738362));
-    CHECK(point.z == Approx(11.192629901994575));
+    CHECK(point.x == Approx(12.522604025121286f));
+    CHECK(point.y == Approx(15.65208885738362f));
+    CHECK(point.z == Approx(11.192629901994575f));
 
-    float3 index = vol.point2index(float3({130.3, -19.2, 55.7}));
+    float3 index = vol.point2index(float3({130.3f, -19.2f, 55.7f}));
 
     // oracle from SimpleITK
-    CHECK(index.x == Approx(1073.011446554096));
-    CHECK(index.y == Approx(-195.14144294668));
-    CHECK(index.z == Approx(92.03969103390264));
+    CHECK(index.x == Approx(1073.011446554096f));
+    CHECK(index.y == Approx(-195.14144294668f));
+    CHECK(index.z == Approx(92.03969103390264f));
 
     index = vol.point2index(int3({130, -19, 55}));
 
     // oracle from SimpleITK
-    CHECK(index.x == Approx(1068.0339658527405));
-    CHECK(index.y == Approx(-193.67283470127222));
-    CHECK(index.z == Approx(89.15613539524472));
+    CHECK(index.x == Approx(1068.0339658527405f));
+    CHECK(index.y == Approx(-193.67283470127222f));
+    CHECK(index.z == Approx(89.15613539524472f));
 }
 
 TEST_CASE("volume_clone", "[volume]")

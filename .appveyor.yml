@@ -30,8 +30,8 @@ before_build:
 
   - cmd: if "%PLATFORM%"=="x86" set GENERATOR="Visual Studio 15 2017"
   - cmd: if "%PLATFORM%"=="x64" set GENERATOR="Visual Studio 15 2017 Win64"
-  - cmd: cmake .. -DSTK_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G%GENERATOR%
-  - sh: cmake .. -DSTK_BUILD_TESTS=1 -DCMAKE_BUILD_TYPE=$CONFIGURATION -G"Unix Makefiles"
+  - cmd: cmake .. -DSTK_BUILD_TESTS=1 -DSTK_WARNINGS_ARE_ERRORS=1 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G%GENERATOR%
+  - sh: cmake .. -DSTK_BUILD_TESTS=1 -DSTK_WARNINGS_ARE_ERRORS=1 -DCMAKE_BUILD_TYPE=$CONFIGURATION -G"Unix Makefiles"
 
 build_script:
   - cmd: cmake --build . --config %CONFIGURATION%
