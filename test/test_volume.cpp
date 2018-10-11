@@ -127,7 +127,7 @@ TEST_CASE("volume_types", "[volume]")
         { \
             T test_data[W*H*D]; \
             for (uint32_t i = 0; i < W*H*D; ++i) { \
-                test_data[i] = T{0}; \
+                test_data[i] = T{}; \
             } \
             Volume vol({W,H,D}, T_id, test_data); \
             REQUIRE(vol.valid()); \
