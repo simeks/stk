@@ -13,7 +13,7 @@ stk::VolumeHelper<TOutputType> decomposable_filter_3d(
         const stk::BorderMode border_mode
         )
 {
-    stk::VolumeHelper<TOutputType> result(img.size(), TOutputType{0});
+    stk::VolumeHelper<TOutputType> result(img.size(), TOutputType{});
     result.copy_meta_from(img);
 
     const int3 dims = {int(img.size().x), int(img.size().y), int(img.size().z)};
@@ -26,7 +26,7 @@ stk::VolumeHelper<TOutputType> decomposable_filter_3d(
         {
             for (int x = 0; x < dims.x; ++x)
             {
-                TOutputType value{0};
+                TOutputType value{};
                 for (int t = -kernel.x.radius(); t <= kernel.x.radius(); t++)
                 {
                     const TVoxelType v = img.at(x + t, y, z, border_mode);
@@ -47,7 +47,7 @@ stk::VolumeHelper<TOutputType> decomposable_filter_3d(
         {
             for (int y = 0; y < dims.y; ++y)
             {
-                TOutputType value{0};
+                TOutputType value{};
                 for (int t = -kernel.y.radius(); t <= kernel.y.radius(); t++)
                 {
                     const TOutputType v = tmp.at(x, y + t, z, border_mode);
@@ -59,7 +59,7 @@ stk::VolumeHelper<TOutputType> decomposable_filter_3d(
     }
 
     tmp.copy_from(result);
-    
+
     //Z dimension
     #pragma omp parallel for
     for (int x = 0; x < dims.x; ++x)
@@ -68,7 +68,7 @@ stk::VolumeHelper<TOutputType> decomposable_filter_3d(
         {
             for (int z = 0; z < dims.z; ++z)
             {
-                TOutputType value{0};
+                TOutputType value{};
                 for (int t = -kernel.z.radius(); t <= kernel.z.radius(); t++)
                 {
                     const TOutputType v = tmp.at(x, y, z + t, border_mode);

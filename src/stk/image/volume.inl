@@ -89,7 +89,7 @@ T VolumeHelper<T>::at(int x, int y, int z, BorderMode border_mode) const
             y < 0 || FAST_CEIL(y) >= int(_size.y) ||
             z < 0 || FAST_CEIL(z) >= int(_size.z))
         {
-            return T{0};
+            return T{};
         }
     }
     else if (border_mode == Border_Replicate)
@@ -131,7 +131,7 @@ inline T VolumeHelper<T>::linear_at(float x, float y, float z, BorderMode border
         if (x < 0 || int(x) >= int(_size.x) ||
             y < 0 || int(y) >= int(_size.y) ||
             z < 0 || int(z) >= int(_size.z)) {
-            return T{0};
+            return T{};
         }
     }
     else if (border_mode == Border_Replicate) {

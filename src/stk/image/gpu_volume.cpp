@@ -121,7 +121,7 @@ namespace
 
     cudaMemcpy3DParms make_download_params(const GpuVolume& src, const Volume& dst)
     {
-        cudaMemcpy3DParms params = {0};
+        cudaMemcpy3DParms params = {};
 
         // We also assume both volumes have same dimensions
         ASSERT(dst.size() == src.size());
@@ -152,7 +152,7 @@ namespace
 
     cudaMemcpy3DParms make_upload_params(const Volume& src, const GpuVolume& dst)
     {
-        cudaMemcpy3DParms params = {0};
+        cudaMemcpy3DParms params = {};
 
         // We also assume both volumes have same dimensions
         ASSERT(src.size() == dst.size());
@@ -182,7 +182,7 @@ namespace
 
     cudaMemcpy3DParms make_d2d_params(const GpuVolume& src, const GpuVolume& dst)
     {
-        cudaMemcpy3DParms params = {0};
+        cudaMemcpy3DParms params = {};
 
         ASSERT(src.size() == dst.size());
         ASSERT(src.voxel_type() == src.voxel_type());
@@ -269,8 +269,8 @@ GpuVolumeData::GpuVolumeData() :
     usage(gpu::Usage_PitchedPointer),
     array_ptr(nullptr)
 {
-    format_desc = {0};
-    pitched_ptr = {0};
+    format_desc = {};
+    pitched_ptr = {};
 }
 GpuVolumeData::~GpuVolumeData()
 {
@@ -296,7 +296,7 @@ GpuVolume::GpuVolume() :
     _size{0,0,0},
     _origin{0,0,0},
     _spacing{1,1,1},
-    _ptr{0}
+    _ptr{}
 {
     _direction.diagonal({1, 1, 1});
     _inverse_direction.diagonal({1, 1, 1});
@@ -327,7 +327,7 @@ GpuVolume& GpuVolume::operator=(const GpuVolume& other)
 GpuVolume::GpuVolume(const dim3& size, Type voxel_type, gpu::Usage usage) :
     _origin({0,0,0}),
     _spacing({1,1,1}),
-    _ptr({0})
+    _ptr({})
 {
     _direction.diagonal({1, 1, 1});
     _inverse_direction.diagonal({1, 1, 1});
