@@ -2,6 +2,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     string(REPLACE "-Wextra" ""  CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
     string(REPLACE "-Wextra" ""  CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REPLACE "-Wextra" ""  CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
+
+    string(REPLACE "-pedantic" ""  CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    string(REPLACE "-pedantic" ""  CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "-pedantic" ""  CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
 endif()
 
 add_library(Catch INTERFACE)

@@ -79,7 +79,7 @@ TEST_CASE("io", "[io] [volume]")
         IO_TEST_TYPE(ext, double4); \
     }
 
-IO_TEST_EXTENSION(vtk);
-IO_TEST_EXTENSION(nii);
-IO_TEST_EXTENSION(nii.gz);
-IO_TEST_EXTENSION(nrrd);
+IO_TEST_EXTENSION(vtk)
+IO_TEST_EXTENSION(nii)
+IO_TEST_EXTENSION(nii.gz)
+IO_TEST_EXTENSION(nrrd)
