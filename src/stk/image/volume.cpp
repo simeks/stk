@@ -104,7 +104,6 @@ Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range&
     _data(other._data),
     _ptr(other._ptr),
     _voxel_type(other._voxel_type),
-    _origin(other._origin),
     _spacing(other._spacing),
     _direction(other._direction),
     _inverse_direction(other._inverse_direction),
@@ -135,6 +134,12 @@ Volume::Volume(const Volume& other, const Range& x, const Range& y, const Range&
 
     _size = dim3{(uint32_t)nx, (uint32_t)ny, (uint32_t)nz};
     _ptr = ptr;
+
+    _origin = {
+        other._origin.x + _spacing.x * x.begin,
+        other._origin.y + _spacing.y * y.begin,
+        other._origin.z + _spacing.z * z.begin
+    };
 }
 Volume::~Volume()
 {

@@ -754,12 +754,22 @@ TEST_CASE("volume_region", "[volume]")
 
     SECTION("constructor") {
         VolumeInt vol({4, 4, 4}, val);
+        vol.set_origin(float3{10.0f, 20.0f, 30.0f});
+        vol.set_spacing(float3{1.0f, 2.0f, 3.0f});
 
         VolumeInt sub(vol, {1,4}, {1,4}, {1, 4});
         REQUIRE(sub.size().x == 3);
         REQUIRE(sub.size().y == 3);
         REQUIRE(sub.size().z == 3);
         REQUIRE(sub.is_contiguous() == false);
+
+        REQUIRE(sub.origin().x == Approx(11.0f));
+        REQUIRE(sub.origin().y == Approx(22.0f));
+        REQUIRE(sub.origin().z == Approx(33.0f));
+
+        REQUIRE(sub.spacing().x == Approx(1.0f));
+        REQUIRE(sub.spacing().y == Approx(2.0f));
+        REQUIRE(sub.spacing().z == Approx(3.0f));
 
         REQUIRE(sub(0,0,0) == 22);
         REQUIRE(sub(1,0,0) == 23);
@@ -776,6 +786,10 @@ TEST_CASE("volume_region", "[volume]")
         REQUIRE(sub2.size().z == 2);
         REQUIRE(sub2.is_contiguous() == false);
 
+        REQUIRE(sub2.origin().x == Approx(12.0f));
+        REQUIRE(sub2.origin().y == Approx(24.0f));
+        REQUIRE(sub2.origin().z == Approx(33.0f));
+
         REQUIRE(sub2(0,0,0) == 27);
         REQUIRE(sub2(0,0,1) == 43);
 
@@ -784,6 +798,10 @@ TEST_CASE("volume_region", "[volume]")
         REQUIRE(sub3.size().y == 3);
         REQUIRE(sub3.size().z == 3);
         REQUIRE(sub3.is_contiguous() == false);
+
+        REQUIRE(sub3.origin().x == Approx(10.0f));
+        REQUIRE(sub3.origin().y == Approx(20.0f));
+        REQUIRE(sub3.origin().z == Approx(30.0f));
 
         REQUIRE(sub3(0,0,0) == 1);
         REQUIRE(sub3(1,0,0) == 2);

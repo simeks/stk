@@ -335,7 +335,6 @@ GpuVolume::GpuVolume(const dim3& size, Type voxel_type, gpu::Usage usage) :
 }
 GpuVolume::GpuVolume(const GpuVolume& other, const Range& x, const Range& y, const Range& z) :
     _data(other._data),
-    _origin(other._origin),
     _spacing(other._spacing),
     _direction(other._direction),
     _inverse_direction(other._inverse_direction),
@@ -370,6 +369,12 @@ GpuVolume::GpuVolume(const GpuVolume& other, const Range& x, const Range& y, con
 
     _size = dim3{(uint32_t)nx, (uint32_t)ny, (uint32_t)nz};
     _ptr = make_cudaPitchedPtr(ptr, _ptr.pitch, _ptr.xsize, _ptr.ysize);
+    
+    _origin = {
+        other._origin.x + _spacing.x * x.begin,
+        other._origin.y + _spacing.y * y.begin,
+        other._origin.z + _spacing.z * z.begin
+    };
 }
 GpuVolume::~GpuVolume()
 {
