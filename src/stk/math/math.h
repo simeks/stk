@@ -12,7 +12,7 @@ namespace stk {
 
 
 // Arbitrary epsilon for floating-point comparisons
-constexpr float eps(void)
+constexpr float eps()
 {
     return 0.0001f;
 }
