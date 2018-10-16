@@ -1,6 +1,9 @@
 #include "error.h"
 #include "log.h"
 
+#ifdef STK_STACK_TRACE
+    #include <backward.hpp>
+#endif
 
 namespace stk
 {
@@ -16,7 +19,7 @@ namespace stk
 #endif // STK_USE_EXCEPTIONS
 
     FatalError::FatalError(const char* file, int line) :
-        _file(file), 
+        _file(file),
         _line(line)
     {
         _s << "Fatal error: ";
@@ -38,6 +41,16 @@ namespace stk
 
         _s << " (" << file << ":" << _line << ")";
 
+    #ifdef STK_STACK_TRACE
+        _s << std::endl;
+        backward::StackTrace st;
+        st.load_here(32);
+        backward::Printer p;
+        p.object = p.address = true;
+        p.color_mode = backward::ColorMode::always;
+        p.print(st, _s);
+    #endif
+
         // We do not use the macro as we want to make sure we have the
         //  file name and line number of the call to FATAL().
         LogMessage(Fatal, _file, _line).stream() << _s.str();
@@ -48,7 +61,7 @@ namespace stk
         //  to already have an active exception, it is probably triggered by another
         //  FATAL()-invocation.
         throw FatalException(_s.str().c_str());
-    #else 
+    #else
         abort();
     #endif
     }

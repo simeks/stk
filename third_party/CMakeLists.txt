@@ -61,3 +61,7 @@ if(NOT NrrdIO_FOUND)
     endif()
 endif()
 
+if(STK_STACK_TRACE)
+    add_subdirectory(backward-cpp)
+endif()
+

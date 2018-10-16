@@ -1,4 +1,4 @@
-set(STK_SRCS 
+set(STK_SRCS
     "stk/common/error.cpp"
     "stk/common/error.h"
     "stk/common/log.cpp"
@@ -55,7 +55,7 @@ endif()
 
 add_library(stk STATIC ${STK_SRCS})
 
-target_include_directories(stk PUBLIC 
+target_include_directories(stk PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     )
@@ -83,3 +83,8 @@ if(STK_ITK_BRIDGE)
     target_link_libraries(stk PRIVATE ${ITK_LIBRARIES})
 endif()
 
+if(STK_STACK_TRACE)
+    add_definitions(-DSTK_STACK_TRACE)
+    add_backward(stk)
+    target_link_libraries(stk PUBLIC ${BACKWARD_LIBRARIES})
+endif()
