@@ -45,7 +45,7 @@ void get_stack_trace(std::ostream& s, const int skip)
 
 #pragma comment ( lib, "dbghelp.lib" )
 
-int get_stack_trace(std::ostream& s, const int skip)
+void get_stack_trace(std::ostream& s, const int skip)
 {
     #define TRACE_MAX_STACK_FRAMES 256
     #define TRACE_MAX_FUNCTION_NAME_LENGTH 256
@@ -81,13 +81,11 @@ int get_stack_trace(std::ostream& s, const int skip)
 
     #undef TRACE_MAX_STACK_FRAMES
     #undef TRACE_MAX_FUNCTION_NAME_LENGTH
-
-    return 0;
 }
 
 # else // defined(__GNUC__) && defined(__linux__)
 
-int get_stack_trace(std::ostream& s, const int skip)
+void get_stack_trace(std::ostream& s, const int skip)
 {
     (void) s;
     (void) skip;
