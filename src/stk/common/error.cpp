@@ -1,9 +1,6 @@
 #include "error.h"
 #include "log.h"
-
-#ifdef STK_STACK_TRACE
-    #include <backward.hpp>
-#endif
+#include "stack_trace.h"
 
 namespace stk
 {
@@ -42,13 +39,7 @@ namespace stk
         _s << " (" << file << ":" << _line << ")";
 
     #ifdef STK_STACK_TRACE
-        _s << std::endl;
-        backward::StackTrace st;
-        st.load_here(32);
-        backward::Printer p;
-        p.object = p.address = true;
-        p.color_mode = backward::ColorMode::always;
-        p.print(st, _s);
+        get_stack_trace(_s, 1);
     #endif
 
         // We do not use the macro as we want to make sure we have the

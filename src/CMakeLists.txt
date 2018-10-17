@@ -85,6 +85,14 @@ endif()
 
 if(STK_STACK_TRACE)
     add_definitions(-DSTK_STACK_TRACE)
-    add_backward(stk)
-    target_link_libraries(stk PUBLIC ${BACKWARD_LIBRARIES})
+
+	if(UNIX)
+		find_package(Backward)
+		if(Backward_FOUND)
+			add_backward(stk)
+			target_link_libraries(stk PUBLIC ${BACKWARD_LIBRARIES})
+			add_definitions(-DSTK_USE_BACKWARD)
+		endif()
+	endif()
 endif()
+
