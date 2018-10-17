@@ -3,6 +3,8 @@ set(STK_SRCS
     "stk/common/error.h"
     "stk/common/log.cpp"
     "stk/common/log.h"
+    "stk/common/stack_trace.cpp"
+    "stk/common/stack_trace.h"
     "stk/cuda/volume.h"
     "stk/filters/decomposable_filter.h"
     "stk/filters/decomposable_filter.inl"

@@ -39,7 +39,7 @@ namespace stk
         _s << " (" << file << ":" << _line << ")";
 
     #ifdef STK_STACK_TRACE
-        get_stack_trace(_s, 1);
+        get_stack_trace(_s << std::endl, 1);
     #endif
 
         // We do not use the macro as we want to make sure we have the
