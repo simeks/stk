@@ -85,5 +85,13 @@ int get_stack_trace(std::ostream& s, const int skip)
     return 0;
 }
 
+# else // defined(__GNUC__) && defined(__linux__)
+
+int get_stack_trace(std::ostream& s, const int skip)
+{
+    (void) s;
+    (void) skip;
+}
+
 #endif // defined(__GNUC__) && defined(__linux__)
 
