@@ -8,6 +8,12 @@ option(STK_BUILD_WITH_DEBUG_INFO "Includes debug info in release builds" OFF)
 option(STK_ENABLE_FAST_MATH "Enables fast math" OFF)
 option(STK_LOGGING_PREFIX_FILE "Add file name as prefix to each log message" OFF)
 option(STK_ITK_BRIDGE "Bridge library to interoperate with ITK" OFF)
+option(STK_STACK_TRACE "Print a stack trace on errors" OFF)
+
+# The stack trace is of little use without symbols
+if(STK_STACK_TRACE)
+	set(STK_BUILD_WITH_DEBUG_INFO ON)
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Setting default build type: 'Release'")
