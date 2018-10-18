@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <iostream>
 #include <mutex>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -29,6 +30,8 @@ namespace
         virtual void flush() {}
 
         virtual Type type() const = 0;
+
+        stk::LogLevel level() { return _level; }
 
     protected:
         stk::LogLevel _level;
@@ -234,6 +237,7 @@ namespace stk
     {
     #ifdef STK_LOGGING_PREFIX_LEVEL
         const char* level_to_str[Num_LogLevel] = {
+            "DBG",
             "INF",
             "WAR",
             "ERR",
@@ -361,5 +365,43 @@ namespace stk
                                           static_cast<StreamSink*>(s)->stream() == os; }
                     )
                 );
+    }
+    LogLevel log_level()
+    {
+        if (!_logger_data) {
+            return LogLevel::Num_LogLevel;
+        }
+        return std::accumulate(
+                _logger_data->sinks.begin(),
+                _logger_data->sinks.end(),
+                LogLevel::Num_LogLevel,
+                [](LogLevel a, Sink *b) { return std::min(a, b->level()); }
+                );
+    }
+    LogLevel log_level_from_str(const std::string& s)
+    {
+        if (s == "Debug") {
+            return LogLevel::Debug;
+        }
+        else if (s == "Info") {
+            return LogLevel::Info;
+        }
+        else if (s == "Warning") {
+            return LogLevel::Warning;
+        }
+        else if (s == "Error") {
+            return LogLevel::Error;
+        }
+        else if (s == "Fatal") {
+            return LogLevel::Fatal;
+        }
+        return LogLevel::Info;
+    }
+    LogLevel log_level_from_str(const char * const s)
+    {
+        if (!s) {
+            return LogLevel::Info;
+        }
+        return log_level_from_str(std::string(s));
     }
 }
