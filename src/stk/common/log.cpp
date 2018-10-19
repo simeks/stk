@@ -237,7 +237,7 @@ namespace stk
     {
     #ifdef STK_LOGGING_PREFIX_LEVEL
         const char* level_to_str[Num_LogLevel] = {
-            "DBG",
+            "VER",
             "INF",
             "WAR",
             "ERR",
@@ -369,7 +369,7 @@ namespace stk
     LogLevel log_level()
     {
         if (!_logger_data) {
-            return LogLevel::Num_LogLevel;
+            return LogLevel::Info;
         }
         return std::accumulate(
                 _logger_data->sinks.begin(),
@@ -380,8 +380,8 @@ namespace stk
     }
     LogLevel log_level_from_str(const std::string& s)
     {
-        if (s == "Debug") {
-            return LogLevel::Debug;
+        if (s == "Verbose") {
+            return LogLevel::Verbose;
         }
         else if (s == "Info") {
             return LogLevel::Info;
@@ -395,12 +395,12 @@ namespace stk
         else if (s == "Fatal") {
             return LogLevel::Fatal;
         }
-        return LogLevel::Info;
+        throw std::runtime_error(("Unrecognised log level '" + s + "'").c_str());
     }
     LogLevel log_level_from_str(const char * const s)
     {
         if (!s) {
-            return LogLevel::Info;
+            throw std::runtime_error("Invalid log level");
         }
         return log_level_from_str(std::string(s));
     }

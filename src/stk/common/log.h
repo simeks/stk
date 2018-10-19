@@ -49,7 +49,7 @@ namespace stk
 {
     enum LogLevel
     {
-        Debug,
+        Verbose,
         Info,
         Warning,
         Error,
@@ -136,10 +136,12 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
 }
 
 #if STK_LOGGING_PREFIX_FILE
-    #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::level, __FILE__, __LINE__).stream()
+    #define _STK_LOG(level) stk::LogFinisher() & stk::LogMessage(stk::level, __FILE__, __LINE__).stream()
 #else
-    #define LOG(level) stk::LogFinisher() & stk::LogMessage(stk::level).stream()
+    #define _STK_LOG(level) stk::LogFinisher() & stk::LogMessage(stk::level).stream()
 #endif
+
+#define LOG(level) (stk::level < stk::log_level()) ? (void)0 : _STK_LOG(level)
 
 #ifdef NDEBUG
     #define DLOG(level) stk::NullStream()
@@ -148,8 +150,4 @@ stk::LogMessage& operator<<(stk::LogMessage& s, const T& v)
 #endif
 
 #define LOG_IF(level, expr) !(expr) ? (void)0 : LOG(level)
-
-// Evaluate the expression to be logged lazily, only if there is at least
-// one sink that will consume it.
-#define LOG_LAZY(level, expr) if (stk::level >= stk::log_level()) { LOG(level) << expr; }
 
