@@ -21,12 +21,14 @@ namespace stk
         struct VolumePtr
         {
             VolumePtr(const GpuVolume& vol) :
-                ptr((T*)vol.pitched_ptr().ptr),
-                pitch(vol.pitched_ptr().pitch),
-                ysize(vol.pitched_ptr().ysize)
+                ptr(vol.valid() ? (T*)vol.pitched_ptr().ptr : nullptr),
+                pitch(vol.valid() ? vol.pitched_ptr().pitch : 0),
+                ysize(vol.valid() ? vol.pitched_ptr().ysize : 0)
             {
-                ASSERT(vol.voxel_type() == type_id<T>::id());
-                ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
+                if (vol.valid()) {
+                    ASSERT(vol.voxel_type() == type_id<T>::id());
+                    ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
+                }
             }
 
             __device__ T& operator()(int x, int y, int z)
@@ -38,16 +40,9 @@ namespace stk
                 return ((T*)(((uint8_t*)ptr) + (y * pitch + z * pitch * ysize)))[x];
             }
 
-            static VolumePtr null_ptr() {
-                return VolumePtr{};
-            }
-
             T* ptr;
             size_t pitch;
             size_t ysize;
-
-        protected:
-            VolumePtr() : ptr {nullptr}, pitch {0}, ysize {0} {}
         };
 
 #ifdef __CUDACC__
