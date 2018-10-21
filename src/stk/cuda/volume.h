@@ -20,17 +20,19 @@ namespace stk
         template<typename T>
         struct VolumePtr
         {
-            VolumePtr(const GpuVolume& vol) : 
-                ptr((T*)vol.pitched_ptr().ptr),
-                pitch(vol.pitched_ptr().pitch),
-                ysize(vol.pitched_ptr().ysize)
+            VolumePtr(const GpuVolume& vol) :
+                ptr(vol.valid() ? (T*)vol.pitched_ptr().ptr : nullptr),
+                pitch(vol.valid() ? vol.pitched_ptr().pitch : 0),
+                ysize(vol.valid() ? vol.pitched_ptr().ysize : 0)
             {
-                ASSERT(vol.voxel_type() == type_id<T>::id());
-                ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
+                if (vol.valid()) {
+                    ASSERT(vol.voxel_type() == type_id<T>::id());
+                    ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
+                }
             }
 
             __device__ T& operator()(int x, int y, int z)
-            { 
+            {
                 return ((T*)(((uint8_t*)ptr) + (y * pitch + z * pitch * ysize)))[x];
             }
             __device__ const T& operator()(int x, int y, int z) const
@@ -45,7 +47,7 @@ namespace stk
 
 #ifdef __CUDACC__
         template<typename T>
-        __device__ T linear_at_border(const VolumePtr<T>& vol, const dim3& dims, 
+        __device__ T linear_at_border(const VolumePtr<T>& vol, const dim3& dims,
                                       float x, float y, float z)
         {
             int x1 = int(x);
@@ -111,7 +113,7 @@ namespace stk
             );
         }
         template<typename T>
-        __device__ T linear_at_clamp(const VolumePtr<T>& vol, const dim3& dims, 
+        __device__ T linear_at_clamp(const VolumePtr<T>& vol, const dim3& dims,
                                      float x, float y, float z)
         {
             // Clamp
