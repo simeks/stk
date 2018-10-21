@@ -34,7 +34,8 @@
 //
 //  log_shutdown() cleans up data allocated by the system and closes all open log files.
 //
-// There are 4 severity levels:
+// There are 5 severity levels:
+//  * Verbose
 //  * Info
 //  * Warning
 //  * Error

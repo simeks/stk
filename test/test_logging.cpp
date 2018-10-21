@@ -28,6 +28,7 @@ TEST_CASE("logging_basic", "[logging]")
 {
     stk::log_init();
 
+    LOG(Info) << "Verbose " << 0;
     LOG(Info) << "Info " << 1;
     LOG(Warning) << "Warning " << 1.0;
     LOG(Error) << "Error " << 'a';
@@ -44,6 +45,11 @@ TEST_CASE("logging_callback", "[logging]")
 
     LogData data = { -1, "" };
     stk::log_add_callback(log_callback, &data, stk::Fatal);
+
+    // Should not trigger callback, since Verbose < Fatal
+    LOG(Verbose) << "Verbose";
+    REQUIRE(data.last_level == -1);
+    REQUIRE(data.last_msg == "");
 
     // Should not trigger callback, since Info < Fatal
     LOG(Info) << "Info";
@@ -69,6 +75,10 @@ TEST_CASE("logging_callback", "[logging]")
     stk::log_remove_callback(log_callback, &data);
 
     // No logging should trigger the callback since it has been removed
+    LOG(Verbose) << "Verbose";
+    REQUIRE(data.last_level == -1);
+    REQUIRE(data.last_msg == "");
+
     LOG(Info) << "Info";
     REQUIRE(data.last_level == -1);
     REQUIRE(data.last_msg == "");
@@ -86,9 +96,13 @@ TEST_CASE("logging_callback", "[logging]")
     REQUIRE(data.last_msg == "");
 
     data = { -1, "" };
-    stk::log_add_callback(log_callback, &data, stk::Info);
+    stk::log_add_callback(log_callback, &data, stk::Verbose);
 
     // Should trigger for all messages
+    LOG(Verbose) << "Verbose";
+    REQUIRE(data.last_level == stk::Verbose);
+    REQUIRE_THAT(data.last_msg, Contains("Verbose"));
+
     LOG(Info) << "Info";
     REQUIRE(data.last_level == stk::Info);
     REQUIRE_THAT(data.last_msg, Contains("Info"));
@@ -150,6 +164,7 @@ TEST_CASE("logging_file", "[logging]")
     {
         stk::log_add_file("test_logging_file_1.txt", stk::Fatal);
 
+        LOG(Verbose) << "Verbose";
         LOG(Info) << "Info";
         LOG(Warning) << "Warning";
         LOG(Error) << "Error";
@@ -176,8 +191,9 @@ TEST_CASE("logging_file", "[logging]")
     // Test 2, all levels
     SECTION("all levels")
     {
-        stk::log_add_file("test_logging_file_2.txt", stk::Info);
+        stk::log_add_file("test_logging_file_2.txt", stk::Verbose);
 
+        LOG(Verbose) << "Verbose";
         LOG(Info) << "Info";
         LOG(Warning) << "Warning";
         LOG(Error) << "Error";
@@ -190,6 +206,16 @@ TEST_CASE("logging_file", "[logging]")
         std::ifstream fs("test_logging_file_2.txt");
 
         std::string line;
+
+        REQUIRE(std::getline(fs, line));
+        #ifdef STK_LOGGING_PREFIX_LEVEL
+            REQUIRE_THAT(line, StartsWith("VER")); // From prefix
+        #endif
+        #ifdef STK_LOGGING_PREFIX_FILE
+            REQUIRE_THAT(line, Contains("test_logging.cpp")); // From prefix
+        #endif
+        REQUIRE_THAT(line, Contains("Verbose"));
+
         REQUIRE(std::getline(fs, line));
         #ifdef STK_LOGGING_PREFIX_LEVEL
             REQUIRE_THAT(line, StartsWith("INF")); // From prefix
@@ -242,6 +268,7 @@ TEST_CASE("logging_stream", "[logging]")
         std::stringstream ss;
         stk::log_add_stream(&ss, stk::Fatal);
 
+        LOG(Verbose) << "Verbose";
         LOG(Info) << "Info";
         LOG(Warning) << "Warning";
         LOG(Error) << "Error";
@@ -266,8 +293,9 @@ TEST_CASE("logging_stream", "[logging]")
     SECTION("all levels")
     {
         std::stringstream ss;
-        stk::log_add_stream(&ss, stk::Info);
+        stk::log_add_stream(&ss, stk::Verbose);
 
+        LOG(Verbose) << "Verbose";
         LOG(Info) << "Info";
         LOG(Warning) << "Warning";
         LOG(Error) << "Error";
@@ -277,6 +305,16 @@ TEST_CASE("logging_stream", "[logging]")
         stk::log_remove_stream(&ss);
 
         std::string line;
+
+        REQUIRE(std::getline(ss, line));
+        #ifdef STK_LOGGING_PREFIX_LEVEL
+            REQUIRE_THAT(line, StartsWith("VER")); // From prefix
+        #endif
+        #ifdef STK_LOGGING_PREFIX_FILE
+            REQUIRE_THAT(line, Contains("test_logging.cpp")); // From prefix
+        #endif
+        REQUIRE_THAT(line, Contains("Verbose"));
+
         REQUIRE(std::getline(ss, line));
         #ifdef STK_LOGGING_PREFIX_LEVEL
             REQUIRE_THAT(line, StartsWith("INF")); // From prefix
@@ -326,8 +364,12 @@ TEST_CASE("logging_file_and_callback", "[logging]")
     stk::log_init();
 
     LogData data = { -1, "" };
-    stk::log_add_callback(log_callback, &data, stk::Info);
-    stk::log_add_file("test_logging_file_3.txt", stk::Info);
+    stk::log_add_callback(log_callback, &data, stk::Verbose);
+    stk::log_add_file("test_logging_file_3.txt", stk::Verbose);
+
+    LOG(Verbose) << "Verbose";
+    REQUIRE(data.last_level == stk::Verbose);
+    REQUIRE_THAT(data.last_msg, Contains("Verbose"));
 
     LOG(Info) << "Info";
     REQUIRE(data.last_level == stk::Info);
@@ -348,6 +390,8 @@ TEST_CASE("logging_file_and_callback", "[logging]")
     std::ifstream fs("test_logging_file_3.txt");
 
     std::string line;
+    REQUIRE(std::getline(fs, line));
+    REQUIRE_THAT(line, Contains("Verbose"));
     REQUIRE(std::getline(fs, line));
     REQUIRE_THAT(line, Contains("Info"));
     REQUIRE(std::getline(fs, line));
