@@ -372,9 +372,11 @@ namespace stk
     }
     LogLevel log_level()
     {
-        if (!_logger_data) {
+        // Default value when no sink is registered
+        if (!_logger_data || _logger_data->sinks.size() == 0) {
             return LogLevel::Info;
         }
+        // Minimum value among the registered sinks
         return std::accumulate(
                 _logger_data->sinks.begin(),
                 _logger_data->sinks.end(),
