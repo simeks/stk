@@ -197,7 +197,7 @@ namespace
             }
         }
     }
-}
+} // namespace
 
 namespace stk
 {
@@ -278,6 +278,10 @@ namespace stk
     }
     void log_shutdown()
     {
+        if (!_logger_data) {
+            return;
+        }
+
         for (auto& s : _logger_data->sinks) {
             delete s;
         }
