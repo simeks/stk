@@ -18,9 +18,28 @@ void get_stack_trace(std::ostream& s, const int skip)
 #elif  defined(__GNUC__) && defined(__linux__)
 
 // Linux-only, relying on GNU extensions
+#include <cxxabi.h>
 #include <execinfo.h>
-#include <unistd.h>
+#include <regex>
 #include <stdlib.h>
+#include <unistd.h>
+
+std::string demangle(const std::string& symbol)
+{
+    int status;
+    char* demangled = abi::__cxa_demangle(symbol.c_str(), NULL, NULL, &status);
+
+    std::string result;
+    if (0 == status && NULL != demangled) {
+        result = std::string(demangled);
+        free(demangled);
+    }
+    else {
+        result = symbol;
+    }
+
+    return result;
+}
 
 void get_stack_trace(std::ostream& s, const int skip)
 {
@@ -28,8 +47,24 @@ void get_stack_trace(std::ostream& s, const int skip)
     void *buffer[BT_BUF_SIZE];
     int bt_len = backtrace(buffer, BT_BUF_SIZE);
     char **bt = backtrace_symbols(buffer, bt_len);
+
+    // object(symbol+offset) [address]
+    std::regex re(R"(([^(]+)\s*\(([^+]+)\+([^)]+)\)\s+\[([^\]]+)\])");
+    std::smatch matches;
+
     for (int i = 1 + skip; i < bt_len; ++i) { // skip current frame
-        s << "# " << i - skip << " " << std::string (bt[i]) << std::endl;
+        s << "# " << bt_len - (i + skip) << "\t";
+
+        const std::string line (bt[i]);
+        if (std::regex_search(line, matches, re)) {
+            s   << "Object \"" << matches[1] << "\", "
+                << "at " << matches[4].str() << " "
+                << "in " << demangle(matches[2]) << " + " << matches[3]
+                << std::endl;
+        }
+        else {
+            s << line << std::endl;
+        }
     }
     free(bt);
     #undef BT_BUF_SIZE
