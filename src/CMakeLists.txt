@@ -26,6 +26,8 @@ set(STK_SRCS
     "stk/math/float2.h"
     "stk/math/float3.h"
     "stk/math/float4.h"
+    "stk/math/math.cpp"
+    "stk/math/math.h"
     "stk/math/types.h"
     "stk/image/dim3.h"
     "stk/image/types.cpp"
