@@ -181,10 +181,6 @@ namespace
 
     void log_write(stk::LogLevel level, const char* msg)
     {
-        if (nullptr == _logger_data || !_logger_data->silent) {
-            std::cerr << msg;
-        }
-
         if (_logger_data) {
             for (auto& s : _logger_data->sinks) {
                 s->write(level, msg);
@@ -373,8 +369,8 @@ namespace stk
     LogLevel log_level()
     {
         // Default value when no sink is registered
-        if (!_logger_data || _logger_data->sinks.size() == 0) {
-            return LogLevel::Info;
+        if (!_logger_data) {
+            return LogLevel::Num_LogLevel;
         }
         // Minimum value among the registered sinks
         return std::accumulate(

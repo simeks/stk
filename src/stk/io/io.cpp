@@ -121,7 +121,7 @@ namespace stk
                 return r;
         }
 
-        LOG(Error) << "No reader found for file " << &filename << ", unsupported format?";
+        LOG(Error) << "No reader found for file " << filename << ", unsupported format?";
 
         return VolumeReader();
     }
@@ -160,7 +160,7 @@ namespace stk
         stk::write_itk_image(vol, filename);
 #else // ifdef STK_ITK_BRIDGE
         VolumeWriter w = find_writer(filename);
-        FATAL_IF(!w.write) << "No writer found for file " << &filename;
+        FATAL_IF(!w.write) << "No writer found for file " << filename;
 
         w.write(filename, vol);
 #endif // ifdef STK_ITK_BRIDGE
