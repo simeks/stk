@@ -20,17 +20,19 @@ namespace stk
         template<typename T>
         struct VolumePtr
         {
-            VolumePtr(const GpuVolume& vol) : 
-                ptr((T*)vol.pitched_ptr().ptr),
-                pitch(vol.pitched_ptr().pitch),
-                ysize(vol.pitched_ptr().ysize)
+            VolumePtr(const GpuVolume& vol) :
+                ptr(vol.valid() ? (T*)vol.pitched_ptr().ptr : nullptr),
+                pitch(vol.valid() ? vol.pitched_ptr().pitch : 0),
+                ysize(vol.valid() ? vol.pitched_ptr().ysize : 0)
             {
-                ASSERT(vol.voxel_type() == type_id<T>::id());
-                ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
+                if (vol.valid()) {
+                    ASSERT(vol.voxel_type() == type_id<T>::id());
+                    ASSERT(vol.usage() == gpu::Usage_PitchedPointer);
+                }
             }
 
             __device__ T& operator()(int x, int y, int z)
-            { 
+            {
                 return ((T*)(((uint8_t*)ptr) + (y * pitch + z * pitch * ysize)))[x];
             }
             __device__ const T& operator()(int x, int y, int z) const
@@ -45,27 +47,27 @@ namespace stk
 
 #ifdef __CUDACC__
         template<typename T>
-        __device__ T linear_at_border(const VolumePtr<T>& vol, const dim3& dims, 
+        __device__ T linear_at_border(const VolumePtr<T>& vol, const dim3& dims,
                                       float x, float y, float z)
         {
-            int x1 = int(floorf(x));
-            int y1 = int(floorf(y));
-            int z1 = int(floorf(z));
+            int x1 = int(x);
+            int y1 = int(y);
+            int z1 = int(z);
 
-            int x2 = int(ceilf(x));
-            int y2 = int(ceilf(y));
-            int z2 = int(ceilf(z));
+            int x2 = min(x1+1, int(dims.x-1));
+            int y2 = min(y1+1, int(dims.y-1));
+            int z2 = min(z1+1, int(dims.z-1));
 
-            if (x1 < 0 || x2 >= int(dims.x) ||
-                y1 < 0 || y2 >= int(dims.y) ||
-                z1 < 0 || z2 >= int(dims.z))
+            if (x1 < 0 || x1 >= int(dims.x) ||
+                y1 < 0 || y1 >= int(dims.y) ||
+                z1 < 0 || z1 >= int(dims.z))
             {
                 return T{0};
             }
 
-            float xt = x - floorf(x);
-            float yt = y - floorf(y);
-            float zt = z - floorf(z);
+            float xt = x - x1;
+            float yt = y - y1;
+            float zt = z - z1;
 
             T s111 = vol(x1, y1, z1);
             T s211 = vol(x2, y1, z1);
@@ -111,25 +113,25 @@ namespace stk
             );
         }
         template<typename T>
-        __device__ T linear_at_clamp(const VolumePtr<T>& vol, const dim3& dims, 
+        __device__ T linear_at_clamp(const VolumePtr<T>& vol, const dim3& dims,
                                      float x, float y, float z)
         {
             // Clamp
             x = max(0.0f, min(x, (float)dims.x-1));
-            y = max(0.0f, min(y, (float)dims.x-1));
-            z = max(0.0f, min(z, (float)dims.x-1));
+            y = max(0.0f, min(y, (float)dims.y-1));
+            z = max(0.0f, min(z, (float)dims.z-1));
 
-            int x1 = int(floorf(x));
-            int y1 = int(floorf(y));
-            int z1 = int(floorf(z));
+            int x1 = int(x);
+            int y1 = int(y);
+            int z1 = int(z);
 
-            int x2 = int(ceilf(x));
-            int y2 = int(ceilf(y));
-            int z2 = int(ceilf(z));
+            int x2 = min(x1+1, int(dims.x-1));
+            int y2 = min(y1+1, int(dims.y-1));
+            int z2 = min(z1+1, int(dims.z-1));
 
-            float xt = x - floorf(x);
-            float yt = y - floorf(y);
-            float zt = z - floorf(z);
+            float xt = x - x1;
+            float yt = y - y1;
+            float zt = z - z1;
 
             T s111 = vol(x1, y1, z1);
             T s211 = vol(x2, y1, z1);

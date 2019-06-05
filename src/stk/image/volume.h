@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stk/common/assert.h>
+#include <stk/math/matrix3x3f.h>
 
 #include "dim3.h"
 #include "types.h"
@@ -16,11 +17,11 @@ namespace stk
     {
         Border_Constant,  // Zero padding outside volume
         Border_Replicate, // Clamp to edge
-        Border_Mirror,    // Mirror 
+        Border_Mirror,    // Mirror
         Border_Cyclic,    // Wrap indices around
     };
 
-    // Flags for allocation of the backing memory for the volumes. Currently only 
+    // Flags for allocation of the backing memory for the volumes. Currently only
     //  with CUDA. These flags allows for more efficient transfer of data between
     //  CPU and GPU. However, use sparingly, as excessive use may degrade system
     //  performance.
@@ -55,7 +56,7 @@ namespace stk
     //  a three-dimensional matrix with a specified element type.
     //
     // Usage:
-    //  Create and allocate memory for a new float volume of size WxHxD: 
+    //  Create and allocate memory for a new float volume of size WxHxD:
     //      Volume vol({W, H, D}, Type_Float);
     //  Or using an already existing object:
     //      vol.allocate({W, H, D}, Type_Float);
@@ -63,7 +64,7 @@ namespace stk
     //  The data is automatically released whenever the data reference count reaches 0
     //  (e.g. the vol object goes out of scope and no other references exists). The release
     //  method can be used to explicitly release the data.
-    //  
+    //
     // Copying the object, either through the assignment operator or copy constructor
     //  will create a new reference to the already existing data and only the header
     //  info is copied. Therefore, multiple volume objects may reference to the same data.
@@ -81,7 +82,7 @@ namespace stk
         //  allocated memory.
         // flags : See Usage
         Volume(const dim3& size, Type voxel_type, const void* data = nullptr, uint32_t flags = 0);
-        
+
         // Creates a new reference to a region within an existing volume
         // There's a chance that the resulting volume does not contain contiguous memory when
         //  created using this constructor. Use ptr() with caution and see `is_contiguous`.
@@ -95,7 +96,7 @@ namespace stk
 
         // Release any allocated data the volume is holding
         // This makes the volume object invalid
-        // Note: 
+        // Note:
         //     Resets spacing and origin
         void release();
 
@@ -132,13 +133,34 @@ namespace stk
         Type voxel_type() const;
         const dim3& size() const;
 
+        // Set and get information about the image space.
+        //  * `origin` is a point in image space, denoting the physical
+        //    location of the voxel with indices (0, 0, 0).
+        //  * `spacing` is the physical distance between samples in the
+        //    orthogonal voxel grid.
+        //  * `direction` is a non-singular matrix representing an
+        //    affine transform that maps from the orthogonal system of the
+        //    voxel grid to the physical space.
+        //
+        //  NOTE: the direction matrix is not necessarily orghogonal and
+        //        its columns may not be unit vectors, implying that the
+        //        actual physical distance between samples can have two
+        //        components, one due to `spacing` and another due to
+        //        the shear component of the direction matrix.
         void set_origin(const float3& origin);
         void set_spacing(const float3& spacing);
         void set_direction(const Matrix3x3f& direction);
+        void set_direction(const std::initializer_list<float> direction);
 
         const float3& origin() const;
         const float3& spacing() const;
         const Matrix3x3f& direction() const;
+
+        // Convert between voxel indices and spatial coordinates
+        const float3 index2point(const float3& index) const;
+        const float3 index2point(const int3& index) const;
+        const float3 point2index(const float3& point) const;
+        const float3 point2index(const int3& point) const;
 
         // Strides for x, y, z
         const size_t* strides() const;
@@ -190,6 +212,7 @@ namespace stk
         float3 _origin; // Origin in world coordinates
         float3 _spacing; // Size of a voxel
         Matrix3x3f _direction; // Cosine directions of the axes
+        Matrix3x3f _inverse_direction;
 
         bool _contiguous;
 
@@ -201,7 +224,7 @@ namespace stk
     {
     public:
         typedef T TVoxelType;
-        
+
         // Creates a null (invalid) volume
         VolumeHelper();
         // Converts the given volume if the voxel type does not match
@@ -227,19 +250,24 @@ namespace stk
         // Fills the volume with the specified value
         void fill(const T& value);
 
-        // Returns value at 
+        // Returns value at
         T at(int x, int y, int z, BorderMode border_mode) const;
         T at(int3 p, BorderMode border_mode) const;
 
+        // Indices in the voxel grid
         T linear_at(float x, float y, float z, BorderMode border_mode) const;
         T linear_at(float3 p, BorderMode border_mode) const;
+
+        // Point coordinates in image space
+        T linear_at_point(float x, float y, float z, BorderMode border_mode) const;
+        T linear_at_point(float3 p, BorderMode border_mode) const;
 
         VolumeHelper& operator=(const VolumeHelper& other);
         VolumeHelper& operator=(const Volume& other);
 
         const T& operator()(int x, int y, int z) const;
         T& operator()(int x, int y, int z);
-        
+
         const T& operator()(const int3& p) const;
         T& operator()(const int3& p);
 
@@ -255,7 +283,7 @@ namespace stk
     };
 
     // Finds the minimum and maximum values in a scalar volume.
-    // Does not work for multi-channel volumes. 
+    // Does not work for multi-channel volumes.
     template<typename T>
     void find_min_max(const VolumeHelper<T>& vol, T& min, T& max);
 

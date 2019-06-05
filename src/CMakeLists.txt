@@ -1,15 +1,20 @@
-set(STK_SRCS 
+set(STK_SRCS
     "stk/common/error.cpp"
     "stk/common/error.h"
     "stk/common/log.cpp"
     "stk/common/log.h"
+    "stk/common/stack_trace.cpp"
+    "stk/common/stack_trace.h"
     "stk/cuda/volume.h"
     "stk/filters/decomposable_filter.h"
     "stk/filters/decomposable_filter.inl"
     "stk/filters/gaussian_filter.cpp"
     "stk/filters/gaussian_filter.h"
+    "stk/filters/map.h"
     "stk/filters/sobel.cpp"
     "stk/filters/sobel.h"
+    "stk/filters/vector_calculus.h"
+    "stk/filters/vector_calculus.inl"
     "stk/io/io.cpp"
     "stk/io/io.h"
     "stk/io/nifti.cpp"
@@ -21,6 +26,8 @@ set(STK_SRCS
     "stk/math/float2.h"
     "stk/math/float3.h"
     "stk/math/float4.h"
+    "stk/math/math.cpp"
+    "stk/math/math.h"
     "stk/math/types.h"
     "stk/image/dim3.h"
     "stk/image/types.cpp"
@@ -55,7 +62,7 @@ endif()
 
 add_library(stk STATIC ${STK_SRCS})
 
-target_include_directories(stk PUBLIC 
+target_include_directories(stk PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     )
@@ -81,5 +88,18 @@ if(STK_ITK_BRIDGE)
 
     target_include_directories(stk PRIVATE ${ITK_INCLUDE_DIRS})
     target_link_libraries(stk PRIVATE ${ITK_LIBRARIES})
+endif()
+
+if(STK_STACK_TRACE)
+    add_definitions(-DSTK_STACK_TRACE)
+
+    if(UNIX)
+        find_package(Backward)
+        if(Backward_FOUND)
+            add_backward(stk)
+            target_link_libraries(stk PUBLIC ${BACKWARD_LIBRARIES})
+            add_definitions(-DSTK_USE_BACKWARD)
+        endif()
+    endif()
 endif()
 

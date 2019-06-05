@@ -825,10 +825,20 @@ TEST_CASE("gpu_volume_region", "[volume]")
     SECTION("constructor") {
         VolumeInt vol({4, 4, 4}, val);
         GpuVolume gpu_vol(vol);
+        gpu_vol.set_origin(float3{10.0f, 20.0f, 30.0f});
+        gpu_vol.set_spacing(float3{1.0f, 2.0f, 3.0f});
         GpuVolume gpu_sub = gpu_vol({1,4}, {1,4}, {1,4});
         REQUIRE(gpu_sub.size().x == 3);
         REQUIRE(gpu_sub.size().y == 3);
         REQUIRE(gpu_sub.size().z == 3);
+
+        REQUIRE(gpu_sub.origin().x == Approx(11.0f));
+        REQUIRE(gpu_sub.origin().y == Approx(22.0f));
+        REQUIRE(gpu_sub.origin().z == Approx(33.0f));
+
+        REQUIRE(gpu_sub.spacing().x == Approx(1.0f));
+        REQUIRE(gpu_sub.spacing().y == Approx(2.0f));
+        REQUIRE(gpu_sub.spacing().z == Approx(3.0f));
 
         {
             VolumeInt sub = gpu_sub.download();
@@ -847,6 +857,10 @@ TEST_CASE("gpu_volume_region", "[volume]")
         REQUIRE(gpu_sub2.size().y == 1);
         REQUIRE(gpu_sub2.size().z == 2);
 
+        REQUIRE(gpu_sub2.origin().x == Approx(12.0f));
+        REQUIRE(gpu_sub2.origin().y == Approx(24.0f));
+        REQUIRE(gpu_sub2.origin().z == Approx(33.0f));
+
         {
             VolumeInt sub = gpu_sub2.download();
             REQUIRE(sub(0,0,0) == 27);
@@ -857,6 +871,10 @@ TEST_CASE("gpu_volume_region", "[volume]")
         REQUIRE(gpu_sub3.size().x == 3);
         REQUIRE(gpu_sub3.size().y == 3);
         REQUIRE(gpu_sub3.size().z == 3);
+
+        REQUIRE(gpu_sub3.origin().x == Approx(10.0f));
+        REQUIRE(gpu_sub3.origin().y == Approx(20.0f));
+        REQUIRE(gpu_sub3.origin().z == Approx(30.0f));
 
         {
             VolumeInt sub = gpu_sub3.download();

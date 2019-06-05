@@ -15,7 +15,8 @@ namespace stk {
 template<typename TPixelType>
 stk::Type itk2stk_type(void)
 {
-    return stk::type_id<typename itk::PixelTraits<TPixelType>::ValueType>::id();
+    return stk::build_type(stk::type_id<typename itk::PixelTraits<TPixelType>::ValueType>::id(),
+                           itk::PixelTraits<TPixelType>::Dimension);
 }
 
 

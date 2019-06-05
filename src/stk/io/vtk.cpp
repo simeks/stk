@@ -153,7 +153,7 @@ namespace vtk {
         }
 
         std::string line;
-        
+
         //# vtk DataFile Version 3.0
         std::getline(f, line);
         //<Title>
@@ -175,8 +175,9 @@ namespace vtk {
             return Volume();
         }
 
-        dim3 size{ 0, 0, 0 };
-        float3 origin{0};
+        // Note: VTK images are axis-aligned, so no direction here
+        dim3 size{0, 0, 0};
+        float3 origin{0, 0, 0};
         float3 spacing{1, 1, 1};
 
         // Hopefully we wont have files as large as 2^64
@@ -188,7 +189,7 @@ namespace vtk {
         std::string value;
         while (std::getline(f, line)) {
             std::stringstream ss(line);
-            
+
             ss >> key;
             //DIMENSIONS 256 256 740
             if (key == "DIMENSIONS") {
@@ -219,12 +220,12 @@ namespace vtk {
             //SCALARS image_data double
             else if (key == "SCALARS") {
                 // SCALARS dataName dataType numComp
-                // Here i think numComp is optional 
+                // Here i think numComp is optional
 
                 ss >> value; // dataName, don't know what this is good for
                 std::string data_type;
                 ss >> data_type;
-                
+
                 if (!ss.eof()) {
                     std::string num_comp_s;
                     ss >> num_comp_s;
@@ -247,7 +248,7 @@ namespace vtk {
                 ss >> value; // dataName, don't know what this is good for
                 std::string data_type;
                 ss >> data_type;
-                
+
                 num_comp = 3;
                 voxel_type = vtk_string_to_type(data_type, 3);
 
@@ -305,7 +306,7 @@ namespace vtk {
             byteswap_32((uint32_t*)vol.ptr(), num_values);
         if (bytes_per_elem == 2) // short
             byteswap_16((uint16_t*)vol.ptr(), num_values);
-        
+
         // We don't need to do anything for 1 byte elements
 
         return vol;
@@ -315,9 +316,9 @@ namespace vtk {
     {
         std::stringstream ss;
         Volume vol = read_vtk_volume(filename, ss);
-        
+
         LOG_IF(Error, !vol.valid()) << ss.str();
-        
+
         return vol;
     }
 
@@ -428,8 +429,8 @@ namespace vtk {
             return false;
 
         std::string ext = filename.substr(p+1); // Skip '.'
-        
-        for (size_t i = 0; i < ext.length(); ++i) 
+
+        for (size_t i = 0; i < ext.length(); ++i)
             ext[i] = (char)::tolower(ext[i]);
 
         return ext == "vtk";

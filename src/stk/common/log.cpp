@@ -1,5 +1,6 @@
 #include "log.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <ctime>
@@ -7,6 +8,7 @@
 #include <iomanip>
 #include <iostream>
 #include <mutex>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -19,7 +21,7 @@ namespace
     class Sink
     {
     public:
-        enum Type { Type_FileSink, Type_CallbackSink };
+        enum Type { Type_FileSink, Type_CallbackSink, Type_StreamSink };
 
         Sink(stk::LogLevel level) : _level(level) {}
         virtual ~Sink() {};
@@ -28,6 +30,8 @@ namespace
         virtual void flush() {}
 
         virtual Type type() const = 0;
+
+        stk::LogLevel level() { return _level; }
 
     protected:
         stk::LogLevel _level;
@@ -82,7 +86,7 @@ namespace
         {
             return Type_FileSink;
         }
-        
+
     private:
         std::mutex _lock;
         std::ofstream _fs;
@@ -125,17 +129,58 @@ namespace
         void* _user_data;
     };
 
+    class StreamSink : public Sink
+    {
+    public:
+        StreamSink(std::ostream *os, stk::LogLevel level)
+            : Sink(level)
+            , _os(os)
+        {
+        }
+        virtual ~StreamSink()
+        {
+            flush();
+        }
+        void write(stk::LogLevel level, const char* msg)
+        {
+            std::lock_guard<std::mutex> guard(_lock);
+
+            if(level >= _level) {
+                _os->write(msg, strlen(msg));
+            }
+        }
+        void flush()
+        {
+            std::lock_guard<std::mutex> guard(_lock);
+            _os->flush();
+        }
+
+        std::ostream* stream(void)
+        {
+            return _os;
+        }
+
+        Type type() const
+        {
+            return Type_StreamSink;
+        }
+
+    private:
+        std::mutex _lock;
+        std::ostream *_os;
+        std::string _file;
+    };
+
     struct LoggerData
     {
         std::vector<Sink*> sinks;
+        bool silent = false;
     };
 
     LoggerData* _logger_data = nullptr;
 
     void log_write(stk::LogLevel level, const char* msg)
     {
-        std::cerr << msg;
-
         if (_logger_data) {
             for (auto& s : _logger_data->sinks) {
                 s->write(level, msg);
@@ -148,7 +193,7 @@ namespace
             }
         }
     }
-}
+} // namespace
 
 namespace stk
 {
@@ -188,10 +233,11 @@ namespace stk
     {
     #ifdef STK_LOGGING_PREFIX_LEVEL
         const char* level_to_str[Num_LogLevel] = {
+            "VER",
             "INF",
             "WAR",
             "ERR",
-            "FAT", 
+            "FAT",
         };
         _s << level_to_str[level] << " ";
     #endif
@@ -221,16 +267,21 @@ namespace stk
         _s << "| ";
     }
 
-    void log_init()
+    void log_init(const bool silent)
     {
         _logger_data = new LoggerData();
+        _logger_data->silent = silent;
     }
     void log_shutdown()
     {
+        if (!_logger_data) {
+            return;
+        }
+
         for (auto& s : _logger_data->sinks) {
             delete s;
         }
-        
+
         delete _logger_data;
         _logger_data = nullptr;
     }
@@ -289,5 +340,70 @@ namespace stk
                 return;
             }
         }
+    }
+    void log_add_stream(std::ostream * const os, LogLevel level)
+    {
+        if (!_logger_data) {
+            return; // TODO: Assert!
+        }
+
+        StreamSink* sink = new StreamSink(os, level);
+
+        _logger_data->sinks.push_back(sink);
+    }
+    void log_remove_stream(std::ostream * const os)
+    {
+        if (!_logger_data) {
+            return; // TODO: Assert!
+        }
+
+        _logger_data->sinks.erase(
+                std::remove_if(
+                    _logger_data->sinks.begin(),
+                    _logger_data->sinks.end(),
+                    [&](Sink* s) { return s->type() == Sink::Type_StreamSink &&
+                                          static_cast<StreamSink*>(s)->stream() == os; }
+                    )
+                );
+    }
+    LogLevel log_level()
+    {
+        // Default value when no sink is registered
+        if (!_logger_data) {
+            return LogLevel::Num_LogLevel;
+        }
+        // Minimum value among the registered sinks
+        return std::accumulate(
+                _logger_data->sinks.begin(),
+                _logger_data->sinks.end(),
+                LogLevel::Num_LogLevel,
+                [](LogLevel a, Sink *b) { return std::min(a, b->level()); }
+                );
+    }
+    LogLevel log_level_from_str(const std::string& s)
+    {
+        if (s == "Verbose") {
+            return LogLevel::Verbose;
+        }
+        else if (s == "Info") {
+            return LogLevel::Info;
+        }
+        else if (s == "Warning") {
+            return LogLevel::Warning;
+        }
+        else if (s == "Error") {
+            return LogLevel::Error;
+        }
+        else if (s == "Fatal") {
+            return LogLevel::Fatal;
+        }
+        throw std::runtime_error(("Unrecognised log level '" + s + "'").c_str());
+    }
+    LogLevel log_level_from_str(const char * const s)
+    {
+        if (!s) {
+            throw std::runtime_error("Invalid log level");
+        }
+        return log_level_from_str(std::string(s));
     }
 }

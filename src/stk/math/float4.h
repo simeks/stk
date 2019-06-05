@@ -41,7 +41,11 @@ inline CUDA_HOST_DEVICE float4& operator+=(float4& l, const float4& r)
     l.y += r.y;
     l.z += r.z;
     l.w += r.w;
-    return l; 
+    return l;
+}
+inline CUDA_HOST_DEVICE float dot(float4 l, float4 r)
+{
+    return l.x * r.x + l.y * r.y + l.z * r.z + l.w * r.w;
 }
 
 

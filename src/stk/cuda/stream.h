@@ -4,6 +4,9 @@
 
 #include "cuda.h"
 
+#include <functional>
+#include <memory>
+
 namespace stk
 {
     namespace cuda
@@ -44,17 +47,16 @@ namespace stk
         class Stream
         {
         public:
-            typedef void (*Callback)(cudaStream_t stream, cudaError_t status, void* user_data);
+            typedef std::function<void(Stream, int)> Callback;
 
             Stream();
-            Stream(cudaStream_t stream);
             ~Stream();
 
             // Adds a callback to the stream. Added callbacks will be executed
             //  only once.
             // Read CUDA docs (cudaStreamAddCallback) for an in-depth description
             //  on the behaviour and restrictions of stream callbacks.
-            void add_callback(Callback cb, void* user_data);
+            void add_callback(Callback cb);
 
             // Queries the stream for completion status
             // Returns true if all tasks in the stream are completed
@@ -72,11 +74,11 @@ namespace stk
             static Stream& null();
 
         private:
-            Stream(const Stream&);
-            Stream& operator=(const Stream&);
+            struct Internal;
 
-            bool _destroy;
-            cudaStream_t _stream; 
+            Stream(std::shared_ptr<Internal> impl);
+
+            std::shared_ptr<Internal> _impl;
         };
         
     }

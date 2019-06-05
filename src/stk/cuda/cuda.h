@@ -38,12 +38,12 @@ namespace stk
             TextureObject(const TextureObject&);
             TextureObject& operator=(const TextureObject&);
 
-            cudaTextureObject_t _obj; 
+            cudaTextureObject_t _obj;
 
             // Keep a reference to the volume to make sure it won't get destroyed
             GpuVolume _vol;
         };
-        
+
         // Wrapper around cudaSurfaceObject_t, will automatically destroy
         //  the object when going out of scope.
         class SurfaceObject
@@ -59,7 +59,7 @@ namespace stk
             SurfaceObject& operator=(const SurfaceObject&);
 
             cudaSurfaceObject_t _obj;
-            
+
             // Keep a reference to the volume to make sure it won't get destroyed
             GpuVolume _vol;
         };
