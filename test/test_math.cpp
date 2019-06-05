@@ -111,6 +111,14 @@ TEST_CASE("math_float3_norm", "[math]")
     REQUIRE(stk::norm(v) == Approx(std::sqrt(1.0f*1.0f + 2.0f*2.0f + 3.0f*3.0f)));
     REQUIRE(stk::norm2(v) == Approx(1.0f*1.0f + 2.0f*2.0f + 3.0f*3.0f));
 }
+
+TEST_CASE("math_float4_norm", "[math]")
+{
+    float4 v{1,2,3,4};
+    REQUIRE(stk::norm(v) == Approx(std::sqrt(1.0f*1.0f + 2.0f*2.0f + 3.0f*3.0f + 4.0f*4.0f)));
+    REQUIRE(stk::norm2(v) == Approx(1.0f*1.0f + 2.0f*2.0f + 3.0f*3.0f + 4.0f*4.0f));
+}
+
 TEST_CASE("math_float3_op", "[math]")
 {
     float3 v1{1.1f, 2.2f, 3.3f};

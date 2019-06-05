@@ -97,7 +97,7 @@ namespace stk
     typedef void (LogCallback)(void*, LogLevel, const char*);
 
     // Initializes logging, should be called at application startup
-    void log_init(const bool silent=false);
+    void log_init();
 
     // Shuts the logging system down.
     void log_shutdown();

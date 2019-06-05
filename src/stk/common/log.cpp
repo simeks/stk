@@ -174,7 +174,6 @@ namespace
     struct LoggerData
     {
         std::vector<Sink*> sinks;
-        bool silent = false;
     };
 
     LoggerData* _logger_data = nullptr;
@@ -267,10 +266,9 @@ namespace stk
         _s << "| ";
     }
 
-    void log_init(const bool silent)
+    void log_init()
     {
         _logger_data = new LoggerData();
-        _logger_data->silent = silent;
     }
     void log_shutdown()
     {
