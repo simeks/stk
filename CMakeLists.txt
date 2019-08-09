@@ -69,7 +69,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     if (STK_ENABLE_FAST_MATH)
         set(EXTRA_FLAGS "${extra_flags} -ffast-math")
     endif()
-elseif(CMAKE_CXX_COMPILER_ID matches "Clang")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(EXTRA_FLAGS "-Wall -Wextra -pedantic")
 
     if (STK_WARNINGS_ARE_ERRORS)
