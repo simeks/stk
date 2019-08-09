@@ -2,6 +2,18 @@
 
 #include <stk/cuda/cuda.h>
 
+namespace stk
+{
+    inline CUDA_HOST_DEVICE float norm(const float4& v)
+    {
+        return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
+    }
+    inline CUDA_HOST_DEVICE float norm2(const float4& v)
+    {
+        return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+    }
+}
+
 inline CUDA_HOST_DEVICE float4 operator+(const float4& l, const float4& r)
 {
     return { l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w };
