@@ -11,6 +11,23 @@
     #include <string>
 #endif
 
+// TODO:
+// There seem to be something weird going on with 'noreturn' on gcc-4. Works fine on
+//  gcc-9.
+// Example:
+// try {
+//     FATAL_IF(true) << "asd";
+// } catch (...) {
+// }
+// results in : "terminate called after throwing an instance of 'stk::FatalException'".
+// I.e. the application seems to terminate before passing the exception further.
+#if defined __GNUC__ && __GNUC__ <= 4
+    #pragma GCC diagnostic ignored "-Wreturn-type"
+    #define STK_NORETURN
+#else
+    #define STK_NORETURN [[noreturn]]
+#endif
+
 namespace stk
 {
 #if STK_USE_EXCEPTIONS
@@ -32,7 +49,7 @@ namespace stk
     {
     public:
         FatalError(const char* file, int line);
-        [[noreturn]] ~FatalError() noexcept(false);
+        STK_NORETURN ~FatalError() noexcept(false);
 
         std::ostringstream& stream();
     private:
