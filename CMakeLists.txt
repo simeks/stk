@@ -25,7 +25,7 @@ project(stk)
 set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -56,7 +56,7 @@ if (MSVC)
         set(EXTRA_FLAGS "${extra_flags} /fp:fast")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(EXTRA_FLAGS "-Wall -Wextra -pedantic")
+    set(EXTRA_FLAGS "-Wall -Wextra -pedantic -Wno-missing-field-initializers")
 
     if (STK_WARNINGS_ARE_ERRORS)
         set(EXTRA_FLAGS "${extra_flags} -Werror")

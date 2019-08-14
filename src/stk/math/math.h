@@ -32,10 +32,10 @@ std::vector<TBase> to_vector(const T& o)
 
 
 // Check if any element is non-zero
-template<typename T>
+template<typename T, typename TBase = typename stk::type_id<T>::Base>
 bool nonzero(const T& o)
 {
-    const auto fold_op = [](auto l, auto r) { return l || (std::fabs(r) > eps()); };
+    const auto fold_op = [](TBase l, TBase r) { return l || (std::fabs(r) > eps()); };
     const auto v = to_vector(o);
     return std::accumulate(v.begin(), v.end(), false, fold_op);
 }
