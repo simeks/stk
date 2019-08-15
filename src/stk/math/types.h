@@ -134,8 +134,10 @@ struct STK_ALIGN(16) double4
 
 struct Matrix3x3f
 {
-    static constexpr unsigned int rows = 3;
-    static constexpr unsigned int cols = 3;
+    enum : unsigned int {
+        rows = 3,
+        cols = 3
+    };
 
     float3 _rows[rows];
 
