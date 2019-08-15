@@ -12,7 +12,7 @@
 #endif
 
 // TODO:
-// There seem to be something weird going on with 'noreturn' on gcc-4. Works fine on
+// There seem to be something weird going on with 'noreturn' on gcc 4 or 5. Works fine on
 //  gcc-9.
 // Example:
 // try {
@@ -21,7 +21,7 @@
 // }
 // results in : "terminate called after throwing an instance of 'stk::FatalException'".
 // I.e. the application seems to terminate before passing the exception further.
-#if defined __GNUC__ && __GNUC__ <= 4
+#if defined __GNUC__ && __GNUC__ <= 5
     #pragma GCC diagnostic ignored "-Wreturn-type"
     #define STK_NORETURN
 #else
