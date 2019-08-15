@@ -1,11 +1,12 @@
 language: cpp
 
 matrix:
+  fast_finish: true
   include:
   - os: linux
     dist: trusty
-    name: gcc 4.8
-    env: GCC=4.8
+  - os: linux
+    dist: xenial
 
 script:
 - mkdir build
