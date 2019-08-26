@@ -4,6 +4,7 @@
 #include <stk/common/platform.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <initializer_list>
 #include <sstream>
 
