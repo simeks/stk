@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 
 option(STK_BUILD_EXAMPLES "Build examples" ON)
 option(STK_BUILD_TESTS "Build unit tests" ON)
+option(STK_BUILD_PYTHON_WRAPPER "Build Python wrapper" OFF)
 option(STK_USE_CUDA "Enables CUDA support" OFF)
 option(STK_WARNINGS_ARE_ERRORS "Warnings are treated as errors" OFF)
 option(STK_BUILD_WITH_DEBUG_INFO "Includes debug info in release builds" OFF)
@@ -109,9 +110,10 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${EXTRA_FLAGS_RELEASE}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_LINK_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_LINK_FLAGS_RELEASE}")
 
+include_directories(src)
+
 # TODO: Determine QNANHIBIT for NrrdIO
 set(QNANHIBIT 1)
-
 
 if(NOT WIN32)
     find_package(ZLIB QUIET)
