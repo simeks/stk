@@ -150,7 +150,6 @@ namespace stk
         void set_origin(const float3& origin);
         void set_spacing(const float3& spacing);
         void set_direction(const Matrix3x3f& direction);
-        void set_direction(const std::initializer_list<float> direction);
 
         const float3& origin() const;
         const float3& spacing() const;
