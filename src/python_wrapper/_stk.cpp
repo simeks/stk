@@ -1,3 +1,4 @@
+#include <pybind11/buffer_info.h>
 #include <pybind11/iostream.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -5,268 +6,259 @@
 
 #include <stk/common/error.h>
 #include <stk/image/volume.h>
+#include <stk/io/io.h>
 
 #include <cassert>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace py = pybind11;
 
 
-/*!
- * \brief Get the stk::Type associated to a numpy image.
- */
-stk::Type get_stk_type(const py::array& a) {
-    stk::Type base_type = stk::Type_Unknown;
+namespace pybind11 { namespace detail {
+    template <> struct type_caster<float3> {
+    public:
+        PYBIND11_TYPE_CASTER(float3, _("float3"));
 
-    if (py::isinstance<py::array_t<char>>(a)) {
-        base_type = stk::Type_Char;
-    }
-    else if (py::isinstance<py::array_t<bool>>(a)) {
-        base_type = stk::Type_Char;
-    }
-    else if (py::isinstance<py::array_t<uint8_t>>(a)) {
-        base_type = stk::Type_UChar;
-    }
-    else if (py::isinstance<py::array_t<short>>(a)) {
-        base_type = stk::Type_Short;
-    }
-    else if (py::isinstance<py::array_t<uint16_t>>(a)) {
-        base_type = stk::Type_UShort;
-    }
-    else if (py::isinstance<py::array_t<int>>(a)) {
-        base_type = stk::Type_Int;
-    }
-    else if (py::isinstance<py::array_t<uint32_t>>(a)) {
-        base_type = stk::Type_UInt;
-    }
-    else if (py::isinstance<py::array_t<float>>(a)) {
-        base_type = stk::Type_Float;
-    }
-    else if (py::isinstance<py::array_t<double>>(a)) {
-        base_type = stk::Type_Double;
+        bool load(handle src, bool) {
+            try {
+                tuple t = py::cast<tuple>(src);
+                if (t.size() != 3) {
+                    return false;
+                }
+                value = float3{
+                    t[0].cast<float>(),
+                    t[1].cast<float>(),
+                    t[2].cast<float>()
+                };
+            } catch (std::exception& e) {
+                return false;
+            }
+            return true;
+        }
+        static handle cast(float3 src, return_value_policy /* policy */, handle /* parent */) {
+            return make_tuple(
+                src.x,
+                src.y,
+                src.z
+            ).release();
+        }
+    };
+    template <> struct type_caster<dim3> {
+    public:
+        PYBIND11_TYPE_CASTER(dim3, _("dim3"));
+
+        bool load(handle src, bool) {
+            try {
+                tuple t = py::cast<tuple>(src);
+                if (t.size() != 3) {
+                    return false;
+                }
+                value = dim3{
+                    t[0].cast<uint32_t>(),
+                    t[1].cast<uint32_t>(),
+                    t[2].cast<uint32_t>()
+                };
+            } catch (std::exception& e) {
+                return false;
+            }
+            return true;
+        }
+        static handle cast(dim3 src, return_value_policy /* policy */, handle /* parent */) {
+            return make_tuple(
+                src.x,
+                src.y,
+                src.z
+            ).release();
+        }
+    };
+    template <> struct type_caster<int3> {
+    public:
+        PYBIND11_TYPE_CASTER(int3, _("int3"));
+
+        bool load(handle src, bool) {
+            try {
+                tuple t = py::cast<tuple>(src);
+                if (t.size() != 3) {
+                    return false;
+                }
+                value = int3{
+                    t[0].cast<int>(),
+                    t[1].cast<int>(),
+                    t[2].cast<int>()
+                };
+            } catch (std::exception& e) {
+                return false;
+            }
+            return true;
+        }
+        static handle cast(int3 src, return_value_policy /* policy */, handle /* parent */) {
+            return make_tuple(
+                src.x,
+                src.y,
+                src.z
+            ).release();
+        }
+    };
+    template <> struct type_caster<Matrix3x3f> {
+    public:
+        PYBIND11_TYPE_CASTER(Matrix3x3f, _("Matrix3x3f"));
+
+        bool load(handle src, bool) {
+            try {
+                array_t<float> a = py::cast<array_t<float>>(src);
+                if (a.ndim() != 2
+                    || a.shape(0) != 3
+                    || a.shape(1) != 3) {
+                    return false;
+                }
+                value = Matrix3x3f{
+                    float3{a.at(0, 0), a.at(0, 1), a.at(0, 2)},
+                    float3{a.at(1, 0), a.at(1, 1), a.at(1, 2)},
+                    float3{a.at(2, 0), a.at(2, 1), a.at(2, 2)}
+                };
+            } catch (std::exception& e) {
+                return false;
+            }
+            return true;
+        }
+        static handle cast(Matrix3x3f src, return_value_policy /* policy */, handle /* parent */) {
+            return py::array_t<float>(
+                {3, 3},
+                &src._rows[0].x
+            ).release();
+        }
+    };
+
+}} // namespace pybind11::detail
+
+std::vector<size_t> get_shape(const stk::Volume& vol)
+{
+    dim3 size = vol.size();
+    size_t ncomp = stk::num_components(vol.voxel_type());
+    if (ncomp == 1) {
+        // Flip directions since size is in (width, height, depth),
+        // numpy expects (depth, height, width)
+        return {
+            size.z,
+            size.y,
+            size.x
+        };
     }
     else {
-        throw std::invalid_argument("Unsupported type");
+        return {
+            size.z,
+            size.y,
+            size.x,
+            ncomp
+        };
     }
-
-    // NOTE: the value of ndim can be ambiguous, e.g.
-    // ndim == 3 may be a scalar volume or a vector 2D image...
-    return stk::build_type(base_type, a.ndim() == 4 ? 3 : 1);
 }
 
-void get_numpy_type_and_shape(stk::Type type, const dim3& size) {
-    stk::Type base_type = stk::base_type(type);
+std::vector<size_t> get_strides(const stk::Volume& vol)
+{
+    const size_t* strides = vol.strides();
+    size_t ncomp = stk::num_components(vol.voxel_type());
 
-    stk::Type base_type = stk::Type_Unknown;
-
-    if (py::isinstance<py::array_t<char>>(a)) {
-        base_type = stk::Type_Char;
-    }
-    else if (py::isinstance<py::array_t<bool>>(a)) {
-        base_type = stk::Type_Char;
-    }
-    else if (py::isinstance<py::array_t<uint8_t>>(a)) {
-        base_type = stk::Type_UChar;
-    }
-    else if (py::isinstance<py::array_t<short>>(a)) {
-        base_type = stk::Type_Short;
-    }
-    else if (py::isinstance<py::array_t<uint16_t>>(a)) {
-        base_type = stk::Type_UShort;
-    }
-    else if (py::isinstance<py::array_t<int>>(a)) {
-        base_type = stk::Type_Int;
-    }
-    else if (py::isinstance<py::array_t<uint32_t>>(a)) {
-        base_type = stk::Type_UInt;
-    }
-    else if (py::isinstance<py::array_t<float>>(a)) {
-        base_type = stk::Type_Float;
-    }
-    else if (py::isinstance<py::array_t<double>>(a)) {
-        base_type = stk::Type_Double;
+    // Reverse, because of numpy ordering
+    if (ncomp == 1) {
+        return {
+            strides[2],
+            strides[1],
+            strides[0]
+        };
     }
     else {
-        throw std::invalid_argument("Unsupported type");
+        return {
+            strides[2],
+            strides[1],
+            strides[0],
+            strides[0]/ncomp
+        };
     }
-
-    // NOTE: the value of ndim can be ambiguous, e.g.
-    // ndim == 3 may be a scalar volume or a vector 2D image...
-    return stk::build_type(base_type, a.ndim() == 4 ? 3 : 1);
 }
 
-
-/*!
- * \brief Convert a numpy array to a stk::Volume.
- *
- * The new volume creates a copy of the input
- * image data.
- *
- * @note The numpy array must be C-contiguous, with
- *       [z,y,x] indexing.
- *
- * @param image Array representing a volume image.
- * @param origin Vector of length 3, containing
- *               the (x, y,z) coordinates of the
- *               volume origin.
- * @param spacing Vector of length 3, containing
- *                the (x, y,z) spacing of the
- *                volume.
- * @param direction Vector of length 9, representing
- *                  the cosine direction matrix in
- *                  row-major order.
- * @return A volume representing the same image.
- */
-stk::Volume image_to_volume(
-        const py::array image,
-        const std::vector<double>& origin,
-        const std::vector<double>& spacing,
-        const std::vector<double>& direction
-        )
+const char* format_descriptor(stk::Type base_type)
 {
-    if (image.flags() & py::array::f_style) {
-        throw std::invalid_argument("The arrays must be C-contiguous.");
-    }
-    
-    float3 origin_ {
-        float(origin[0]),
-        float(origin[1]),
-        float(origin[2]),
-    };
-    float3 spacing_ {
-        float(spacing[0]),
-        float(spacing[1]),
-        float(spacing[2]),
-    };
-    Matrix3x3f direction_ {{
-        {float(direction[0]), float(direction[1]), float(direction[2])},
-        {float(direction[3]), float(direction[4]), float(direction[5])},
-        {float(direction[6]), float(direction[7]), float(direction[8])},
-    }};
-    dim3 size {
-        std::uint32_t(image.shape(2)),
-        std::uint32_t(image.shape(1)),
-        std::uint32_t(image.shape(0)),
-    };
-    stk::Volume volume {size, get_stk_type(image), image.data()};
-    volume.set_origin(origin_);
-    volume.set_spacing(spacing_);
-    volume.set_direction(direction_);
-    return volume;
+         if (base_type == stk::Type_Char)   return "b";
+    else if (base_type == stk::Type_UChar)  return "B";
+    else if (base_type == stk::Type_Short)  return "h";
+    else if (base_type == stk::Type_UShort) return "H";
+    else if (base_type == stk::Type_Int)    return "i";
+    else if (base_type == stk::Type_UInt)   return "I";
+    else if (base_type == stk::Type_Float)  return "f";
+    else if (base_type == stk::Type_Double) return "d";
+    return "";
 }
 
-
-class PyVolume
+py::buffer_info get_buffer_info(stk::Volume& v)
 {
-public:
-    PyVolume() {}
-    ~PyVolume() {}
+    stk::Type base_type = stk::base_type(v.voxel_type());
+    int ncomp = stk::num_components(v.voxel_type());
 
-    py::tuple origin() {
-        return py::make_tuple(
-            _volume.origin().x,
-            _volume.origin().y,
-            _volume.origin().z
-        );
-    }
-
-    bool valid() {
-        return _volume.valid();
-    }
-
-    void set_origin(py::tuple origin) {
-        if (origin.size() != 3) {
-            throw py::value_error("Expected an 3-tuple");
-        }
-
-        _volume.set_origin(float3{
-            origin[0].cast<float>(),
-            origin[1].cast<float>(),
-            origin[2].cast<float>()
-        });
-    }
-
-    py::tuple spacing() {
-        return py::make_tuple(
-            _volume.spacing().x,
-            _volume.spacing().y,
-            _volume.spacing().z
-        );
-    }
-    void set_spacing(py::tuple spacing) {
-        if (spacing.size() != 3) {
-            throw py::value_error("Expected an 3-tuple");
-        }
-
-        _volume.set_spacing(float3{
-            spacing[0].cast<float>(),
-            spacing[1].cast<float>(),
-            spacing[2].cast<float>()
-        });
-    }
-
-    py::array_t<float> direction() {
-        return py::array_t<float>(
-            {3, 3},
-            &_volume.direction()._rows[0].x
-        );
-    }
-    void set_direction(py::array_t<float> dir) {
-        if (dir.ndim() != 2
-            || dir.shape(0) != 3
-            || dir.shape(1) != 3) {
-            throw py::value_error("Expected an 3x3 matrix");
-        }
-
-        _volume.set_direction(Matrix3x3f{
-            float3{dir.at(0, 0), dir.at(0, 1), dir.at(0, 2)},
-            float3{dir.at(1, 0), dir.at(1, 1), dir.at(1, 2)},
-            float3{dir.at(2, 0), dir.at(2, 1), dir.at(2, 2)}
-        });
-    }
-
-    py::array data() {
-
-    }
-
-private:
-    stk::Volume _volume;
-};
-
-PyVolume test()
-{
-    printf("test\n");
-    return PyVolume();
+    return py::buffer_info(
+        v.ptr(),                        /* Pointer to buffer */
+        stk::type_size(base_type),      /* Size of one scalar */
+        format_descriptor(base_type),   /* Python struct-style format descriptor */
+        ncomp == 1 ? 3 : 4,             /* Number of dimensions */
+        
+        get_shape(v),                   /* Buffer dimensions */
+        get_strides(v)                  /* Strides (in bytes) for each index */
+    );
 }
-
-// Volume read_volume(const std::string& filename);
-
-// // Attempts to write the given volume to the specified file.
-// // Uses the extension of the filename to identify the target file format.
-// // Triggers a fatal error if write failed (e.g. invalid file extension).
-// void write_volume(const std::string&, const Volume& vol);
 
 PYBIND11_MODULE(_stk, m)
 {
-    m.def("test", &test, "");
-    
-    py::class_<PyVolume>(m, "Volume")
+    py::enum_<stk::Type>(m, "Type")
+        .value("Unknown", stk::Type_Unknown)
+        .value("Char", stk::Type_Char)
+        .value("Char2", stk::Type_Char2)
+        .value("Char3", stk::Type_Char3)
+        .value("Char4", stk::Type_Char4)
+        .value("UChar", stk::Type_UChar)
+        .value("UChar2", stk::Type_UChar2)
+        .value("UChar3", stk::Type_UChar3)
+        .value("UChar4", stk::Type_UChar4)
+        .value("Short", stk::Type_Short)
+        .value("Short2", stk::Type_Short2)
+        .value("Short3", stk::Type_Short3)
+        .value("Short4", stk::Type_Short4)
+        .value("UShort", stk::Type_UShort)
+        .value("UShort2", stk::Type_UShort2)
+        .value("UShort3", stk::Type_UShort3)
+        .value("UShort4", stk::Type_UShort4)
+        .value("Int", stk::Type_Int)
+        .value("Int2", stk::Type_Int2)
+        .value("Int3", stk::Type_Int3)
+        .value("Int4", stk::Type_Int4)
+        .value("UInt", stk::Type_UInt)
+        .value("UInt2", stk::Type_UInt2)
+        .value("UInt3", stk::Type_UInt3)
+        .value("UInt4", stk::Type_UInt4)
+        .value("Float", stk::Type_Float)
+        .value("Float2", stk::Type_Float2)
+        .value("Float3", stk::Type_Float3)
+        .value("Float4", stk::Type_Float4)
+        .value("Double", stk::Type_Double)
+        .value("Double2", stk::Type_Double2)
+        .value("Double3", stk::Type_Double3)
+        .value("Double4", stk::Type_Double4)
+        .export_values();
+
+    py::class_<stk::Volume>(m, "Volume", py::buffer_protocol())
+        .def_buffer(get_buffer_info)
         .def(py::init<>())
-        .def("valid", &PyVolume::valid)
-        .def_property("origin", &PyVolume::origin, &PyVolume::set_origin)
-        .def_property("spacing", &PyVolume::spacing, &PyVolume::set_spacing)
-        .def_property("direction", &PyVolume::direction, &PyVolume::set_direction)
-        .def_property_readonly("data", &PyVolume::data);
+        .def("valid", &stk::Volume::valid)
+        .def_property_readonly("size", &stk::Volume::size)
+        .def_property_readonly("type", &stk::Volume::voxel_type)
+        .def_property("origin", &stk::Volume::origin, &stk::Volume::set_origin)
+        .def_property("spacing", &stk::Volume::spacing, &stk::Volume::set_spacing)
+        .def_property("direction", &stk::Volume::direction, &stk::Volume::set_direction)
+        ;
 
-        // .def("go_for_a_walk", &Pet::go_for_a_walk)
-        // .def("get_hunger", &Pet::get_hunger)
-        // .def("get_name", &Pet::get_name)
-        // .def_property_readonly("hunger", &Pet::get_hunger)
-        // .def_;
-
-    // m.def("read_volume", &read_volume, "");
-    // m.def("write_volume", &write_volume, "");
+    m.def("read_volume", &stk::read_volume, "");
+    m.def("write_volume", &stk::write_volume, "");
     
     // Translate relevant exception types. The exceptions not handled
     // here will be translated autmatically according to pybind11's rules.
