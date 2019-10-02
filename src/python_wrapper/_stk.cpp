@@ -453,6 +453,8 @@ PYBIND11_MODULE(_stk, m)
         .def_property("direction", &stk::Volume::direction, &stk::Volume::set_direction)
         ;
 
+    py::implicitly_convertible<py::array, stk::Volume>();
+
     m.def("read_volume", &stk::read_volume, "");
     m.def("write_volume", &stk::write_volume, "");
     
