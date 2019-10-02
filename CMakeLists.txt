@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 
 option(STK_BUILD_EXAMPLES "Build examples" ON)
 option(STK_BUILD_TESTS "Build unit tests" ON)
+option(STK_BUILD_PYTHON_WRAPPER "Build Python wrapper" OFF)
 option(STK_USE_CUDA "Enables CUDA support" OFF)
 option(STK_WARNINGS_ARE_ERRORS "Warnings are treated as errors" OFF)
 option(STK_BUILD_WITH_DEBUG_INFO "Includes debug info in release builds" OFF)
@@ -56,7 +57,9 @@ if (MSVC)
         set(EXTRA_FLAGS "${extra_flags} /fp:fast")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(EXTRA_FLAGS "-Wall -Wextra -pedantic -Wno-missing-field-initializers")
+    set(EXTRA_FLAGS "-Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-attributes")
+
+    # -Wno-attributes thanks to pybind11
 
     if (STK_WARNINGS_ARE_ERRORS)
         set(EXTRA_FLAGS "${extra_flags} -Werror")
@@ -88,6 +91,7 @@ endif()
 if (STK_USE_CUDA)
     add_definitions(-DSTK_USE_CUDA)
     enable_language(CUDA)
+    set(CMAKE_CUDA_STANDARD 11)
 
     if (STK_ENABLE_FAST_MATH)
         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
@@ -109,9 +113,10 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${EXTRA_FLAGS_RELEASE}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_LINK_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${EXTRA_LINK_FLAGS_RELEASE}")
 
+include_directories(src)
+
 # TODO: Determine QNANHIBIT for NrrdIO
 set(QNANHIBIT 1)
-
 
 if(NOT WIN32)
     find_package(ZLIB QUIET)

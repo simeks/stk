@@ -1,37 +1,56 @@
-language: cpp
+language: python
+python:
+- 3.6
 
 matrix:
-  fast_finish: true
   include:
-  - os: linux
+  - name: trusty
+    os: linux
     dist: trusty
-  - os: linux
+    env: 
+      - PYTHON_EXECUTABLE=~/virtualenv/python3.6/bin/python
+  - name: xenial
+    os: linux
     dist: xenial
-  - os: linux
+    env: 
+      - PYTHON_EXECUTABLE=~/virtualenv/python3.6/bin/python
+  - name: g++8
+    os: linux
     addons:
       apt:
         sources:
-          - ubuntu-toolchain-r-test
+        - ubuntu-toolchain-r-test
         packages:
-          - g++-6
-    env:
-      - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-  - os: linux
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - g++-7
-    env:
-      - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - g++-8
+    before_install:
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
+    env: 
+      - PYTHON_EXECUTABLE=~/virtualenv/python3.6/bin/python
   - name: osx
     os: osx
     language: generic
+    before_install:
+    - brew install llvm libomp
+    - python3 -m pip install virtualenv
+    - virtualenv venv -p python3
+    - source venv/bin/activate
+    env:
+      - PYTHON_EXECUTABLE=../venv/bin/python
+      - HOMEBREW_NO_AUTO_UPDATE=1
+      - CC=/usr/local/opt/llvm/bin/clang
+      - CXX=/usr/local/opt/llvm/bin/clang++
+
+install:
+- pip install -r requirements.txt
 
 script:
 - mkdir build
 - cd build
-- cmake .. -DCMAKE_BUILD_TYPE=Release -DSTK_BUILD_TESTS=1 -DSTK_WARNINGS_ARE_ERRORS=1
+- cmake .. -DCMAKE_BUILD_TYPE=Release -DSTK_BUILD_TESTS=1
+  -DSTK_BUILD_PYTHON_WRAPPER=ON -DPYTHON_EXECUTABLE=$PYTHON_EXECUTABLE
 - cmake --build . --config Release
 - ctest --output-on-failure
+- cd ..
+- python setup.py install
+- python -m unittest discover test
