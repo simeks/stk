@@ -208,6 +208,85 @@ py::buffer_info get_buffer_info(stk::Volume& v)
     );
 }
 
+stk::Volume numpy_to_volume(const py::array arr)
+{
+    // Ensure ordering
+    py::array buf = py::array::ensure(arr, py::array::c_style | py::array::forcecast);
+   
+    if (!(buf.ndim() == 3 || buf.ndim() == 4)) {
+        throw std::invalid_argument("Expected a 3D or a 4D array");
+    }
+
+    dim3 size {
+        std::uint32_t(buf.shape(2)),
+        std::uint32_t(buf.shape(1)),
+        std::uint32_t(buf.shape(0)),
+    };
+
+    stk::Type base_type = stk::Type_Unknown;
+    if (py::isinstance<py::array_t<char>>(arr)) {
+        base_type = stk::Type_Char;
+    }
+    else if (py::isinstance<py::array_t<bool>>(arr)) {
+        base_type = stk::Type_Char;
+    }
+    else if (py::isinstance<py::array_t<uint8_t>>(arr)) {
+        base_type = stk::Type_UChar;
+    }
+    else if (py::isinstance<py::array_t<short>>(arr)) {
+        base_type = stk::Type_Short;
+    }
+    else if (py::isinstance<py::array_t<uint16_t>>(arr)) {
+        base_type = stk::Type_UShort;
+    }
+    else if (py::isinstance<py::array_t<int>>(arr)) {
+        base_type = stk::Type_Int;
+    }
+    else if (py::isinstance<py::array_t<uint32_t>>(arr)) {
+        base_type = stk::Type_UInt;
+    }
+    else if (py::isinstance<py::array_t<float>>(arr)) {
+        base_type = stk::Type_Float;
+    }
+    else if (py::isinstance<py::array_t<double>>(arr)) {
+        base_type = stk::Type_Double;
+    }
+    else {
+        throw std::invalid_argument("Unsupported type");
+    }
+
+    int ncomp = 1;
+    if (buf.ndim() == 4) {
+        ncomp = buf.shape(3);
+    }
+
+    if (ncomp < 1 || ncomp > 4) {
+        throw std::invalid_argument("Unsupported number of channels");
+    }
+
+    // NOTE: the value of ndim can be ambiguous, e.g.
+    // ndim == 3 may be a scalar volume or a vector 2D image...
+
+    return stk::Volume(
+        size,
+        stk::build_type(base_type, ncomp),
+        buf.data()
+    );
+}
+
+stk::Volume make_volume(
+    py::array arr,
+    const float3& origin,
+    const float3& spacing,
+    const Matrix3x3f& direction
+) {
+    stk::Volume vol = numpy_to_volume(arr);
+    vol.set_origin(origin);
+    vol.set_spacing(spacing);
+    vol.set_direction(direction);
+    return vol;
+}
+
 PYBIND11_MODULE(_stk, m)
 {
     py::enum_<stk::Type>(m, "Type")
@@ -249,7 +328,14 @@ PYBIND11_MODULE(_stk, m)
     py::class_<stk::Volume>(m, "Volume", py::buffer_protocol())
         .def_buffer(get_buffer_info)
         .def(py::init<>())
+        .def(py::init(&make_volume),
+            py::arg("array"),
+            py::arg("origin") = float3{0.0, 0.0, 0.0},
+            py::arg("spacing") = float3{1.0, 1.0, 1.0},
+            py::arg("direction") = Matrix3x3f::Identity
+        )
         .def("valid", &stk::Volume::valid)
+        .def("copy_meta_from", &stk::Volume::copy_meta_from)
         .def_property_readonly("size", &stk::Volume::size)
         .def_property_readonly("type", &stk::Volume::voxel_type)
         .def_property("origin", &stk::Volume::origin, &stk::Volume::set_origin)
