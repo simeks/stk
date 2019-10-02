@@ -1,7 +1,6 @@
 version: '{branch}-{build}'
 
 image:
-  - Ubuntu
   - Visual Studio 2017
 
 platform:
@@ -9,7 +8,6 @@ platform:
 #  - x86 # Unsupported, will enable if there's interest in 32bit
 
 configuration:
-  - Debug
   - Release
 
 build:
@@ -18,9 +16,6 @@ build:
 
 matrix:
     fast_finish: true
-
-install:
-  - sh: sudo update-alternatives --set gcc /usr/bin/gcc-8
 
 before_build:
   - cmd: if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
@@ -31,11 +26,9 @@ before_build:
   - cmd: if "%PLATFORM%"=="x86" set GENERATOR="Visual Studio 15 2017"
   - cmd: if "%PLATFORM%"=="x64" set GENERATOR="Visual Studio 15 2017 Win64"
   - cmd: cmake .. -DSTK_BUILD_TESTS=1 -DSTK_WARNINGS_ARE_ERRORS=1 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G%GENERATOR%
-  - sh: cmake .. -DSTK_BUILD_TESTS=1 -DSTK_WARNINGS_ARE_ERRORS=1 -DCMAKE_BUILD_TYPE=$CONFIGURATION -G"Unix Makefiles"
 
 build_script:
   - cmd: cmake --build . --config %CONFIGURATION%
-  - sh: cmake --build . --config $CONFIGURATION
 
 test_script:
   - ctest --output-on-failure

@@ -386,8 +386,8 @@ std::vector<std::string> Volume::get_metadata_keys(void) const
 {
     std::vector<std::string> keys;
     keys.reserve(_metadata->size());
-    for (auto const& [k, _] : *_metadata) {
-        keys.push_back(k);
+    for (auto const& p : *_metadata) {
+        keys.push_back(p.first);
     }
     return keys;
 }

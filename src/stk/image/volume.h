@@ -231,6 +231,8 @@ namespace stk
         VolumeHelper(const Volume& other);
         // Creates a new volume of the specified size
         VolumeHelper(const dim3& size);
+        // Copy constructor
+        VolumeHelper(const VolumeHelper&) = default;
 
         // Creates a new volume of the specified size and initializes it with the given value
         explicit VolumeHelper(const dim3& size, const T& value);

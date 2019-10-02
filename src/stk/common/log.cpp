@@ -246,7 +246,10 @@ namespace stk
         auto in_time = system_clock::to_time_t(now);
         auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
-        _s << std::put_time(std::localtime(&in_time), "%m-%d %X") << "." << std::setw(3) << std::setfill('0') << ms.count() << " ";
+        char timestamp[32];
+        std::strftime(timestamp, sizeof(timestamp), "%m-%d %X", std::localtime(&in_time));
+
+        _s << timestamp << "." << std::setw(3) << std::setfill('0') << ms.count() << " ";
     #endif
 
     #ifdef STK_LOGGING_PREFIX_FILE
