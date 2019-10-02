@@ -5,6 +5,7 @@
 #include <pybind11/stl.h>
 
 #include <stk/common/error.h>
+#include <stk/filters/vector_calculus.h>
 #include <stk/image/volume.h>
 #include <stk/io/io.h>
 
@@ -287,6 +288,115 @@ stk::Volume make_volume(
     return vol;
 }
 
+
+std::string divergence_docstring =
+R"(Compute the divergence of a displacement field.
+
+The divergence of a vector field
+
+.. math::
+    f(\boldsymbol{x}) =
+        (f_1(\boldsymbol{x}),
+         f_2(\boldsymbol{x}),
+         f_3(\boldsymbol{x}))
+
+with :math:`\boldsymbol{x} = (x_1, x_2, x_3)`
+is defined as
+
+.. math::
+    \nabla \cdot f (\boldsymbol{x}) =
+    \sum_{i=1}^3
+        \frac{\partial f_i}{\partial x_i} (\boldsymbol{x})
+
+.. note::
+    All the arrays must be C-contiguous.
+
+Parameters
+----------
+displacement: np.ndarray
+    Displacement field used to resample the image.
+
+origin: np.ndarray
+    Origin of the displacement field.
+
+spacing: np.ndarray
+    Spacing of the displacement field.
+
+direction: Tuple[Int]
+    Cosine direction matrix of the displacement field.
+
+Returns
+-------
+np.ndarray
+    Scalar volume image containing the divergence of
+    the input displacement.
+)";
+
+
+
+std::string rotor_docstring =
+R"(Compute the rotor of a displacement field.
+
+The rotor of a 3D 3-vector field
+
+.. math::
+    f(\boldsymbol{x}) =
+        (f_1(\boldsymbol{x}),
+         f_2(\boldsymbol{x}),
+         f_3(\boldsymbol{x}))
+
+with :math:`\boldsymbol{x} = (x_1, x_2, x_3)`
+is defined as
+
+.. math::
+    \nabla \times f(\boldsymbol{x}) =
+    \left(
+        \frac{\partial f_3}{\partial x_2} -
+        \frac{\partial f_2}{\partial x_3},
+        \frac{\partial f_1}{\partial x_3} -
+        \frac{\partial f_3}{\partial x_1},
+        \frac{\partial f_2}{\partial x_1} -
+        \frac{\partial f_1}{\partial x_2}
+    \right)
+
+.. note::
+    All the arrays must be C-contiguous.
+
+Parameters
+----------
+displacement: stk.Volume
+    Displacement field used to resample the image.
+
+Returns
+-------
+stk.Volume
+    Vector volume image containing the rotor of
+    the input displacement.
+)";
+
+
+
+std::string circulation_density_docstring =
+R"(Compute the circulation density of a displacement field.
+
+The circulation density for a 3D 3-vector field is defined as the
+norm of the rotor.
+
+.. note::
+    All the arrays must be C-contiguous.
+
+Parameters
+----------
+displacement: stk.Volume
+    Displacement field used to resample the image.
+
+Returns
+-------
+stk.Volume
+    Vector volume image containing the circulation
+    density of the input displacement.
+)";
+
 PYBIND11_MODULE(_stk, m)
 {
     py::enum_<stk::Type>(m, "Type")
@@ -346,6 +456,21 @@ PYBIND11_MODULE(_stk, m)
     m.def("read_volume", &stk::read_volume, "");
     m.def("write_volume", &stk::write_volume, "");
     
+    m.def("divergence",
+            &stk::divergence<float3>,
+            divergence_docstring.c_str()
+         );
+
+    m.def("rotor",
+            &stk::rotor<float3>,
+            rotor_docstring.c_str()
+         );
+
+    m.def("circulation_density",
+            &stk::circulation_density<float3>,
+            circulation_density_docstring.c_str()
+         );
+
     // Translate relevant exception types. The exceptions not handled
     // here will be translated autmatically according to pybind11's rules.
     py::register_exception_translator([](std::exception_ptr p) {
