@@ -61,9 +61,10 @@ if(STK_ITK_BRIDGE)
 endif()
 
 add_library(stk STATIC ${STK_SRCS})
+target_link_libraries(stk PUBLIC pybind11)
 
 target_include_directories(stk PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/.."
     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     )
 
