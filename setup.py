@@ -76,7 +76,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='python-stk',
-    version='0.1',
+    version='0.4',
     author='Simon Ekström',
     author_email='',
     description='',
