@@ -17,18 +17,27 @@ build:
 matrix:
     fast_finish: true
 
-before_build:
-  - cmd: if "%PLATFORM%"=="x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-  - cmd: if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-  - mkdir build
-  - cd build
+environment:
+  matrix:
+  - PYTHON: "C:\\Python36-x64"
 
-  - cmd: if "%PLATFORM%"=="x86" set GENERATOR="Visual Studio 15 2017"
-  - cmd: if "%PLATFORM%"=="x64" set GENERATOR="Visual Studio 15 2017 Win64"
-  - cmd: cmake .. -DSTK_BUILD_TESTS=1 -DSTK_WARNINGS_ARE_ERRORS=1 -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G%GENERATOR%
+install:
+- git submodule update --init --recursive
+- set PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+- pip install -r requirements.txt
+
+before_build:
+- mkdir build
+- cd build
+- cmake .. -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DCMAKE_GENERATOR_PLATFORM=%PLATFORM% -DSTK_BUILD_TESTS=1 -DSTK_WARNINGS_ARE_ERRORS=1
 
 build_script:
-  - cmd: cmake --build . --config %CONFIGURATION%
+- cmake --build . --config %CONFIGURATION%
+- cd ..
+- python setup.py install -DCMAKE_GENERATOR_PLATFORM=%PLATFORM%
 
 test_script:
-  - ctest --output-on-failure
+- cd build
+- ctest --output-on-failure
+- cd ..
+- python -m unittest discover test
