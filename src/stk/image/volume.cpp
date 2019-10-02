@@ -255,11 +255,6 @@ void Volume::set_direction(const Matrix3x3f& direction)
     _direction = direction;
     _inverse_direction = _direction.inverse();
 }
-void Volume::set_direction(const std::initializer_list<float> direction)
-{
-    _direction.set(direction);
-    _inverse_direction = _direction.inverse();
-}
 const float3& Volume::origin() const
 {
     return _origin;

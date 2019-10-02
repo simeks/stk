@@ -61,3 +61,7 @@ if(NOT NrrdIO_FOUND)
     endif()
 endif()
 
+if(STK_BUILD_PYTHON_WRAPPER)
+    add_subdirectory(pybind11)
+endif()
+

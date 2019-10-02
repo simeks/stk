@@ -1,5 +1,10 @@
 #include "math.h"
 
+Matrix3x3f Matrix3x3f::Identity {
+    float3{1, 0, 0},
+    float3{0, 1, 0},
+    float3{0, 0, 1}
+};
 
 namespace stk {
 

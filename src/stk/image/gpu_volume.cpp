@@ -449,11 +449,6 @@ void GpuVolume::set_direction(const Matrix3x3f& direction)
     _direction = direction;
     _inverse_direction = _direction.inverse();
 }
-void GpuVolume::set_direction(const std::initializer_list<float> direction)
-{
-    _direction.set(direction);
-    _inverse_direction = _direction.inverse();
-}
 
 const float3& GpuVolume::origin() const
 {
