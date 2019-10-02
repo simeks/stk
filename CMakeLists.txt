@@ -57,7 +57,9 @@ if (MSVC)
         set(EXTRA_FLAGS "${extra_flags} /fp:fast")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(EXTRA_FLAGS "-Wall -Wextra -pedantic -Wno-missing-field-initializers")
+    set(EXTRA_FLAGS "-Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-attributes")
+
+    # -Wno-attributes thanks to pybind11
 
     if (STK_WARNINGS_ARE_ERRORS)
         set(EXTRA_FLAGS "${extra_flags} -Werror")
