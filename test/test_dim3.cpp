@@ -47,12 +47,39 @@ TEST_CASE("dim3_iterator", "[volume]")
     }}}
 
     int3 r{0,0,0};
-    for (int3 p : d) {
-        r.x += p.x;
-        r.y += p.y;
-        r.z += p.z;
+
+    for (int3 i : d) {
+        r.x += i.x;
+        r.y += i.y;
+        r.z += i.z;
     }
     REQUIRE(r.x == r_expected.x);
     REQUIRE(r.y == r_expected.y);
     REQUIRE(r.z == r_expected.z);
 }
+TEST_CASE("dim3_iterator_omp", "[volume]")
+{
+    dim3 d{3, 5, 7};
+    
+    int3 r_expected{0,0,0};
+    for (int z = 0; z < (int)d.z; ++z) {
+    for (int y = 0; y < (int)d.y; ++y) {
+    for (int x = 0; x < (int)d.x; ++x) {
+        r_expected.x += x;
+        r_expected.y += y;
+        r_expected.z += z;
+    }}}
+
+    int3 r{0,0,0};
+
+    #pragma omp parallel for
+    for (Dim3Iterator it = begin(d); it < end(d); ++it) {
+        r.x += (*it).x;
+        r.y += (*it).y;
+        r.z += (*it).z;
+    }
+    REQUIRE(r.x == r_expected.x);
+    REQUIRE(r.y == r_expected.y);
+    REQUIRE(r.z == r_expected.z);
+}
+

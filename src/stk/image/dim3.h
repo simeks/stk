@@ -44,10 +44,20 @@ inline std::ostream& operator<<(std::ostream& s, const dim3& v)
  * {0, 0, dim3.z}, which is considered the end.
  * 
  * Example:
+ * The preferred way is to use C++11 range-based for loops:
  *  stk::Volume vol;
  *  for (int3 p : vol.size()) {
  *      vol(p) = 0:
  *  }
+ * 
+ * To use the iterators with OpenMP you'll have to manually set up the loop, and also
+ * remember to use 'it < end()', rather than the typical 'it != end()':
+ *  stk::Volume vol;
+ *  #pragma omp parallel for
+ *  for (auto it = begin(vol.size()); it < end(vol.size()); ++it) {
+ *      vol(*it) = 0;
+ *  }
+ * 
  * */
 struct Dim3Iterator
 {
@@ -59,6 +69,10 @@ struct Dim3Iterator
     inline const int3& operator*()
     {
         return _p;
+    }
+    inline const int3* operator->()
+    {
+        return &_p;
     }
     inline void operator++()
     {
@@ -74,22 +88,41 @@ struct Dim3Iterator
     }
     inline bool operator!=(const Dim3Iterator& other)
     {
-        return _dim != other._dim
-            || _p != other._p;
+        return index() != other.index();
+    }
+    // Required by OpenMP
+    inline bool operator<(const Dim3Iterator& other)
+    {
+        return index() < other.index();
+    }
+    // Required by OpenMP
+    inline void operator+=(size_t n)
+    {
+        for (size_t i = 0; i < n; ++i) ++(*this);
+    }
+    inline size_t index() const
+    {
+        return _p.x + _p.y * _dim.x + _p.z * _dim.x * _dim.y;
     }
 };
+
+// Required by OpenMP
+inline size_t operator-(const Dim3Iterator& a, const Dim3Iterator& b)
+{
+    return a.index() - b.index();
+}
 
 // Retrieves the begin iterator for Dim3Iterator.
 inline Dim3Iterator begin(const dim3& d)
 {
-    return Dim3Iterator(d, int3{0,0,0});
+    return Dim3Iterator(d, int3{0, 0, 0});
 }
 
 // Retrieves the end iterator for Dim3Iterator.
 //  p{0,0,d.z} is defined as the end.
 inline Dim3Iterator end(const dim3& d)
 {
-    return Dim3Iterator(d, int3{0,0, int(d.z)});
+    return Dim3Iterator(d, int3{0, 0, int(d.z)});
 }
 
 namespace stk
@@ -97,7 +130,9 @@ namespace stk
     // Check whether the given point is inside the given range
     inline bool is_inside(const dim3& dims, const int3& p)
     {
-        return (p.x >= 0 && p.x < int(dims.x) && p.y >= 0 && p.y < int(dims.y) && p.z >= 0 && p.z < int(dims.z));
+        return (p.x >= 0 && p.x < int(dims.x) && 
+                p.y >= 0 && p.y < int(dims.y) && 
+                p.z >= 0 && p.z < int(dims.z));
     }
 }
 
