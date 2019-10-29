@@ -57,6 +57,8 @@ TEST_CASE("dim3_iterator", "[volume]")
     REQUIRE(r.y == r_expected.y);
     REQUIRE(r.z == r_expected.z);
 }
+#ifndef _WIN32
+// Windows only supports OpenMP 2, which means no support for iterators.
 TEST_CASE("dim3_iterator_omp", "[volume]")
 {
     dim3 d{3, 5, 7};
@@ -82,4 +84,5 @@ TEST_CASE("dim3_iterator_omp", "[volume]")
     REQUIRE(r.y == r_expected.y);
     REQUIRE(r.z == r_expected.z);
 }
+#endif
 

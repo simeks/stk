@@ -45,13 +45,17 @@ inline std::ostream& operator<<(std::ostream& s, const dim3& v)
  * 
  * Example:
  * The preferred way is to use C++11 range-based for loops:
+ *
  *  stk::Volume vol;
  *  for (int3 p : vol.size()) {
  *      vol(p) = 0:
  *  }
  * 
  * To use the iterators with OpenMP you'll have to manually set up the loop, and also
- * remember to use 'it < end()', rather than the typical 'it != end()':
+ * remember to use 'it < end()', rather than the typical 'it != end()'.
+ *
+ * Note: Windows only supports OpenMP 2.0, meaning there's no support for iterators.
+ *
  *  stk::Volume vol;
  *  #pragma omp parallel for
  *  for (auto it = begin(vol.size()); it < end(vol.size()); ++it) {
