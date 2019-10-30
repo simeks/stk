@@ -45,6 +45,46 @@ namespace stk
             size_t ysize;
         };
 
+        // Wrapper around cudaTextureObject_t, will automatically destroy
+        //  the object when going out of scope.
+        class TextureObject
+        {
+        public:
+            TextureObject(const GpuVolume& vol, const cudaTextureDesc& tex_desc);
+            ~TextureObject();
+
+            operator cudaTextureObject_t() const;
+
+        private:
+            TextureObject(const TextureObject&);
+            TextureObject& operator=(const TextureObject&);
+
+            cudaTextureObject_t _obj;
+
+            // Keep a reference to the volume to make sure it won't get destroyed
+            GpuVolume _vol;
+        };
+
+        // Wrapper around cudaSurfaceObject_t, will automatically destroy
+        //  the object when going out of scope.
+        class SurfaceObject
+        {
+        public:
+            SurfaceObject(const GpuVolume& vol);
+            ~SurfaceObject();
+
+            operator cudaSurfaceObject_t() const;
+
+        private:
+            SurfaceObject(const SurfaceObject&);
+            SurfaceObject& operator=(const SurfaceObject&);
+
+            cudaSurfaceObject_t _obj;
+
+            // Keep a reference to the volume to make sure it won't get destroyed
+            GpuVolume _vol;
+        };
+
 #ifdef __CUDACC__
         template<typename T>
         __device__ T linear_at_border(const VolumePtr<T>& vol, const dim3& dims,

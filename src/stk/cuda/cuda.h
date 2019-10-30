@@ -11,7 +11,6 @@
 #include <cuda_runtime.h>
 
 #include <stk/common/error.h>
-#include <stk/image/gpu_volume.h>
 
 #define CUDA_CHECK_ERRORS(val) \
     if (val != cudaSuccess) { \
@@ -20,50 +19,8 @@
 
 namespace stk
 {
-    class GpuVolume;
-
     namespace cuda
     {
-        // Wrapper around cudaTextureObject_t, will automatically destroy
-        //  the object when going out of scope.
-        class TextureObject
-        {
-        public:
-            TextureObject(const GpuVolume& vol, const cudaTextureDesc& tex_desc);
-            ~TextureObject();
-
-            operator cudaTextureObject_t() const;
-
-        private:
-            TextureObject(const TextureObject&);
-            TextureObject& operator=(const TextureObject&);
-
-            cudaTextureObject_t _obj;
-
-            // Keep a reference to the volume to make sure it won't get destroyed
-            GpuVolume _vol;
-        };
-
-        // Wrapper around cudaSurfaceObject_t, will automatically destroy
-        //  the object when going out of scope.
-        class SurfaceObject
-        {
-        public:
-            SurfaceObject(const GpuVolume& vol);
-            ~SurfaceObject();
-
-            operator cudaSurfaceObject_t() const;
-
-        private:
-            SurfaceObject(const SurfaceObject&);
-            SurfaceObject& operator=(const SurfaceObject&);
-
-            cudaSurfaceObject_t _obj;
-
-            // Keep a reference to the volume to make sure it won't get destroyed
-            GpuVolume _vol;
-        };
-
         // Initializes CUDA
         void init();
 
