@@ -44,6 +44,8 @@ if (STK_USE_CUDA)
         "cuda/cuda.h"
         "cuda/stream.cpp"
         "cuda/stream.h"
+        "cuda/volume.cpp"
+        "cuda/volume.h"
         "filters/gpu/normalize.cu"
         "image/gpu_volume.cpp"
         "image/gpu_volume.cu"

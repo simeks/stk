@@ -3,6 +3,8 @@
 
 #include "stk/image/gpu_volume.h"
 
+#include <cstring>
+
 #ifdef STK_USE_CUDA
 
 namespace stk {
