@@ -98,9 +98,9 @@ namespace stk
             int y2 = min(y1+1, int(dims.y-1));
             int z2 = min(z1+1, int(dims.z-1));
 
-            if (x1 < 0 || x1 >= int(dims.x) ||
-                y1 < 0 || y1 >= int(dims.y) ||
-                z1 < 0 || z1 >= int(dims.z))
+            if (x < 0 || x1 >= int(dims.x) ||
+                y < 0 || y1 >= int(dims.y) ||
+                z < 0 || z1 >= int(dims.z))
             {
                 return T{0};
             }
