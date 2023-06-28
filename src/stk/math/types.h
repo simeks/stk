@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <initializer_list>
+#include <limits>
 #include <sstream>
 
 #ifdef STK_USE_CUDA
