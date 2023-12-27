@@ -79,15 +79,11 @@ void VolumeHelper<T>::fill(const T& value)
 template<typename T>
 T VolumeHelper<T>::at(int x, int y, int z, BorderMode border_mode) const
 {
-    // PERF: 15% faster than ceilf/floorf
-    #define FAST_CEIL(x_) ((int)x_ + (x_ > (int)x_))
-    #define FAST_FLOOR(x_) ((int)x_ - (x_ < (int)x_))
-
     if (border_mode == Border_Constant)
     {
-        if (x < 0 || FAST_CEIL(x) >= int(_size.x) ||
-            y < 0 || FAST_CEIL(y) >= int(_size.y) ||
-            z < 0 || FAST_CEIL(z) >= int(_size.z))
+        if (x < 0 || x >= int(_size.x) ||
+            y < 0 || y >= int(_size.y) ||
+            z < 0 || z >= int(_size.z))
         {
             return T{};
         }
@@ -230,22 +226,22 @@ VolumeHelper<T>& VolumeHelper<T>::operator=(const Volume& other)
 }
 
 template<typename T>
-const T& VolumeHelper<T>::operator()(int x, int y, int z) const
+inline const T& VolumeHelper<T>::operator()(int x, int y, int z) const
 {
     return *((T const*)(((uint8_t*)_ptr) + offset(x, y, z)));
 }
 template<typename T>
-T& VolumeHelper<T>::operator()(int x, int y, int z)
+inline T& VolumeHelper<T>::operator()(int x, int y, int z)
 {
     return *((T*)(((uint8_t*)_ptr) + offset(x, y, z)));
 }
 template<typename T>
-const T& VolumeHelper<T>::operator()(const int3& p) const
+inline const T& VolumeHelper<T>::operator()(const int3& p) const
 {
     return operator()(p.x, p.y, p.z);
 }
 template<typename T>
-T& VolumeHelper<T>::operator()(const int3& p)
+inline T& VolumeHelper<T>::operator()(const int3& p)
 {
     return operator()(p.x, p.y, p.z);
 }
