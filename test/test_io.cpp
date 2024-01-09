@@ -83,3 +83,22 @@ IO_TEST_EXTENSION(vtk)
 IO_TEST_EXTENSION(nii)
 IO_TEST_EXTENSION(nii.gz)
 IO_TEST_EXTENSION(nrrd)
+
+TEST_CASE("io_vtk_2d", "[io] [volume]") {
+    VolumeUChar img = read_volume("test_2d_image.vtk");
+    REQUIRE(img.valid());
+    REQUIRE(img.size().x == 5);
+    REQUIRE(img.size().y == 5);
+    REQUIRE(img.size().z == 1);
+
+    REQUIRE(img.spacing().x == Approx(1.0f));
+    REQUIRE(img.spacing().y == Approx(1.0f));
+    REQUIRE(img.spacing().z == Approx(1.0f));
+
+    REQUIRE(img(0, 0, 0) == 0);
+    REQUIRE(img(1, 1, 0) == 1);
+    REQUIRE(img(3, 3, 0) == 1);
+    REQUIRE(img(4, 4, 0) == 0);
+}
+
+
