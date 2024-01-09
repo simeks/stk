@@ -25,7 +25,7 @@ endif ()
 
 add_executable(stk_test ${STK_TEST_SRCS})
 
-add_test(stk_test stk_test)
+add_test(stk_test stk_test WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(stk_test Catch stk)
 

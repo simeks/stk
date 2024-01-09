@@ -197,20 +197,26 @@ namespace vtk {
                 size.x = atoi(value.c_str());
                 ss >> value;
                 size.y = atoi(value.c_str());
-                ss >> value;
-                size.z = atoi(value.c_str());
+                if (!ss.eof()) {
+                    ss >> value;
+                    size.z = atoi(value.c_str());
+                }
             }
             //ORIGIN - 249.023 - 249.023 21.0165
             else if (key == "ORIGIN") {
                 ss >> origin.x;
                 ss >> origin.y;
-                ss >> origin.z;
+                if (!ss.eof()) {
+                    ss >> origin.z;
+                }
             }
             //SPACING 1.9531 1.9531 2.6001
             else if (key == "SPACING") {
                 ss >> spacing.x;
                 ss >> spacing.y;
-                ss >> spacing.z;
+                if (!ss.eof()) {
+                    ss >> spacing.z;
+                }
             }
             //POINT_DATA 48496640
             else if (key == "POINT_DATA") {
@@ -266,6 +272,11 @@ namespace vtk {
                 // Assume that blob comes after this line
                 break;
             }
+        }
+
+        // 2D image, assume Z=1
+        if (size.z == 0) {
+            size.z = 1;
         }
 
         if (size.x == 0 || size.y == 0 || size.z == 0) {
