@@ -10,6 +10,7 @@ option(STK_ENABLE_FAST_MATH "Enables fast math" OFF)
 option(STK_LOGGING_PREFIX_FILE "Add file name as prefix to each log message" OFF)
 option(STK_ITK_BRIDGE "Bridge library to interoperate with ITK" OFF)
 option(STK_STACK_TRACE "Print a stack trace on errors" OFF)
+option(STK_USE_SYSTEM_ZLIB "Use system zlib" OFF)
 
 # The stack trace is of little use without symbols
 if(STK_STACK_TRACE)
@@ -122,6 +123,10 @@ if(NOT WIN32)
     find_package(ZLIB QUIET)
     find_package(NIFTI QUIET)
     find_package(NrrdIO QUIET)
+endif()
+
+if (STK_USE_SYSTEM_ZLIB)
+    find_package(ZLIB REQUIRED)
 endif()
 
 add_subdirectory(${THIRD_PARTY_DIR})

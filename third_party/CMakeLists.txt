@@ -35,6 +35,11 @@ if(NOT NIFTI_FOUND)
     set(NIFTI_INCLUDE_DIRS "nifticlib-2.0.0/niftilib")
     target_include_directories(niftiio INTERFACE "nifticlib-2.0.0/niftilib")
     target_include_directories(znz INTERFACE "nifticlib-2.0.0/znzlib")
+
+    if (ZLIB_FOUND)
+        target_include_directories(znz PUBLIC "${ZLIB_INCLUDE_DIRS}")
+    endif()
+
     if (WIN32)
         set_target_properties(niftiio PROPERTIES COMPILE_FLAGS
             "/wd4100 /wd4244 /wd4245 /wd4267 /wd4304 /wd4456 /wd4701"
@@ -54,6 +59,11 @@ endif()
 if(NOT NrrdIO_FOUND)
     add_subdirectory(NrrdIO-1.11.0)
     target_include_directories(NrrdIO INTERFACE "NrrdIO-1.11.0")
+
+    if (ZLIB_FOUND)
+        target_include_directories(NrrdIO PRIVATE "${ZLIB_INCLUDE_DIRS}")
+    endif()
+
     if (WIN32)
         set_target_properties(NrrdIO PROPERTIES COMPILE_FLAGS
             "/wd4127 /wd4701 /wd4706 /wd4996"
