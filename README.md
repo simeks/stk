@@ -30,7 +30,7 @@ A minimalistic Python API is also provided.
 ## Install
 
 ```bash
-python setup.py install
+python -m pip install -e .
 ```
 
 ## Example usage

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools", "cmake"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-stk"
+version = "0.4"
+description = "Toolkit for 3D volume processing"
+readme = "README.md"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Simon Ekström" },
+]
+dependencies = [
+    "numpy",
+]
+
