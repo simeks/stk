@@ -9,12 +9,23 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 add_library(Catch INTERFACE)
-target_include_directories(Catch INTERFACE Catch2)
+target_include_directories(Catch INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/Catch2>
+  $<INSTALL_INTERFACE:include>
+)
 
 if(NOT ZLIB_FOUND)
     add_subdirectory(zlib-1.2.11)
-    target_include_directories(zlib INTERFACE zlib-1.2.11 ${zlib_BINARY_DIR})
-    target_include_directories(zlibstatic INTERFACE zlib-1.2.11 ${zlib_BINARY_DIR})
+    target_include_directories(zlib INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib-1.2.11>
+        $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
+        $<INSTALL_INTERFACE:include>
+    )
+    target_include_directories(zlibstatic INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib-1.2.11>
+        $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
+        $<INSTALL_INTERFACE:include>
+    )
 
     if (WIN32)
         set_target_properties(zlib PROPERTIES COMPILE_FLAGS
@@ -30,11 +41,18 @@ if(NOT ZLIB_FOUND)
 endif()
 
 
-if(NOT NIFTILIB_FOUND)
+if(NOT NIFTI_FOUND)
     add_subdirectory(nifti_clib)
     set(NIFTILIB_INCLUDE_DIRS "nifti_clib/niftilib")
-    target_include_directories(niftiio INTERFACE "nifti_clib/niftilib")
-    target_include_directories(znz INTERFACE "nifti_clib/znzlib")
+
+    target_include_directories(niftiio INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/nifti_clib/niftilib>
+        $<INSTALL_INTERFACE:include>
+    )
+    target_include_directories(znz INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/nifti_clib/znzlib>
+        $<INSTALL_INTERFACE:include>
+    )
 
     if (ZLIB_FOUND)
         target_include_directories(znz PUBLIC "${ZLIB_INCLUDE_DIRS}")
@@ -58,7 +76,11 @@ endif()
 
 if(NOT NrrdIO_FOUND)
     add_subdirectory(NrrdIO)
-    target_include_directories(NrrdIO INTERFACE "NrrdIO")
+ 
+    target_include_directories(NrrdIO INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/NrrdIO>
+        $<INSTALL_INTERFACE:include>
+    )
 
     if (ZLIB_FOUND)
         target_include_directories(NrrdIO PRIVATE "${ZLIB_INCLUDE_DIRS}")
