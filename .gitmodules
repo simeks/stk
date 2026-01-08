@@ -4,3 +4,6 @@
 [submodule "third_party/NrrdIO"]
 	path = third_party/NrrdIO
 	url = https://git.code.sf.net/p/teem/nrrdio/nrrdio.git
+[submodule "third_party/nifti_clib"]
+	path = third_party/nifti_clib
+	url = https://github.com/NIFTI-Imaging/nifti_clib.git

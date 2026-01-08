@@ -30,11 +30,11 @@ if(NOT ZLIB_FOUND)
 endif()
 
 
-if(NOT NIFTI_FOUND)
-    add_subdirectory(nifticlib-2.0.0)
-    set(NIFTI_INCLUDE_DIRS "nifticlib-2.0.0/niftilib")
-    target_include_directories(niftiio INTERFACE "nifticlib-2.0.0/niftilib")
-    target_include_directories(znz INTERFACE "nifticlib-2.0.0/znzlib")
+if(NOT NIFTILIB_FOUND)
+    add_subdirectory(nifti_clib)
+    set(NIFTILIB_INCLUDE_DIRS "nifti_clib/niftilib")
+    target_include_directories(niftiio INTERFACE "nifti_clib/niftilib")
+    target_include_directories(znz INTERFACE "nifti_clib/znzlib")
 
     if (ZLIB_FOUND)
         target_include_directories(znz PUBLIC "${ZLIB_INCLUDE_DIRS}")
