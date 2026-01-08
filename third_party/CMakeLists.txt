@@ -57,8 +57,8 @@ if(NOT NIFTI_FOUND)
 endif()
 
 if(NOT NrrdIO_FOUND)
-    add_subdirectory(NrrdIO-1.11.0)
-    target_include_directories(NrrdIO INTERFACE "NrrdIO-1.11.0")
+    add_subdirectory(NrrdIO)
+    target_include_directories(NrrdIO INTERFACE "NrrdIO")
 
     if (ZLIB_FOUND)
         target_include_directories(NrrdIO PRIVATE "${ZLIB_INCLUDE_DIRS}")
