@@ -15,14 +15,14 @@ target_include_directories(Catch INTERFACE
 )
 
 if(NOT ZLIB_FOUND)
-    add_subdirectory(zlib-1.2.11)
+    add_subdirectory(zlib)
     target_include_directories(zlib INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib-1.2.11>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib>
         $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
         $<INSTALL_INTERFACE:include>
     )
     target_include_directories(zlibstatic INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib-1.2.11>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib>
         $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
         $<INSTALL_INTERFACE:include>
     )
@@ -42,6 +42,12 @@ endif()
 
 
 if(NOT NIFTI_FOUND)
+
+    if(NOT ZLIB_FOUND)
+        # NIFTI requires ZLIB, use bundled version if not found.
+        set(NIFTI_ZLIB_LIBRARIES ZLIB::ZLIBSTATIC CACHE STRING "" FORCE)
+    endif()
+
     add_subdirectory(nifti_clib)
     set(NIFTILIB_INCLUDE_DIRS "nifti_clib/niftilib")
 
