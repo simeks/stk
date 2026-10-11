@@ -103,8 +103,9 @@ if (STK_LOGGING_PREFIX_FILE)
     add_definitions(-DSTK_LOGGING_PREFIX_FILE)
 endif()
 
-# Build Python wrapper if building using Scikit build
-if (DEFINED SKBUILD)
+# Build Python wrapper if building using Scikit build, but only if we are the
+# top-level project. Projects embedding STK ship their own Python package.
+if (DEFINED SKBUILD AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(STK_BUILD_PYTHON_WRAPPER ON)
 endif()
 

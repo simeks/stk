@@ -15,7 +15,7 @@ target_include_directories(Catch INTERFACE
 )
 
 if(NOT ZLIB_FOUND)
-    add_subdirectory(zlib)
+    add_subdirectory(zlib EXCLUDE_FROM_ALL)
     target_include_directories(zlib INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib>
         $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
@@ -48,7 +48,7 @@ if(NOT NIFTI_FOUND)
         set(NIFTI_ZLIB_LIBRARIES ZLIB::ZLIBSTATIC CACHE STRING "" FORCE)
     endif()
 
-    add_subdirectory(nifti_clib)
+    add_subdirectory(nifti_clib EXCLUDE_FROM_ALL)
     set(NIFTILIB_INCLUDE_DIRS "nifti_clib/niftilib")
 
     target_include_directories(niftiio INTERFACE
@@ -81,7 +81,7 @@ if(NOT NIFTI_FOUND)
 endif()
 
 if(NOT NrrdIO_FOUND)
-    add_subdirectory(NrrdIO)
+    add_subdirectory(NrrdIO EXCLUDE_FROM_ALL)
  
     target_include_directories(NrrdIO INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/NrrdIO>
