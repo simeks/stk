@@ -14,3 +14,9 @@ authors = [
 dependencies = [
     "numpy",
 ]
+
+[tool.cibuildwheel]
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
+skip = "*-musllinux_*"
+archs = "auto64"
+test-command = "python -m unittest discover -s {project}/test"
