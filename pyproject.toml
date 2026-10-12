@@ -20,3 +20,15 @@ build = "cp310-* cp311-* cp312-* cp313-* cp314-* cp315-*"
 skip = "*-musllinux_*"
 archs = "auto64"
 test-command = "python -m unittest discover -s {package}/test"
+
+[tool.cibuildwheel.macos]
+# Apple Clang ships without an OpenMP runtime, so use libomp from Homebrew.
+# Homebrew builds libomp for the macOS version of the build machine, which the
+# deployment target has to match for delocate to accept bundling it.
+before-all = "brew install libomp"
+environment = { MACOSX_DEPLOYMENT_TARGET = "15.0", OpenMP_ROOT = "$(brew --prefix libomp)", HOMEBREW_NO_AUTO_UPDATE = "1" }
+
+[tool.cibuildwheel.windows]
+# Bundle the OpenMP runtime (vcomp140.dll), which is not shipped with Python
+before-build = "pip install delvewheel"
+repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel}"

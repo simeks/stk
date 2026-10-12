@@ -14,7 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        # macos-15 builds arm64 wheels, macos-15-intel builds x86_64 wheels
+        os: [ubuntu-latest, windows-latest, macos-15, macos-15-intel]
 
     steps:
       - uses: actions/checkout@v4

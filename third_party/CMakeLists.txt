@@ -15,25 +15,21 @@ target_include_directories(Catch INTERFACE
 )
 
 if(NOT ZLIB_FOUND)
+    # Only build the static library, to avoid a runtime dependency on a zlib
+    # shared library that would have to be distributed alongside the binaries.
+    set(ZLIB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+
     add_subdirectory(zlib EXCLUDE_FROM_ALL)
-    target_include_directories(zlib INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib>
-        $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
-        $<INSTALL_INTERFACE:include>
-    )
     target_include_directories(zlibstatic INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib>
         $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
         $<INSTALL_INTERFACE:include>
     )
 
+    # NrrdIO links to ZLIB::ZLIB, which is otherwise the shared library.
+    add_library(ZLIB::ZLIB ALIAS zlibstatic)
+
     if (WIN32)
-        set_target_properties(zlib PROPERTIES COMPILE_FLAGS
-            "/wd4100 /wd4127 /wd4131 /wd4244 /wd4245 /wd4267 /wd4305"
-            )
-        set_target_properties(zlibstatic PROPERTIES COMPILE_FLAGS
-            "/wd4100 /wd4127 /wd4131 /wd4244 /wd4245 /wd4267 /wd4305"
-            )
         set_target_properties(zlibstatic PROPERTIES COMPILE_FLAGS
             "/wd4100 /wd4127 /wd4131 /wd4244 /wd4245 /wd4267 /wd4305"
             )
@@ -87,6 +83,12 @@ if(NOT NrrdIO_FOUND)
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/NrrdIO>
         $<INSTALL_INTERFACE:include>
     )
+
+    # NrrdIO is built as a static library. Without TEEM_STATIC its header
+    # declares the API as dllimport on Windows, which fails to link.
+    if(NOT BUILD_SHARED_LIBS)
+        target_compile_definitions(NrrdIO PUBLIC TEEM_STATIC)
+    endif()
 
     if (ZLIB_FOUND)
         target_include_directories(NrrdIO PRIVATE "${ZLIB_INCLUDE_DIRS}")

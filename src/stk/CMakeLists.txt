@@ -83,6 +83,13 @@ else()
     target_link_libraries(stk PRIVATE NrrdIO)
 endif()
 
+# Compilers without a built-in OpenMP runtime (e.g. Apple Clang with libomp)
+# need the include directory and library explicitly, the flags are not enough.
+if(OpenMP_CXX_FOUND)
+    target_include_directories(stk PUBLIC ${OpenMP_CXX_INCLUDE_DIRS})
+    target_link_libraries(stk PUBLIC ${OpenMP_CXX_LIBRARIES})
+endif()
+
 if(STK_ITK_BRIDGE)
     add_definitions(-DSTK_ITK_BRIDGE)
     find_package(ITK REQUIRED)
