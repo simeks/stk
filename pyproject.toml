@@ -15,6 +15,11 @@ dependencies = [
     "numpy",
 ]
 
+[tool.scikit-build.cmake.define]
+STK_BUILD_TESTS = "OFF"
+STK_BUILD_EXAMPLES = "OFF"
+NIFTI_BUILD_TESTING = "OFF"
+
 [tool.cibuildwheel]
 build = "cp310-* cp311-* cp312-* cp313-* cp314-* cp315-*"
 skip = "*-musllinux_*"
