@@ -70,17 +70,24 @@ target_include_directories(stk PUBLIC
     )
 
 if(NIFTI_FOUND)
-    target_include_directories(stk PUBLIC ${NIFTI_INCLUDE_DIR})
-    target_link_libraries(stk PUBLIC ${NIFTI_LIBRARIES})
+    target_include_directories(stk PRIVATE ${NIFTI_INCLUDE_DIR})
+    target_link_libraries(stk PRIVATE ${NIFTI_LIBRARIES})
 else()
-    target_link_libraries(stk PUBLIC niftiio)
+    target_link_libraries(stk PRIVATE niftiio)
 endif()
 
 if(NrrdIO_FOUND)
-    target_include_directories(stk PUBLIC ${NrrdIO_INCLUDE_DIR})
-    target_link_libraries(stk PUBLIC ${NrrdIO_LIBRARIES})
+    target_include_directories(stk PRIVATE ${NrrdIO_INCLUDE_DIR})
+    target_link_libraries(stk PRIVATE ${NrrdIO_LIBRARIES})
 else()
-    target_link_libraries(stk PUBLIC NrrdIO)
+    target_link_libraries(stk PRIVATE NrrdIO)
+endif()
+
+# Compilers without a built-in OpenMP runtime (e.g. Apple Clang with libomp)
+# need the include directory and library explicitly, the flags are not enough.
+if(OpenMP_CXX_FOUND)
+    target_include_directories(stk PUBLIC ${OpenMP_CXX_INCLUDE_DIRS})
+    target_link_libraries(stk PUBLIC ${OpenMP_CXX_LIBRARIES})
 endif()
 
 if(STK_ITK_BRIDGE)

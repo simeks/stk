@@ -29,8 +29,16 @@ A minimalistic Python API is also provided.
 
 ## Install
 
+Requires the Python development headers (e.g. `python3-dev` or `python3-devel`).
+
 ```bash
-python setup.py install
+python -m pip install -e .
+```
+
+Wheels for multiple Python versions are built with [cibuildwheel](https://cibuildwheel.pypa.io), which requires Docker or Podman:
+
+```bash
+pipx run cibuildwheel --platform linux
 ```
 
 ## Example usage

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15)
 
 option(STK_BUILD_EXAMPLES "Build examples" ON)
 option(STK_BUILD_TESTS "Build unit tests" ON)
@@ -103,7 +103,13 @@ if (STK_LOGGING_PREFIX_FILE)
     add_definitions(-DSTK_LOGGING_PREFIX_FILE)
 endif()
 
+# Build Python wrapper if building using Scikit build, but only if we are the
+# top-level project. Projects embedding STK ship their own Python package.
+if (DEFINED SKBUILD AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(STK_BUILD_PYTHON_WRAPPER ON)
+endif()
 
+set(STK_PYTHON_INSTALL_DIR "python-stk" CACHE STRING "Where to install python modules")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${EXTRA_FLAGS_RELEASE}")
@@ -140,3 +146,6 @@ if (STK_BUILD_TESTS)
     add_subdirectory(test)
 endif()
 
+if (STK_BUILD_PYTHON_WRAPPER)    
+    install(DIRECTORY stk DESTINATION .)
+endif()

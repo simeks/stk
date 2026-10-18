@@ -9,20 +9,27 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 add_library(Catch INTERFACE)
-target_include_directories(Catch INTERFACE Catch2)
+target_include_directories(Catch INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/Catch2>
+  $<INSTALL_INTERFACE:include>
+)
 
 if(NOT ZLIB_FOUND)
-    add_subdirectory(zlib-1.2.11)
-    target_include_directories(zlib INTERFACE zlib-1.2.11 ${zlib_BINARY_DIR})
-    target_include_directories(zlibstatic INTERFACE zlib-1.2.11 ${zlib_BINARY_DIR})
+    # Only build the static library, to avoid a runtime dependency on a zlib
+    # shared library that would have to be distributed alongside the binaries.
+    set(ZLIB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+
+    add_subdirectory(zlib EXCLUDE_FROM_ALL)
+    target_include_directories(zlibstatic INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/zlib>
+        $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
+        $<INSTALL_INTERFACE:include>
+    )
+
+    # NrrdIO links to ZLIB::ZLIB, which is otherwise the shared library.
+    add_library(ZLIB::ZLIB ALIAS zlibstatic)
 
     if (WIN32)
-        set_target_properties(zlib PROPERTIES COMPILE_FLAGS
-            "/wd4100 /wd4127 /wd4131 /wd4244 /wd4245 /wd4267 /wd4305"
-            )
-        set_target_properties(zlibstatic PROPERTIES COMPILE_FLAGS
-            "/wd4100 /wd4127 /wd4131 /wd4244 /wd4245 /wd4267 /wd4305"
-            )
         set_target_properties(zlibstatic PROPERTIES COMPILE_FLAGS
             "/wd4100 /wd4127 /wd4131 /wd4244 /wd4245 /wd4267 /wd4305"
             )
@@ -31,10 +38,23 @@ endif()
 
 
 if(NOT NIFTI_FOUND)
-    add_subdirectory(nifticlib-2.0.0)
-    set(NIFTI_INCLUDE_DIRS "nifticlib-2.0.0/niftilib")
-    target_include_directories(niftiio INTERFACE "nifticlib-2.0.0/niftilib")
-    target_include_directories(znz INTERFACE "nifticlib-2.0.0/znzlib")
+
+    if(NOT ZLIB_FOUND)
+        # NIFTI requires ZLIB, use bundled version if not found.
+        set(NIFTI_ZLIB_LIBRARIES ZLIB::ZLIBSTATIC CACHE STRING "" FORCE)
+    endif()
+
+    add_subdirectory(nifti_clib EXCLUDE_FROM_ALL)
+    set(NIFTILIB_INCLUDE_DIRS "nifti_clib/niftilib")
+
+    target_include_directories(niftiio INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/nifti_clib/niftilib>
+        $<INSTALL_INTERFACE:include>
+    )
+    target_include_directories(znz INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/nifti_clib/znzlib>
+        $<INSTALL_INTERFACE:include>
+    )
 
     if (ZLIB_FOUND)
         target_include_directories(znz PUBLIC "${ZLIB_INCLUDE_DIRS}")
@@ -57,8 +77,18 @@ if(NOT NIFTI_FOUND)
 endif()
 
 if(NOT NrrdIO_FOUND)
-    add_subdirectory(NrrdIO-1.11.0)
-    target_include_directories(NrrdIO INTERFACE "NrrdIO-1.11.0")
+    add_subdirectory(NrrdIO EXCLUDE_FROM_ALL)
+ 
+    target_include_directories(NrrdIO INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/NrrdIO>
+        $<INSTALL_INTERFACE:include>
+    )
+
+    # NrrdIO is built as a static library. Without TEEM_STATIC its header
+    # declares the API as dllimport on Windows, which fails to link.
+    if(NOT BUILD_SHARED_LIBS)
+        target_compile_definitions(NrrdIO PUBLIC TEEM_STATIC)
+    endif()
 
     if (ZLIB_FOUND)
         target_include_directories(NrrdIO PRIVATE "${ZLIB_INCLUDE_DIRS}")
