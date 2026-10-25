@@ -4,6 +4,7 @@
 
 #include "cuda.h"
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 
